@@ -47,7 +47,6 @@ export const getShopsall = async (req?: IncomingMessage) => {
   try {
     const axiosInstance = axiosWithAuth(req);
     const response = await axiosInstance.get(`/shops/get/all`);
-        console.log("store",response.data.shops)
 
     return response.data.shops as IShop[];
   } catch (error) {

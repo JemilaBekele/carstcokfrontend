@@ -168,6 +168,28 @@ export const updateProductBatch = async (
   }
 };
 
+export const updateShopStock = async (
+  shopId: string,
+  batchId: string,
+  quantity: number,
+  unitOfMeasureId?: string | null,
+  req?: IncomingMessage
+) => {
+  try {
+    const axiosInstance = axiosWithAuth(req);
+
+    const response = await axiosInstance.put(
+      `/update/shops/${shopId}/batches/${batchId}/stock`,
+      {
+        quantity,
+        unitOfMeasureId: unitOfMeasureId || null,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 // ✅ Delete product batch
 export const deleteProductBatch = async (id: string, req?: IncomingMessage) => {
   try {
