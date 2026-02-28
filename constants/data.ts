@@ -297,10 +297,24 @@ export const navItems: NavItem[] = [
         // icon: 'userPen',
         shortcut: ['po', 'po'],
         permission: 'VIEW_ALL_ROLE_PERMISSIONS'
-      },
+      }, 
       {
         title: 'Permission',
         url: '/dashboard/Permission',
+        // icon: 'userPen',
+        shortcut: ['pr', 'pr'],
+        permission: 'VIEW_ALL_PERMISSIONS'
+      },
+        {
+        title: 'SellProduct',
+        url: '/dashboard/SellProduct',
+        // icon: 'userPen',
+        shortcut: ['pr', 'pr'],
+        permission: 'VIEW_ALL_PERMISSIONS'
+      },
+          {
+        title: 'Permis',
+        url: '/dashboard/missstlege',
         // icon: 'userPen',
         shortcut: ['pr', 'pr'],
         permission: 'VIEW_ALL_PERMISSIONS'
