@@ -305,20 +305,20 @@ export const navItems: NavItem[] = [
         shortcut: ['pr', 'pr'],
         permission: 'VIEW_ALL_PERMISSIONS'
       },
-        {
-        title: 'SellProduct',
-        url: '/dashboard/SellProduct',
-        // icon: 'userPen',
-        shortcut: ['pr', 'pr'],
-        permission: 'VIEW_ALL_PERMISSIONS'
-      },
-          {
-        title: 'Permis',
-        url: '/dashboard/missstlege',
-        // icon: 'userPen',
-        shortcut: ['pr', 'pr'],
-        permission: 'VIEW_ALL_PERMISSIONS'
-      }
+      //   {
+      //   title: 'SellProduct',
+      //   url: '/dashboard/SellProduct',
+      //   // icon: 'userPen',
+      //   shortcut: ['pr', 'pr'],
+      //   permission: 'VIEW_ALL_PERMISSIONS'
+      // },
+      //     {
+      //   title: 'Permis',
+      //   url: '/dashboard/missstlege',
+      //   // icon: 'userPen',
+      //   shortcut: ['pr', 'pr'],
+      //   permission: 'VIEW_ALL_PERMISSIONS'
+      // }
     ]
   }
 ];

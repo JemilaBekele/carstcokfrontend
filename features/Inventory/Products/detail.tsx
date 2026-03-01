@@ -1469,7 +1469,7 @@ const handleDeleteStockLedger = async (ledgerId: string) => {
                   <TableHead>Reference/Invoice</TableHead>
                   <TableHead>User</TableHead>
                   <TableHead>Notes</TableHead>
-                      <TableHead>Actions</TableHead> {/* Add this line */}
+                      {/* <TableHead>Actions</TableHead> Add this line */}
 
                 </TableRow>
               </TableHeader>
@@ -1621,7 +1621,7 @@ const handleDeleteStockLedger = async (ledgerId: string) => {
                           {ledger.notes || 'N/A'}
                         </TableCell>
                          {/* Add delete button cell */}
-          <TableCell>
+          {/* <TableCell>
             <Button
               variant='ghost'
               size='sm'
@@ -1630,7 +1630,7 @@ const handleDeleteStockLedger = async (ledgerId: string) => {
             >
               <Trash2 className='h-4 w-4' />
             </Button>
-          </TableCell>
+          </TableCell> */}
                       </TableRow>
                     );
                   });

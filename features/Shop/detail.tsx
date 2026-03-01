@@ -1673,10 +1673,7 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                           >
                             Reject
                           </Button>
-                          
-                        </>
-                      )}
-                      <Button
+                              <Button
                             variant='outline'
                             size='sm'
                             onClick={() =>
@@ -1690,6 +1687,9 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                           >
                             Delete
                           </Button>
+                        </>
+                      )}
+                  
                     </div>
                   </div>
 

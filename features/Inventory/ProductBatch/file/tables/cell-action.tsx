@@ -241,11 +241,11 @@ export const ProductBatchCellAction: React.FC<ProductBatchCellActionProps> = ({
 
           {/* New Shop Stock Management Option */}
          
-            <DropdownMenuItem
+            {/* <DropdownMenuItem
               onClick={() => setStockDialogOpen(true)}
             >
               <IconBuildingStore className='mr-2 h-4 w-4' /> Manage Shop Stock
-            </DropdownMenuItem>
+            </DropdownMenuItem> */}
 
           <PermissionGuard
             requiredPermission={PERMISSIONS.PRODUCT_BATCH.DELETE.name}
