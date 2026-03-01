@@ -83,3 +83,15 @@ export const getAllProductsallsell = async ({
     throw error;
   }
 };
+
+//delete/stockLedger
+
+export const deleteStockLedgerByIds = async (id: string, req?: IncomingMessage) => {
+  try {
+    const axiosInstance = axiosWithAuth(req);
+    const response = await axiosInstance.delete(`/delete/stockLedger/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

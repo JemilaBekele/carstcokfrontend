@@ -23,6 +23,8 @@ import {
   Filter,
   Download
 } from 'lucide-react';
+import { deleteStockLedgerByIds } from '@/service/MissingStockLedger'; // Adjust the path as needed
+import { Trash2 } from 'lucide-react'; // Add this to your lucide-react imports
 import {
   Table,
   TableBody,
@@ -436,7 +438,23 @@ const ProductDetailsPage: React.FC<ProductDetailsProps> = ({ productId }) => {
       </div>
     );
   }
-
+const handleDeleteStockLedger = async (ledgerId: string) => {
+  if (confirm('Are you sure you want to delete this stock ledger entry?')) {
+    try {
+      await deleteStockLedgerByIds(ledgerId);
+      toast.success('Stock ledger entry deleted successfully');
+      
+      // Refresh the product details
+      if (productId) {
+        const updatedDetails = await getProductdetailaById(productId);
+        setProductDetails(updatedDetails);
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete stock ledger entry');
+    }
+  }
+};
   const { product, batches, locationStocks, summary } = productDetails;
   const unitSymbol = product.unitOfMeasure?.symbol || 'unit';
 
@@ -1451,6 +1469,8 @@ const ProductDetailsPage: React.FC<ProductDetailsProps> = ({ productId }) => {
                   <TableHead>Reference/Invoice</TableHead>
                   <TableHead>User</TableHead>
                   <TableHead>Notes</TableHead>
+                      <TableHead>Actions</TableHead> {/* Add this line */}
+
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1600,6 +1620,17 @@ const ProductDetailsPage: React.FC<ProductDetailsProps> = ({ productId }) => {
                         >
                           {ledger.notes || 'N/A'}
                         </TableCell>
+                         {/* Add delete button cell */}
+          <TableCell>
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={() => handleDeleteStockLedger(ledger.id)}
+              className='text-red-600 hover:text-red-700 hover:bg-red-100'
+            >
+              <Trash2 className='h-4 w-4' />
+            </Button>
+          </TableCell>
                       </TableRow>
                     );
                   });
