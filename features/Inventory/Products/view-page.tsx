@@ -1,8 +1,7 @@
 import { getProductById } from '@/service/Product';
 import ProductForm from './form';
 import { IProduct } from '@/models/Product';
-import { getCategories, getSubCategories } from '@/service/Category';
-import { getUnitsOfMeasure } from '@/service/UnitOfMeasure';
+import { getCategories } from '@/service/Category';
 import { normalizeImagePath } from '@/lib/norm'; // 👈 import helper
 import { toast } from 'sonner';
 import { getShopallapi } from '@/service/shop';
@@ -40,10 +39,8 @@ export default async function ProductViewPage({
   }
 
   // Fetch dropdown data
-  const [categories, subCategories, unitsOfMeasure, shops] = await Promise.all([
+  const [categories, shops] = await Promise.all([
     getCategories(),
-    getSubCategories(),
-    getUnitsOfMeasure(),
     getShopallapi()
   ]);
 
@@ -52,8 +49,6 @@ export default async function ProductViewPage({
       initialData={combinedProductData}
       pageTitle={pageTitle}
       categories={categories}
-      subCategories={subCategories}
-      unitsOfMeasure={unitsOfMeasure}
       shops={shops}
     />
   );

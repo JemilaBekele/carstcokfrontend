@@ -1,10 +1,9 @@
 import { IEmployee } from './employee';
-import { IProduct, IProductBatch } from './Product';
+import { IProduct } from './Product';
 import { IPurchase } from './purchase';
 import { IShop } from './shop';
 import { IStore } from './store';
 import { ITransfer } from './transfer';
-import { IUnitOfMeasure } from './UnitOfMeasure';
 
 // ======================= ENUMS ======================= //
 
@@ -29,11 +28,8 @@ export interface IStockCorrectionItem {
   productId: string;
   product?: IProduct;
 
-  batchId?: string;
-  batch?: IProductBatch;
+isBox: boolean; // ✅ Box or Piece
 
-  unitOfMeasureId: string;
-  unitOfMeasure?: IUnitOfMeasure;
 
   quantity: number;
 

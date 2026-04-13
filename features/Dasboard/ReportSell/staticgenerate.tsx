@@ -28,7 +28,9 @@ import {
   Package,
   Users,
   AlertTriangle,
-  BarChart3
+  BarChart3,
+  Box,
+  PackageOpen
 } from 'lucide-react';
 import { utils, writeFile } from 'xlsx';
 
@@ -56,21 +58,87 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getSalesReports } from '@/service/Report';
 import { getShops } from '@/service/shop';
 import { getBranches } from '@/service/branch';
-import {
-  SalesReportResponse,
-  BatchReportItem,
-  SellerReportItem
-} from '@/models/sellreport';
 
+// models/sellreport.ts
+
+export interface ProductReportItem {
+  productId: string;
+  product: {
+    id: string;
+    name: string;
+    productCode: string;
+    category?: {
+      id: string;
+      name: string;
+    };
+    brand?: {
+      id: string;
+      name: string;
+    };
+    hasBox: boolean;
+    boxSize: number | null;
+    UnitOfMeasure: string | null;
+  } | null;
+  quantity: number;
+  revenue: number;
+  avgPrice: number;
+  hasBox: boolean;
+  boxSize: number | null;
+  boxQuantity: number;
+  remainingPieces: number;
+  UnitOfMeasure: string | null;
+  category: string;
+  brand: string;
+  valueScore: number;
+}
+
+export interface SellerReportItem {
+  userId: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  totalRevenue: number;
+  totalGrossRevenue: number;
+  totalOrders: number;
+}
+
+export interface SalesReportResponse {
+  reportPeriod: {
+    startDate: string;
+    endDate: string;
+  };
+  filters: {
+    shopId?: string;
+    branchId?: string;
+    limit: number;
+    slowMoveThreshold: number;
+  };
+  summary: {
+    totalItemsAnalyzed: number;
+    totalSellers: number;
+    totalSlowMovingItems: number;
+    totalTopItems: number;
+    totalProducts: number;
+  };
+  reports: {
+    topItemsByQuantity: ProductReportItem[];
+    topItemsByRevenue: ProductReportItem[];
+    topItemsByValue: ProductReportItem[];
+    slowMovingItems: ProductReportItem[];
+    topSellers: SellerReportItem[];
+  };
+}
 // Define columns for different report types
-// Update your column definitions to include explicit ids
-const topItemsColumns: ColumnDef<BatchReportItem>[] = [
+const topItemsColumns: ColumnDef<ProductReportItem>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -94,7 +162,7 @@ const topItemsColumns: ColumnDef<BatchReportItem>[] = [
     enableHiding: false
   },
   {
-    id: 'product.name', // Add explicit id
+    id: 'product.name',
     accessorKey: 'product.name',
     header: 'Product Name',
     cell: ({ row }) => (
@@ -102,25 +170,33 @@ const topItemsColumns: ColumnDef<BatchReportItem>[] = [
     )
   },
   {
-    id: 'batchNumber', // Add explicit id
-    accessorKey: 'batchNumber',
-    header: 'Batch Number',
+    id: 'product.productCode',
+    accessorKey: 'product.productCode',
+    header: 'Product Code',
     cell: ({ row }) => (
       <div className='font-mono text-sm'>
-        {row.original.batchNumber || 'N/A'}
+        {row.original.product?.productCode || 'N/A'}
       </div>
     )
   },
   {
-    id: 'product.category', // Add explicit id
-    accessorKey: 'product.category',
+    id: 'product.category.name',
+    accessorKey: 'product.category.name',
     header: 'Category',
     cell: ({ row }) => (
       <div>{row.original.product?.category?.name || 'N/A'}</div>
     )
   },
   {
-    id: 'quantity', // Add explicit id
+    id: 'product.brand.name',
+    accessorKey: 'product.brand.name',
+    header: 'Brand',
+    cell: ({ row }) => (
+      <div>{row.original.product?.brand?.name || 'N/A'}</div>
+    )
+  },
+  {
+    id: 'quantity',
     accessorKey: 'quantity',
     header: ({ column }: { column: any }) => {
       return (
@@ -134,13 +210,25 @@ const topItemsColumns: ColumnDef<BatchReportItem>[] = [
       );
     },
     cell: ({ row }) => {
+      const item = row.original;
+      const displayQuantity = item.hasBox && item.boxQuantity > 0
+        ? `${item.boxQuantity} box(es) + ${item.remainingPieces} pcs`
+        : `${item.quantity} ${item.UnitOfMeasure || 'units'}`;
+      
       return (
-        <div className='text-right font-medium'>{row.original.quantity}</div>
+        <div className='text-right font-medium'>
+          <div>{displayQuantity}</div>
+          {item.hasBox && item.boxSize && (
+            <div className='text-xs text-muted-foreground'>
+              ({item.boxSize} pcs/box)
+            </div>
+          )}
+        </div>
       );
     }
   },
   {
-    id: 'revenue', // Add explicit id
+    id: 'revenue',
     accessorKey: 'revenue',
     header: () => <div className='text-right'>Revenue</div>,
     cell: ({ row }) => {
@@ -152,23 +240,24 @@ const topItemsColumns: ColumnDef<BatchReportItem>[] = [
     }
   },
   {
-    id: 'valueScore', // Add explicit id
+    id: 'avgPrice',
+    accessorKey: 'avgPrice',
+    header: () => <div className='text-right'>Avg. Unit Price</div>,
+    cell: ({ row }) => {
+      const formatted = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'ETB'
+      }).format(row.original.avgPrice);
+      return <div className='text-right font-medium'>{formatted}</div>;
+    }
+  },
+  {
+    id: 'valueScore',
     accessorKey: 'valueScore',
     header: () => <div className='text-right'>Value Score</div>,
     cell: ({ row }) => {
       const score = row.original.valueScore || 0;
       return <div className='text-right font-medium'>{score.toFixed(2)}</div>;
-    }
-  },
-  {
-    id: 'expiryDate', // Add explicit id
-    accessorKey: 'expiryDate',
-    header: 'Expiry Date',
-    cell: ({ row }) => {
-      const date = row.original.expiryDate
-        ? new Date(row.original.expiryDate)
-        : null;
-      return <div>{date ? date.toLocaleDateString() : 'N/A'}</div>;
     }
   }
 ];
@@ -197,7 +286,7 @@ const sellersColumns: ColumnDef<SellerReportItem>[] = [
     enableHiding: false
   },
   {
-    id: 'user.name', // Add explicit id
+    id: 'user.name',
     accessorKey: 'user.name',
     header: 'Seller Name',
     cell: ({ row }) => (
@@ -205,13 +294,13 @@ const sellersColumns: ColumnDef<SellerReportItem>[] = [
     )
   },
   {
-    id: 'user.email', // Add explicit id
+    id: 'user.email',
     accessorKey: 'user.email',
     header: 'Email',
     cell: ({ row }) => <div>{row.original.user?.email || 'N/A'}</div>
   },
   {
-    id: 'totalOrders', // Add explicit id
+    id: 'totalOrders',
     accessorKey: 'totalOrders',
     header: ({ column }: { column: any }) => {
       return (
@@ -233,14 +322,26 @@ const sellersColumns: ColumnDef<SellerReportItem>[] = [
     }
   },
   {
-    id: 'totalSales', // Add explicit id
-    accessorKey: 'totalSales',
+    id: 'totalRevenue',
+    accessorKey: 'totalRevenue',
     header: () => <div className='text-right'>Total Sales</div>,
     cell: ({ row }) => {
       const formatted = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'ETB'
       }).format(row.original.totalRevenue);
+      return <div className='text-right font-medium'>{formatted}</div>;
+    }
+  },
+  {
+    id: 'totalGrossRevenue',
+    accessorKey: 'totalGrossRevenue',
+    header: () => <div className='text-right'>Gross Revenue</div>,
+    cell: ({ row }) => {
+      const formatted = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'ETB'
+      }).format(row.original.totalGrossRevenue);
       return <div className='text-right font-medium'>{formatted}</div>;
     }
   }
@@ -256,7 +357,6 @@ interface IBranch {
   name: string;
 }
 
-// Update the renderTable function to safely handle missing filter columns
 const renderTable = <T,>(
   table: Table<T>,
   exportData: T[],
@@ -285,7 +385,7 @@ const renderTable = <T,>(
       </CardHeader>
       <CardContent>
         <div className='flex items-center py-4'>
-          {column && ( // Only render input if column exists
+          {column && (
             <Input
               placeholder={`Filter ${exportName.toLowerCase()}...`}
               value={(column.getFilterValue() as string) ?? ''}
@@ -321,7 +421,6 @@ const renderTable = <T,>(
           </DropdownMenu>
         </div>
 
-        {/* Rest of the table code remains the same */}
         <div className='overflow-hidden rounded-md border'>
           <UITable>
             <TableHeader>
@@ -401,7 +500,7 @@ const renderTable = <T,>(
     </Card>
   );
 };
-// Export to Excel function
+
 const exportToExcel = (data: any[], sheetName: string) => {
   const worksheet = utils.json_to_sheet(data);
   const workbook = utils.book_new();
@@ -416,7 +515,11 @@ export function SalesReportsDataTable() {
   const [loading, setLoading] = useState(true);
 
   // Table states for different report types
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [topQuantitySorting, setTopQuantitySorting] = useState<SortingState>([]);
+  const [topRevenueSorting, setTopRevenueSorting] = useState<SortingState>([]);
+  const [slowMovingSorting, setSlowMovingSorting] = useState<SortingState>([]);
+  const [sellersSorting, setSellersSorting] = useState<SortingState>([]);
+  
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
@@ -451,7 +554,7 @@ export function SalesReportsDataTable() {
 
       const reportData = await getSalesReports(params);
       setReportData(reportData);
-    } catch  {
+    } catch {
       setReportData(null);
     } finally {
       setLoading(false);
@@ -478,9 +581,8 @@ export function SalesReportsDataTable() {
         setShops(shopsData || []);
         setBranches(branchesData || []);
 
-        // Load initial report
         await loadReports();
-      } catch  {
+      } catch {
         setReportData(null);
       } finally {
         setLoading(false);
@@ -498,8 +600,6 @@ export function SalesReportsDataTable() {
     setSelectedBranch('all');
     setLimit(10);
     setSlowMoveThreshold(10);
-
-    // Re-fetch all data when clearing filters
     await loadReports();
   };
 
@@ -507,7 +607,7 @@ export function SalesReportsDataTable() {
   const topItemsByQuantityTable = useReactTable({
     data: reportData?.reports.topItemsByQuantity || [],
     columns: topItemsColumns,
-    onSortingChange: setSorting,
+    onSortingChange: setTopQuantitySorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -516,7 +616,7 @@ export function SalesReportsDataTable() {
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     state: {
-      sorting,
+      sorting: topQuantitySorting,
       columnFilters,
       columnVisibility,
       rowSelection
@@ -526,7 +626,7 @@ export function SalesReportsDataTable() {
   const topItemsByRevenueTable = useReactTable({
     data: reportData?.reports.topItemsByRevenue || [],
     columns: topItemsColumns,
-    onSortingChange: setSorting,
+    onSortingChange: setTopRevenueSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -535,7 +635,7 @@ export function SalesReportsDataTable() {
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     state: {
-      sorting,
+      sorting: topRevenueSorting,
       columnFilters,
       columnVisibility,
       rowSelection
@@ -545,7 +645,7 @@ export function SalesReportsDataTable() {
   const slowMovingItemsTable = useReactTable({
     data: reportData?.reports.slowMovingItems || [],
     columns: topItemsColumns,
-    onSortingChange: setSorting,
+    onSortingChange: setSlowMovingSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -554,7 +654,7 @@ export function SalesReportsDataTable() {
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     state: {
-      sorting,
+      sorting: slowMovingSorting,
       columnFilters,
       columnVisibility,
       rowSelection
@@ -564,7 +664,7 @@ export function SalesReportsDataTable() {
   const topSellersTable = useReactTable({
     data: reportData?.reports.topSellers || [],
     columns: sellersColumns,
-    onSortingChange: setSorting,
+    onSortingChange: setSellersSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -573,7 +673,7 @@ export function SalesReportsDataTable() {
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     state: {
-      sorting,
+      sorting: sellersSorting,
       columnFilters,
       columnVisibility,
       rowSelection
@@ -738,9 +838,9 @@ export function SalesReportsDataTable() {
                   <div className='space-y-2'>
                     {reportData.reports.topItemsByQuantity
                       .slice(0, 5)
-                      .map((item) => (
+                      .map((item, idx) => (
                         <div
-                          key={item.batchId}
+                          key={idx}
                           className='flex items-center justify-between rounded border p-2'
                         >
                           <div>
@@ -748,12 +848,20 @@ export function SalesReportsDataTable() {
                               {item.product?.name}
                             </div>
                             <div className='text-muted-foreground text-sm'>
-                              {item.batchNumber}
+                              {item.product?.productCode}
                             </div>
+                            {item.hasBox && (
+                              <Badge variant='outline' className='mt-1 text-xs'>
+                                <Box className='mr-1 h-3 w-3' />
+                                Box: {item.boxSize} pcs/box
+                              </Badge>
+                            )}
                           </div>
                           <div className='text-right'>
                             <div className='font-bold'>
-                              {item.quantity} units
+                              {item.hasBox && item.boxQuantity > 0
+                                ? `${item.boxQuantity} boxes + ${item.remainingPieces} pcs`
+                                : `${item.quantity} ${item.UnitOfMeasure || 'units'}`}
                             </div>
                             <div className='text-sm'>
                               {new Intl.NumberFormat('en-US', {
@@ -780,9 +888,9 @@ export function SalesReportsDataTable() {
                   <div className='space-y-2'>
                     {reportData.reports.topItemsByRevenue
                       .slice(0, 5)
-                      .map((item) => (
+                      .map((item, idx) => (
                         <div
-                          key={item.batchId}
+                          key={idx}
                           className='flex items-center justify-between rounded border p-2'
                         >
                           <div>
@@ -790,8 +898,14 @@ export function SalesReportsDataTable() {
                               {item.product?.name}
                             </div>
                             <div className='text-muted-foreground text-sm'>
-                              {item.batchNumber}
+                              {item.product?.productCode}
                             </div>
+                            {item.hasBox && (
+                              <Badge variant='outline' className='mt-1 text-xs'>
+                                <Box className='mr-1 h-3 w-3' />
+                                Box: {item.boxSize} pcs/box
+                              </Badge>
+                            )}
                           </div>
                           <div className='text-right'>
                             <div className='font-bold'>
@@ -800,7 +914,11 @@ export function SalesReportsDataTable() {
                                 currency: 'ETB'
                               }).format(item.revenue)}
                             </div>
-                            <div className='text-sm'>{item.quantity} units</div>
+                            <div className='text-sm'>
+                              {item.hasBox && item.boxQuantity > 0
+                                ? `${item.boxQuantity} boxes + ${item.remainingPieces} pcs`
+                                : `${item.quantity} ${item.UnitOfMeasure || 'units'}`}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -853,9 +971,9 @@ export function SalesReportsDataTable() {
             reportData?.reports.topSellers || [],
             'Top Sellers',
             loading,
-            'user.name' // This is the key fix for the error
+            'user.name'
           )}
-        </TabsContent>{' '}
+        </TabsContent>
       </Tabs>
     </div>
   );

@@ -1,12 +1,12 @@
+/* eslint-disable react-hooks/error-boundaries */
 import { searchParamsCache } from '@/lib/searchparams';
-import { productBatchColumns } from './tables/columns';
+import { getAllBrands } from '@/service/brand';
+import { brandColumns } from './tables/columns';
 import { DataTable } from '@/components/ui/table/data-table';
-import { IProductBatch } from '@/models/Product';
-import { getAllProductBatches } from '@/service/productBatchService';
 
-type ProductBatchesListingPageProps = object;
+type BrandsListingPageProps = object;
 
-export default async function ProductBatchesListingPage({}: ProductBatchesListingPageProps) {
+export default async function BrandsListingPage({}: BrandsListingPageProps) {
   // ────────────────────────────────────────────────────────────────
   // Query-string inputs
   // ────────────────────────────────────────────────────────────────
@@ -16,18 +16,13 @@ export default async function ProductBatchesListingPage({}: ProductBatchesListin
 
   try {
     // Fetch data from API
-    const { data: productBatches, totalCount } = await getAllProductBatches({
-      page,
-      limit
-    });
+    const { brands, totalCount } = await getAllBrands({ page, limit });
 
     // ────────────────────────────────────────────────────────────────
-    // Client-side search filter (on batchNumber or product name)
+    // Client-side search filter
     // ────────────────────────────────────────────────────────────────
-    const filteredData = productBatches.filter(
-      (item: IProductBatch) =>
-        item.batchNumber?.toLowerCase().includes(search.toLowerCase()) ||
-        item.product?.name?.toLowerCase().includes(search.toLowerCase())
+    const filteredData = brands.filter((item) =>
+      item.name?.toLowerCase().includes(search.toLowerCase())
     );
 
     // ────────────────────────────────────────────────────────────────
@@ -38,17 +33,16 @@ export default async function ProductBatchesListingPage({}: ProductBatchesListin
     const paginatedData = filteredData.slice(startIndex, endIndex);
 
     return (
-      // eslint-disable-next-line react-hooks/error-boundaries
       <DataTable
         data={paginatedData}
         totalItems={totalCount}
-        columns={productBatchColumns}
+        columns={brandColumns}
       />
     );
-  } catch  {
+  } catch {
     return (
       <div className='p-4 text-red-500'>
-        Error loading product batches. Please try again later.
+        Error loading brands. Please try again later.
       </div>
     );
   }

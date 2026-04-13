@@ -14,7 +14,7 @@ import {
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 
-import { IconEdit, IconDotsVertical, IconTrash, IconCheck } from '@tabler/icons-react';
+import { IconEdit, IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -50,35 +50,10 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
     }
   };
 
-  // Filter unchecked stock corrections
-  const uncheckedCorrections = data.SellStockCorrection?.filter(
-    correction => !correction.isChecked
-  ) || [];
+
 
   // Get count of unchecked corrections
-  const hasUncheckedCorrections = uncheckedCorrections.length > 0;
 
-  // Handle marking as checked
-  const handleMarkCorrectionChecked = () => {
-    if (!data?.id) {
-      toast.error('Sell ID is missing.');
-      return;
-    }
-
-    if (!hasUncheckedCorrections) {
-      toast.info('No unchecked stock corrections found.');
-      return;
-    }
-
-    // If there's only one unchecked correction, navigate to mark it directly
-    if (uncheckedCorrections.length === 1) {
-      router.push(`/dashboard/Sell/SellCorrectionForm/marek/${data.id}`);
-      return;
-    }
-
-    // If multiple corrections, navigate to selection page
-      router.push(`/dashboard/Sell/SellCorrectionForm/marek/${data.id}`);
-  };
 
   return (
     <>
@@ -115,7 +90,7 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
             <Edit className='mr-2 h-4 w-4' /> View
           </DropdownMenuItem>
           
-          {data.saleStatus === 'DELIVERED' && (
+          {/* {data.saleStatus === 'DELIVERED' && (
             <PermissionGuard requiredPermission={PERMISSIONS.SELL_STOCK_CORRECTION.CREATE.name}>
               <DropdownMenuItem
                 onClick={() =>
@@ -127,10 +102,10 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
                 <Edit className='mr-2 h-4 w-4' /> Return Sell Correction
               </DropdownMenuItem>
             </PermissionGuard>
-          )}
+          )} */}
 
           {/* Add "Mark Correction as Checked" action */}
-          {hasUncheckedCorrections && (
+          {/* {hasUncheckedCorrections && (
             // <PermissionGuard requiredPermission={PERMISSIONS.SELL_STOCK_CORRECTION.MARK_AS_CHECKED.name}>
               <DropdownMenuItem
                 onClick={handleMarkCorrectionChecked}
@@ -144,7 +119,7 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
                 )}
               </DropdownMenuItem>
             // </PermissionGuard>
-          )}
+          )} */}
 
           <PermissionGuard requiredPermission={PERMISSIONS.SELL.DELETE.name}>
             <DropdownMenuItem onClick={() => setOpen(true)}>

@@ -224,22 +224,7 @@ export default async function SellListingPage({}: SellListingPageProps) {
           uncheckedCorrectionsFilter={uncheckedCorrectionsFilter}
         />
 
-        {/* Additional Filters Section */}
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex flex-wrap items-center gap-6">
-            {/* Unchecked Corrections Filter - Client Component */}
-            <UncheckedCorrectionsFilter
-              isChecked={uncheckedCorrectionsFilter}
-              count={uncheckedCorrectionsCount}
-              search={search}
-              limit={limit}
-              startDate={startDate}
-              endDate={endDate}
-              statusFilter={statusFilter}
-              employeeFilter={employeeFilter}
-            />
-          </div>
-        </div>
+       
 
         {/* Radio Group for Status Filter */}
         <RadioGroup

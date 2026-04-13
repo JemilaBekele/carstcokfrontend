@@ -20,14 +20,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { IProduct } from '@/models/Product';
 import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
-import { IUnitOfMeasure } from '@/models/UnitOfMeasure';
 import Select, { SingleValue } from 'react-select';
 import { Modal } from '@/components/ui/modal';
-import { getUnitsOfMeasure } from '@/service/UnitOfMeasure';
-import UnitOfMeasureForm from '../UnitOfMeasure/form';
 import { RefreshCw, Plus, Trash2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { IShop } from '@/models/shop';
+import { IBrand } from '@/models/brand';
+import { getBrands } from '@/service/brand';
 
 interface ProductFormValues {
   productCode: string;
@@ -35,10 +34,12 @@ interface ProductFormValues {
   generic?: string;
   description?: string;
   categoryId: string;
-  subCategoryId?: string;
-  unitOfMeasureId: string;
+  brandId?: string;
+  UnitOfMeasure?: string;
   sellPrice: number | null;
   imageUrl: string;
+  hasBox: boolean;
+  boxSize?: number | null;
   isActive: boolean;
   additionalPrices: {
     label: string;
@@ -57,7 +58,6 @@ interface ProductFormProps {
   pageTitle: string;
   categories?: { id: string; name: string }[];
   subCategories?: { id: string; name: string; categoryId: string }[];
-  unitsOfMeasure?: IUnitOfMeasure[];
   shops?: IShop[];
 }
 
@@ -65,24 +65,33 @@ export default function ProductForm({
   initialData,
   pageTitle,
   categories = [],
-  subCategories: initialSubCategories = [],
-  unitsOfMeasure: initialUnits = [],
   shops: initialShops = []
 }: ProductFormProps) {
   const router = useRouter();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [isRefreshingUnits, setIsRefreshingUnits] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [unitsOfMeasure, setUnitsOfMeasure] = useState<IUnitOfMeasure[]>(
-    initialUnits || []
-  );
-  const [isUnitModalOpen, setIsUnitModalOpen] = useState(false);
-  const [subCategories, setSubCategories] = useState<
-    { id: string; name: string; categoryId: string }[]
-  >(initialSubCategories || []);
+  const [brands, setBrands] = useState<IBrand[]>([]);
+  const [isLoadingBrands, setIsLoadingBrands] = useState(false);
 
-  // Use shops directly from props - no need to fetch since server component provides them
+  // Use shops directly from props
   const shops = initialShops;
+
+  // Fetch brands on component mount
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        setIsLoadingBrands(true);
+        const fetchedBrands = await getBrands();
+        setBrands(fetchedBrands || []);
+      } catch (error) {
+        console.error('Failed to fetch brands:', error);
+        toast.error('Failed to load brands');
+      } finally {
+        setIsLoadingBrands(false);
+      }
+    };
+    fetchBrands();
+  }, []);
 
   const defaultValues = useMemo<ProductFormValues>(
     () => ({
@@ -91,10 +100,12 @@ export default function ProductForm({
       generic: initialData?.generic || '',
       description: initialData?.description || '',
       categoryId: initialData?.categoryId || '',
-      subCategoryId: initialData?.subCategoryId || '',
-      unitOfMeasureId: initialData?.unitOfMeasureId || '',
+      brandId: initialData?.brandId || '',
+      UnitOfMeasure: initialData?.UnitOfMeasure || '',
       sellPrice: initialData?.sellPrice || null,
       imageUrl: initialData?.imageUrl || '',
+      hasBox: initialData?.hasBox ?? false,
+      boxSize: initialData?.boxSize || null,
       isActive: initialData?.isActive ?? true,
       additionalPrices: initialData?.AdditionalPrice?.map((price, index) => ({
         label: price.label || `Label ${index + 1}`,
@@ -117,34 +128,7 @@ export default function ProductForm({
     name: 'additionalPrices'
   });
 
-  // Filter subcategories when category changes
-  const selectedCategoryId = form.watch('categoryId');
-  useEffect(() => {
-    if (!selectedCategoryId) {
-      setSubCategories([]);
-      form.setValue('subCategoryId', '');
-      return;
-    }
-
-    // Filter subcategories based on selected category
-    const filteredSubCategories = initialSubCategories.filter(
-      (sub) => sub.categoryId === selectedCategoryId
-    );
-    setSubCategories(filteredSubCategories);
-
-    // Reset subcategory if the current one doesn't belong to the selected category
-    const currentSubCategoryId = form.getValues('subCategoryId');
-    if (currentSubCategoryId) {
-      const isValidSubCategory = filteredSubCategories.some(
-        (sub) => sub.id === currentSubCategoryId
-      );
-      if (!isValidSubCategory) {
-        form.setValue('subCategoryId', '');
-      }
-    }
-  }, [selectedCategoryId, form, initialSubCategories]);
-
-  // Handle image preview with normalized paths
+  // Handle image preview
   useEffect(() => {
     if (initialData?.imageUrl) {
       setPreviewImage(initialData.imageUrl);
@@ -153,24 +137,15 @@ export default function ProductForm({
     }
   }, [initialData]);
 
-  const unitOptions: SelectOption[] = useMemo(
-    () =>
-      (unitsOfMeasure || []).map((unit) => ({
-        value: unit.id,
-        label: `${unit.name}${unit.symbol ? ` (${unit.symbol})` : ''}`
-      })),
-    [unitsOfMeasure]
-  );
-
-  const shopOptions: SelectOption[] = useMemo(
+  const brandOptions: SelectOption[] = useMemo(
     () => [
-      { value: '', label: '' },
-      ...(shops || []).map((shop) => ({
-        value: shop.id,
-        label: shop.name
+      { value: '', label: 'None' },
+      ...(brands || []).map((brand) => ({
+        value: brand.id,
+        label: brand.name
       }))
     ],
-    [shops]
+    [brands]
   );
 
   const categoryOptions: SelectOption[] = useMemo(
@@ -178,27 +153,16 @@ export default function ProductForm({
     [categories]
   );
 
-  const subCategoryOptions: SelectOption[] = useMemo(
-    () =>
-      (subCategories || []).map((sub) => ({
-        value: sub.id,
-        label: sub.name
-      })),
-    [subCategories]
+  const shopOptions: SelectOption[] = useMemo(
+    () => [
+      { value: '', label: 'None' },
+      ...(shops || []).map((shop) => ({
+        value: shop.id,
+        label: shop.name
+      }))
+    ],
+    [shops]
   );
-
-  const refetchUnits = async () => {
-    try {
-      setIsRefreshingUnits(true);
-      const data = await getUnitsOfMeasure();
-      setUnitsOfMeasure(data || []);
-      toast.success('Units of measure refreshed');
-    } catch  {
-      toast.error('Failed to refresh units');
-    } finally {
-      setIsRefreshingUnits(false);
-    }
-  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -227,14 +191,16 @@ export default function ProductForm({
         isActive:
           typeof data.isActive === 'string'
             ? data.isActive === 'true'
-            : Boolean(data.isActive)
+            : Boolean(data.isActive),
+        hasBox: Boolean(data.hasBox),
+        boxSize: data.hasBox ? data.boxSize : null
       };
 
       const { additionalPrices, ...formValues } = processedData;
 
       // Append main product data
       Object.entries(formValues).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
+        if (value !== undefined && value !== null && value !== '') {
           if (typeof value === 'boolean') {
             formData.append(key, value.toString());
           } else {
@@ -245,13 +211,15 @@ export default function ProductForm({
 
       // Append additional prices
       additionalPrices.forEach((price, index) => {
-        formData.append(`additionalPrices[${index}][label]`, price.label);
-        formData.append(
-          `additionalPrices[${index}][price]`,
-          price.price.toString()
-        );
-        if (price.shopId) {
-          formData.append(`additionalPrices[${index}][shopId]`, price.shopId);
+        if (price.label && price.price > 0) {
+          formData.append(`additionalPrices[${index}][label]`, price.label);
+          formData.append(
+            `additionalPrices[${index}][price]`,
+            price.price.toString()
+          );
+          if (price.shopId) {
+            formData.append(`additionalPrices[${index}][shopId]`, price.shopId);
+          }
         }
       });
 
@@ -270,7 +238,7 @@ export default function ProductForm({
         const createdProduct = await createProduct(formData);
         toast.success('Product created successfully');
         router.push(
-          `/dashboard/Products/ProductBatch?id=${createdProduct.product.id}`
+          `/dashboard/Products`
         );
       }
       router.refresh();
@@ -337,6 +305,9 @@ export default function ProductForm({
       shopId: ''
     });
   };
+
+  // Watch hasBox to conditionally show boxSize field
+  const hasBox = form.watch('hasBox');
 
   return (
     <>
@@ -434,6 +405,57 @@ export default function ProductForm({
                     )}
                   />
 
+                  {/* Box Support Section */}
+                  <FormField
+                    control={form.control}
+                    name='hasBox'
+                    render={({ field }) => (
+                      <FormItem className='flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm'>
+                        <div className='space-y-0.5'>
+                          <FormLabel>Has Box/Packaging</FormLabel>
+                          <div className='text-muted-foreground text-sm'>
+                            {field.value
+                              ? 'Product is sold in boxes/packs'
+                              : 'Product is sold individually'}
+                          </div>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  {hasBox && (
+                    <FormField
+                      name='boxSize'
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Box Size (Quantity per Box)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type='number'
+                              min='1'
+                              placeholder='e.g., 12'
+                              value={field.value === null ? '' : field.value}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                field.onChange(
+                                  value === '' ? null : parseInt(value)
+                                );
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
                   {/* Active Status Switch */}
                   <FormField
                     control={form.control}
@@ -462,60 +484,22 @@ export default function ProductForm({
                 {/* Right Column */}
                 <div className='space-y-4'>
                   <FormField
-                    name='unitOfMeasureId'
+                    name='UnitOfMeasure'
                     control={form.control}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className='flex items-center justify-between'>
-                          <span>Unit of Measure</span>
-                          <div className='flex gap-2'>
-                            <Button
-                              type='button'
-                              variant='outline'
-                              size='sm'
-                              onClick={refetchUnits}
-                              disabled={isRefreshingUnits}
-                              className='h-8 w-8 p-0'
-                              title='Refresh units'
-                            >
-                              <RefreshCw
-                                className={`h-4 w-4 ${isRefreshingUnits ? 'animate-spin' : ''}`}
-                              />
-                            </Button>
-                            <Button
-                              type='button'
-                              variant='link'
-                              size='sm'
-                              onClick={() => setIsUnitModalOpen(true)}
-                            >
-                              + Add New
-                            </Button>
-                          </div>
-                        </FormLabel>
+                        <FormLabel>Unit of Measure</FormLabel>
                         <FormControl>
-                          <Select
-                            options={unitOptions}
-                            value={
-                              unitOptions.find(
-                                (option) => option.value === field.value
-                              ) || null
-                            }
-                            onChange={(selectedOption) => {
-                              field.onChange(selectedOption?.value || '');
-                            }}
-                            onBlur={field.onBlur}
-                            placeholder='Search or select a unit...'
-                            isSearchable
-                            isClearable
-                            className='react-select-container'
-                            classNamePrefix='react-select'
-                            styles={isDark ? darkStyles : {}}
+                          <Input
+                            placeholder='e.g., Tablet, Capsule, Bottle'
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     name='categoryId'
                     control={form.control}
@@ -539,36 +523,29 @@ export default function ProductForm({
                       </FormItem>
                     )}
                   />
+
                   <FormField
-                    name='subCategoryId'
+                    name='brandId'
                     control={form.control}
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Subcategory (Optional)</FormLabel>
+                        <FormLabel>Brand (Optional)</FormLabel>
                         <FormControl>
                           <Select
-                            isDisabled={!selectedCategoryId}
-                            options={subCategoryOptions}
-                            onChange={(
-                              option: SingleValue<{
-                                value: string;
-                                label: string;
-                              }>
-                            ) => field.onChange(option?.value)}
+                            options={brandOptions}
+                            onChange={(option) => field.onChange(option?.value)}
                             value={
-                              field.value
-                                ? subCategoryOptions.find(
-                                    (s) => s.value === field.value
-                                  ) || null
-                                : null
+                              brandOptions.find(
+                                (b) => b.value === field.value
+                              ) || null
                             }
                             placeholder={
-                              !selectedCategoryId
-                                ? 'Select a category first'
-                                : subCategoryOptions.length === 0
-                                  ? 'No subcategories available'
-                                  : 'Select a subcategory'
+                              isLoadingBrands
+                                ? 'Loading brands...'
+                                : 'Select a brand'
                             }
+                            isDisabled={isLoadingBrands}
+                            isClearable
                             styles={isDark ? darkStyles : {}}
                           />
                         </FormControl>
@@ -748,21 +725,6 @@ export default function ProductForm({
           </Form>
         </CardContent>
       </Card>
-      <Modal
-        title='Add Unit of Measure'
-        description='Create a new unit of measure'
-        isOpen={isUnitModalOpen}
-        onClose={() => {
-          setIsUnitModalOpen(false);
-          refetchUnits();
-        }}
-        size='md'
-      >
-        <UnitOfMeasureForm
-          initialData={null}
-          closeModal={() => setIsUnitModalOpen(false)}
-        />
-      </Modal>
     </>
   );
 }

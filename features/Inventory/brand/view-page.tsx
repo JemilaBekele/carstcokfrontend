@@ -5,18 +5,18 @@ import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Modal } from '@/components/ui/modal';
 import { buttonVariants } from '@/components/ui/button';
-import { ISubCategory } from '@/models/Category';
-import SubCategoryForm from './form'; // Adjust the path as needed
+import { IBrand } from '@/models/brand';
+import BrandForm from './form'; // Adjust path if needed
 
-interface SubCategoryModalProps {
-  initialData?: ISubCategory | null;
+interface BrandModalProps {
+  initialData?: IBrand | null;
   pageTitle?: string;
 }
 
-export default function SubCategoryModal({
+export default function BrandModal({
   initialData = null,
-  pageTitle = 'Add New Subcategory'
-}: SubCategoryModalProps) {
+  pageTitle = 'Add New Brand'
+}: BrandModalProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
 
@@ -34,22 +34,22 @@ export default function SubCategoryModal({
           buttonVariants({ variant: 'default' }) + ' text-xs md:text-sm'
         }
       >
-        <Plus className='mr-2 h-4 w-4' />
-        {initialData ? 'Edit Subcategory' : 'Add New Subcategory'}
+        <Plus className='w-4 h-4 mr-2' />
+        {initialData ? 'Edit Brand' : 'Add New Brand'}
       </button>
 
       <Modal
-        title={initialData ? 'Edit Subcategory' : pageTitle}
+        title={initialData ? 'Edit Brand' : pageTitle}
         description={
           initialData
-            ? 'Update the subcategory details below.'
-            : 'Fill in the details below to add a new subcategory.'
+            ? 'Update the brand details below.'
+            : 'Fill in the details below to add a new brand.'
         }
         isOpen={isModalOpen}
         onClose={handleModalClose}
         size='xl'
       >
-        <SubCategoryForm
+        <BrandForm
           closeModal={handleModalClose}
           initialData={initialData || null}
           isEdit={!!initialData}

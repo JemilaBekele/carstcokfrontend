@@ -1,62 +1,59 @@
 import { ICategory } from './Category';
 import { IShop } from './shop';
-import { IShopStock } from './store';
-import { IUnitOfMeasure } from './UnitOfMeasure';
+import { IBrand } from './brand';
+
+export interface IProduct {
+  id: string;
+
+  productCode: string;
+  name: string;
+  generic?: string;
+  description?: string;
+
+  imageUrl?: string;
+
+  sellPrice?: number;
+
+  categoryId: string;
+  category: ICategory;
+
+  brandId?: string;
+  brand?: IBrand;
+
+  // ✅ Box Support
+  hasBox: boolean;
+  boxSize?: number;
+
+  // ✅ Unit
+  UnitOfMeasure?: string;
+
+  isActive: boolean;
+
+  createdAt: string;
+  updatedAt: string;
+
+  // ✅ Stock Summary
+  stockSummary: IStockSummary;
+
+  // ✅ Overall totals
+  overallTotals: IOverallTotals;
+
+  // ✅ Additional price
+  AdditionalPrice: IAdditionalPrice[];
+}
 
 export interface IAdditionalPrice {
   id: string;
   label?: string;
   price: number;
-  batchId: string;
-  shopId: string;
-  shop?: IShop;
-  createdAt: string;
-  updatedAt: string;
-}
-export interface IProduct {
-  id: string;
-  imageUrl?: string;
 
-  productCode: string;
-  generic?: string;
-  name: string;
-  description?: string;
-  unitOfMeasureId: string; // foreign key
-  unitOfMeasure?: IUnitOfMeasure;
-  unit: string;
-
-  sellPrice: number;
-
-  categoryId: string;
-  subCategoryId?: string;
-
-  isActive: boolean;
-  additionalPrices?: IAdditionalPrice[];
-  batches?: IProductBatch[];
-  createdAt: string;
-  updatedAt: string;
-  stockSummary: IStockSummary;
-  category: ICategory;
-  subCategory?: ICategory;
-  overallTotals: IOverallTotals;
-  AdditionalPrice: IAdditionalPrice[];
-  // Added overallTotals property
-}
-export interface IProductBatch {
-  id: string;
-  batchNumber: string;
-  expiryDate?: string;
   productId: string;
-  // ISO date string
-  price?: number;
-  stock?: number;
-  warningQuantity?: number;
-  availableQuantity?: number;
-  storeId?: string;
-  ShopStock: IShopStock[];
+
+  shopId?: string;
+  shop?: IShop;
+
   createdAt: string;
   updatedAt: string;
-  product?: IProduct;
 }
 
 export interface IStockSummary {
@@ -67,6 +64,7 @@ export interface IStockSummary {
       branchName?: string;
     };
   };
+
   storeStocks: {
     [storeName: string]: {
       quantity: number;
@@ -74,6 +72,7 @@ export interface IStockSummary {
       branchName?: string;
     };
   };
+
   totalShopStock: number;
   totalStoreStock: number;
   totalStock: number;

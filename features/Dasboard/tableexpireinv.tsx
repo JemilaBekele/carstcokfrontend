@@ -18,41 +18,49 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { InventoryDashboardApi } from '@/service/invarelDash';
-import { AlertTriangle, AlertCircle, TrendingUp, Clock, Package } from 'lucide-react';
+import { AlertTriangle, AlertCircle, TrendingUp, Clock, Package, ShoppingCart, PackageOpen, Box } from 'lucide-react';
 
 interface InventoryItem {
-  _id: any;
+  totalQuantityPurchased: number;
   id?: string;
+  productId?: string;
   productName: string;
   productCode: string;
-  batchNumber?: string;
-  batchDate?: string;
-  expiryDate?: string;
   quantity?: number | string;
   totalQuantity?: number | string;
   currentStock?: number | string;
-  totalCostValue?: number | string;
-  totalRetailValue?: number | string;
-  daysInInventory?: number;
+  totalValue?: number | string;
   inventoryValue?: number | string;
   category?: string;
   categoryName?: string;
+  brand?: string;
+  brandName?: string;
   warningQuantity?: number | string;
-  batchId?: string;
   sellPrice?: number | string;
   unitPrice?: number | string;
-  daysUntilExpiry?: number;
+  avgPrice?: number | string;
+  avgCost?: number | string;
+  totalRevenue?: number | string;
+  totalCost?: number | string;
+  numberOfSales?: number;
+  numberOfPurchases?: number;
   alertType?: 'LOW_STOCK' | 'OUT_OF_STOCK';
   stockPercentage?: number;
+  daysInInventory?: number;
+  hasBox?: boolean;
+  boxSize?: number | null;
+  UnitOfMeasure?: string | null;
+  totalQuantitySold?: number | string;
 }
 
 interface InventoryData {
   alerts: {
-    expiringSoon: InventoryItem[];
     lowStockItems: InventoryItem[];
   };
   tables: {
     topItems: InventoryItem[];
+    topSoldItems: InventoryItem[];
+    topPurchasedItems: InventoryItem[];
     agingReport: InventoryItem[];
   };
   lastUpdated: string;
@@ -70,7 +78,7 @@ export function TableDashboard() {
       try {
         const data = await InventoryDashboardApi.getDashboard();
         setInventoryData(data);
-      } catch  {
+      } catch {
         setError('Failed to load dashboard data. Please try again later.');
       } finally {
         setLoading(false);
@@ -116,58 +124,18 @@ export function TableDashboard() {
 
   const { alerts, tables } = inventoryData;
 
-  // Helper function to calculate days until expiry
-  const calculateDaysUntilExpiry = (expiryDate: string | undefined) => {
-    if (!expiryDate) return null;
-    const expiry = new Date(expiryDate);
-    const now = new Date();
-    const diffTime = expiry.getTime() - now.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  // Helper function to get expiry alert colors
-  const getExpiryAlertColors = (daysUntilExpiry: number | null) => {
-    if (daysUntilExpiry === null) {
-      return {
-        bg: 'bg-muted/30 dark:bg-muted/10',
-        text: 'text-foreground',
-        border: 'border-l-4 border-l-muted',
-        badgeBg: 'bg-gray-100 dark:bg-gray-800',
-        badgeText: 'text-gray-800 dark:text-gray-200',
-        iconColor: 'text-gray-600 dark:text-gray-400'
-      };
+  // Helper function to format quantity display with box support
+  const formatQuantity = (item: InventoryItem, quantity: number) => {
+    if (item.hasBox && item.boxSize && item.boxSize > 0) {
+      const boxes = Math.floor(quantity / item.boxSize);
+      const pieces = quantity % item.boxSize;
+      if (boxes > 0 && pieces > 0) {
+        return `${boxes} box(es) + ${pieces} pcs`;
+      } else if (boxes > 0) {
+        return `${boxes} box(es)`;
+      }
     }
-
-    if (daysUntilExpiry <= 180) { // 6 months or less
-      return {
-        bg: 'bg-red-50 dark:bg-red-950/20',
-        text: 'text-red-700 dark:text-red-300',
-        border: 'border-l-4 border-l-red-500 dark:border-l-red-400',
-        badgeBg: 'bg-red-100 dark:bg-red-900/30',
-        badgeText: 'text-red-800 dark:text-red-300',
-        iconColor: 'text-red-600 dark:text-red-400'
-      };
-    }
-
-    if (daysUntilExpiry <= 365) { // 1 year or less
-      return {
-        bg: 'bg-amber-50 dark:bg-amber-950/20',
-        text: 'text-amber-700 dark:text-amber-300',
-        border: 'border-l-4 border-l-amber-500 dark:border-l-amber-400',
-        badgeBg: 'bg-amber-100 dark:bg-amber-900/30',
-        badgeText: 'text-amber-800 dark:text-amber-300',
-        iconColor: 'text-amber-600 dark:text-amber-400'
-      };
-    }
-
-    return {
-      bg: 'bg-green-50 dark:bg-green-950/20',
-      text: 'text-green-700 dark:text-green-300',
-      border: 'border-l-4 border-l-green-500 dark:border-l-green-400',
-      badgeBg: 'bg-green-100 dark:bg-green-900/30',
-      badgeText: 'text-green-800 dark:text-green-300',
-      iconColor: 'text-green-600 dark:text-green-400'
-    };
+    return `${quantity} ${item.UnitOfMeasure || 'units'}`;
   };
 
   // Helper function to get stock alert colors
@@ -245,7 +213,7 @@ export function TableDashboard() {
       };
     }
 
-    if (daysInInventory >= 365) { // 1 year or more
+    if (daysInInventory >= 365) {
       return {
         bg: 'bg-red-50 dark:bg-red-950/20',
         text: 'text-red-700 dark:text-red-300',
@@ -255,7 +223,7 @@ export function TableDashboard() {
       };
     }
 
-    if (daysInInventory >= 180) { // 6 months or more
+    if (daysInInventory >= 180) {
       return {
         bg: 'bg-amber-50 dark:bg-amber-950/20',
         text: 'text-amber-700 dark:text-amber-300',
@@ -265,7 +233,7 @@ export function TableDashboard() {
       };
     }
 
-    if (daysInInventory >= 90) { // 3 months or more
+    if (daysInInventory >= 90) {
       return {
         bg: 'bg-yellow-50 dark:bg-yellow-950/20',
         text: 'text-yellow-700 dark:text-yellow-300',
@@ -287,20 +255,7 @@ export function TableDashboard() {
   return (
     <div className='@container/dashboard space-y-6 p-4'>
       {/* Stats Cards Row */}
-      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Expiring Soon</CardTitle>
-            <AlertTriangle className='h-4 w-4 text-red-500' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>{alerts.expiringSoon.length}</div>
-            <p className='text-xs text-muted-foreground'>
-              Items expiring within 1 year
-            </p>
-          </CardContent>
-        </Card>
-
+      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5'>
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>Low Stock</CardTitle>
@@ -316,7 +271,7 @@ export function TableDashboard() {
 
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Top Items</CardTitle>
+            <CardTitle className='text-sm font-medium'>Top Items by Value</CardTitle>
             <TrendingUp className='h-4 w-4 text-green-500' />
           </CardHeader>
           <CardContent>
@@ -329,26 +284,52 @@ export function TableDashboard() {
 
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Top Sold</CardTitle>
+            <ShoppingCart className='h-4 w-4 text-blue-500' />
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold'>{tables.topSoldItems?.length || 0}</div>
+            <p className='text-xs text-muted-foreground'>
+              Best selling products
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Top Purchased</CardTitle>
+            <Package className='h-4 w-4 text-purple-500' />
+          </CardHeader>
+          <CardContent>
+            <div className='text-2xl font-bold'>{tables.topPurchasedItems?.length || 0}</div>
+            <p className='text-xs text-muted-foreground'>
+              Most purchased products
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>Aging Items</CardTitle>
-            <Clock className='h-4 w-4 text-blue-500' />
+            <Clock className='h-4 w-4 text-orange-500' />
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold'>{tables.agingReport.length}</div>
             <p className='text-xs text-muted-foreground'>
-              Items older than 30 days
+              Items in inventory
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Two Column Layout for Alerts */}
+      {/* Two Column Layout for Alerts and Top Items */}
       <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
-        {/* Left Column: Expiring Soon */}
+        {/* Left Column: Low Stock Items */}
         <Card className='@container/card h-full'>
           <CardHeader className='pb-3'>
-            <CardTitle className='text-xl'>Expiring Soon</CardTitle>
+            <CardTitle className='text-xl'>Low Stock Alert</CardTitle>
             <CardDescription className='text-base'>
-              Items nearing their expiry date
+              Items below warning quantity
             </CardDescription>
           </CardHeader>
           <CardContent className='p-0'>
@@ -356,101 +337,67 @@ export function TableDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className='text-lg font-semibold'>
-                      Item Name
-                    </TableHead>
-                    <TableHead className='text-lg font-semibold'>
-                      Batch Number
-                    </TableHead>
-                    <TableHead className='text-lg font-semibold'>
-                      Expiry Date
-                    </TableHead>
-                    <TableHead className='text-lg font-semibold'>
-                      Days Left
-                    </TableHead>
-                    <TableHead className='text-lg font-semibold'>
-                      Quantity
-                    </TableHead>
+                    <TableHead className='text-lg font-semibold'>Item Name</TableHead>
+                    <TableHead className='text-lg font-semibold'>Current Stock</TableHead>
+                    <TableHead className='text-lg font-semibold'>Warning Level</TableHead>
+                    <TableHead className='text-lg font-semibold'>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {alerts.expiringSoon.length > 0 ? (
-                    alerts.expiringSoon.map((item, index) => {
-                      const daysUntilExpiry = item.daysUntilExpiry || calculateDaysUntilExpiry(item.expiryDate);
-                      const colors = getExpiryAlertColors(daysUntilExpiry);
+                  {alerts.lowStockItems.length > 0 ? (
+                    alerts.lowStockItems.map((item, index) => {
+                      const colors = getStockAlertColors(item);
+                      const currentStock = Number(item.currentStock || 0);
+                      const warningQuantity = Number(item.warningQuantity || 0);
+                      const stockPercentage = item.stockPercentage || 
+                        (warningQuantity > 0 ? (currentStock / warningQuantity) * 100 : 0);
 
                       return (
                         <TableRow
-                          key={`${item.batchId}-${index}`}
+                          key={`${item.id}-${index}`}
                           className={`hover:bg-muted/50 ${colors.bg} ${colors.border}`}
                         >
                           <TableCell className={`py-3 text-base font-medium ${colors.text}`}>
                             <div className="flex items-center gap-2">
                               {item.productName}
-                              {daysUntilExpiry !== null && daysUntilExpiry <= 180 && (
-                                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${colors.badgeBg} ${colors.badgeText}`}>
-                                  <AlertTriangle className="h-3 w-3" />
-                                  URGENT
-                                </span>
-                              )}
-                              {daysUntilExpiry !== null && daysUntilExpiry > 180 && daysUntilExpiry <= 365 && (
-                                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${colors.badgeBg} ${colors.badgeText}`}>
-                                  <AlertCircle className="h-3 w-3" />
-                                  WARNING
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className={`py-3 text-base ${colors.text}`}>
-                            {item.batchNumber || 'N/A'}
-                          </TableCell>
-                          <TableCell className={`py-3 text-base ${colors.text}`}>
-                            <div className="flex flex-col">
-                              <span>
-                                {item.expiryDate
-                                  ? new Date(item.expiryDate).toLocaleDateString()
-                                  : 'N/A'}
+                              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${colors.badgeBg} ${colors.badgeText}`}>
+                                {colors.status}
                               </span>
-                              {item.expiryDate && (
-                                <span className="text-sm opacity-70">
-                                  {new Date(item.expiryDate).toLocaleDateString('en-US', {
-                                    weekday: 'short',
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric'
-                                  })}
-                                </span>
-                              )}
                             </div>
-                          </TableCell>
-                          <TableCell className={`py-3 text-base font-medium ${colors.text}`}>
-                            {daysUntilExpiry !== null ? (
-                              <div className="flex items-center gap-2">
-                                <span>{daysUntilExpiry} days</span>
-                                {daysUntilExpiry <= 180 && (
-                                  <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                                )}
-                                {daysUntilExpiry > 180 && daysUntilExpiry <= 365 && (
-                                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                                )}
-                              </div>
-                            ) : (
-                              'N/A'
+                            {item.brandName && (
+                              <div className="text-xs opacity-70 mt-1">{item.brandName}</div>
                             )}
                           </TableCell>
                           <TableCell className={`py-3 text-base ${colors.text}`}>
-                            {Number(item.totalQuantity || item.quantity || 0)}
+                            <div className="flex items-center gap-2">
+                              {formatQuantity(item, currentStock)}
+                              {currentStock === 0 && (
+                                <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className={`py-3 text-base ${colors.text}`}>
+                            {warningQuantity} {item.UnitOfMeasure || 'units'}
+                          </TableCell>
+                          <TableCell className={`py-3 text-base ${colors.text}`}>
+                            <div className="flex flex-col gap-1">
+                              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${colors.badgeBg} ${colors.badgeText}`}>
+                                {colors.status}
+                              </span>
+                              {currentStock > 0 && (
+                                <div className="text-xs opacity-70">
+                                  {Math.round(stockPercentage)}% of warning level
+                                </div>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
                     })
                   ) : (
                     <TableRow>
-                      <TableCell
-                        colSpan={5}
-                        className='py-8 text-center text-lg'
-                      >
-                        No items expiring soon
+                      <TableCell colSpan={4} className='py-8 text-center text-lg'>
+                        No low stock items
                       </TableCell>
                     </TableRow>
                   )}
@@ -460,165 +407,218 @@ export function TableDashboard() {
           </CardContent>
         </Card>
 
-        {/* Right Column: Low Stock Items and Top Items stacked */}
-        <div className='space-y-6'>
-          {/* Low Stock Items */}
-          <Card className='@container/card'>
-            <CardHeader className='pb-3'>
-              <CardTitle className='text-xl'>Low Stock Alert</CardTitle>
-              <CardDescription className='text-base'>
-                Items below warning quantity
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='p-0'>
-              <div className='overflow-x-auto'>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className='text-lg font-semibold'>
-                        Item Name
-                      </TableHead>
-                      <TableHead className='text-lg font-semibold'>
-                        Current Stock
-                      </TableHead>
-                      <TableHead className='text-lg font-semibold'>
-                        Warning Level
-                      </TableHead>
-                      <TableHead className='text-lg font-semibold'>
-                        Status
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {alerts.lowStockItems.length > 0 ? (
-                      alerts.lowStockItems.map((item, index) => {
-                        const colors = getStockAlertColors(item);
-                        const currentStock = Number(item.currentStock || 0);
-                        const warningQuantity = Number(item.warningQuantity || 0);
-                        const stockPercentage = item.stockPercentage || 
-                          (warningQuantity > 0 ? (currentStock / warningQuantity) * 100 : 0);
+        {/* Right Column: Top Items by Value */}
+        <Card className='@container/card'>
+          <CardHeader className='pb-3'>
+            <CardTitle className='text-xl'>Top Items by Inventory Value</CardTitle>
+            <CardDescription className='text-base'>
+              Items with highest stock value
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='p-0'>
+            <div className='overflow-x-auto'>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className='text-lg font-semibold'>Item Name</TableHead>
+                    <TableHead className='text-lg font-semibold'>Quantity</TableHead>
+                    <TableHead className='text-lg font-semibold'>Total Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tables.topItems.length > 0 ? (
+                    tables.topItems.map((item, index) => {
+                      const totalQuantity = Number(item.totalQuantity || 0);
+                      const totalValue = Number(item.totalValue || 0);
+                      const unitPrice = Number(item.unitPrice || 0);
+                      const isTopItem = index < 3;
 
-                        return (
-                          <TableRow
-                            key={`${item._id}-${index}`}
-                            className={`hover:bg-muted/50 ${colors.bg} ${colors.border}`}
-                          >
-                            <TableCell className={`py-3 text-base font-medium ${colors.text}`}>
-                              <div className="flex items-center gap-2">
-                                {item.productName}
-                                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${colors.badgeBg} ${colors.badgeText}`}>
-                                  {colors.status}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell className={`py-3 text-base ${colors.text}`}>
-                              <div className="flex items-center gap-2">
-                                {currentStock}
-                                {currentStock === 0 && (
-                                  <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className={`py-3 text-base ${colors.text}`}>
-                              {warningQuantity}
-                            </TableCell>
-                            <TableCell className={`py-3 text-base ${colors.text}`}>
-                              <div className="flex flex-col gap-1">
-                                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${colors.badgeBg} ${colors.badgeText}`}>
-                                  {colors.status}
-                                </span>
-                                {currentStock > 0 && (
-                                  <div className="text-xs opacity-70">
-                                    {Math.round(stockPercentage)}% of warning level
-                                  </div>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan={4}
-                          className='py-8 text-center text-lg'
+                      return (
+                        <TableRow
+                          key={`${item.productCode}-${index}`}
+                          className={`hover:bg-muted/50`}
                         >
-                          No low stock items
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Top Items */}
-          <Card className='@container/card'>
-            <CardHeader className='pb-3'>
-              <CardTitle className='text-xl'>Top Items by Quantity</CardTitle>
-              <CardDescription className='text-base'>
-                Items with highest stock Quantity
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='p-0'>
-              <div className='overflow-x-auto'>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className='text-lg font-semibold'>
-                        Item Name
-                      </TableHead>
-                      <TableHead className='text-lg font-semibold'>
-                        Quantity
-                      </TableHead>
-                     
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {tables.topItems.length > 0 ? (
-                      tables.topItems.map((item, index) => {
-                        const totalQuantity = Number(item.totalQuantity || 0);
-                        const isTopItem = index < 3;
-
-                        return (
-                          <TableRow
-                            key={`${item.productCode}-${index}`}
-                            className={`hover:bg-muted/50 `}
-                          >
-                            <TableCell className='py-3 text-base font-medium'>
-                              <div className="flex items-center gap-2">
-                                {item.productName}
-                                {isTopItem && (
-                                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                                    <TrendingUp className="h-3 w-3" />
-                                    TOP {index + 1}
-                                  </span>
-                                )}
+                          <TableCell className='py-3 text-base font-medium'>
+                            <div className="flex items-center gap-2">
+                              {item.productName}
+                              {isTopItem && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                  <TrendingUp className="h-3 w-3" />
+                                  TOP {index + 1}
+                                </span>
+                              )}
+                            </div>
+                            {item.brand && (
+                              <div className="text-xs text-muted-foreground mt-1">{item.brand}</div>
+                            )}
+                            {item.hasBox && item.boxSize && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                                <Box className="h-3 w-3" />
+                                Box: {item.boxSize} pcs/box
                               </div>
-                            </TableCell>
-                            <TableCell className='py-3 text-base'>
-                              {totalQuantity.toLocaleString()}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan={3}
-                          className='py-8 text-center text-lg'
-                        >
-                          No top items available
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                            )}
+                          </TableCell>
+                          <TableCell className='py-3 text-base'>
+                            {formatQuantity(item, totalQuantity)}
+                          </TableCell>
+                        
+                          <TableCell className='py-3 text-base font-semibold'>
+                            {totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className='py-8 text-center text-lg'>
+                        No top items available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top Sold Items and Top Purchased Items - Side by Side */}
+      <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+        {/* Top Sold Items */}
+        <Card className='@container/card'>
+          <CardHeader className='pb-3'>
+            <CardTitle className='text-xl'>Top Sold Items</CardTitle>
+            <CardDescription className='text-base'>
+              Best selling products by quantity
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='p-0'>
+            <div className='overflow-x-auto'>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className='text-lg font-semibold'>Product</TableHead>
+                    <TableHead className='text-lg font-semibold'>Quantity Sold</TableHead>
+                    <TableHead className='text-lg font-semibold'>Revenue</TableHead>
+                    <TableHead className='text-lg font-semibold'>Avg Price</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tables.topSoldItems?.length > 0 ? (
+                    tables.topSoldItems.map((item, index) => {
+                      const totalQuantitySold = Number(item.totalQuantitySold || 0);
+                      const totalRevenue = Number(item.totalRevenue || 0);
+                      const avgPrice = Number(item.avgPrice || 0);
+                      const isTopItem = index < 3;
+
+                      return (
+                        <TableRow key={`${item.productId}-${index}`} className='hover:bg-muted/50'>
+                          <TableCell className='py-3 text-base font-medium'>
+                            <div className="flex items-center gap-2">
+                              {item.productName}
+                              {isTopItem && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                  <TrendingUp className="h-3 w-3" />
+                                  TOP {index + 1}
+                                </span>
+                              )}
+                            </div>
+                            {item.brand && (
+                              <div className="text-xs text-muted-foreground mt-1">{item.brand}</div>
+                            )}
+                          </TableCell>
+                          <TableCell className='py-3 text-base'>
+                            {formatQuantity(item, totalQuantitySold)}
+                          </TableCell>
+                          <TableCell className='py-3 text-base font-semibold text-green-600'>
+                            {totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell className='py-3 text-base'>
+                            {avgPrice.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className='py-8 text-center text-lg'>
+                        No sold items data available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Top Purchased Items */}
+        <Card className='@container/card'>
+          <CardHeader className='pb-3'>
+            <CardTitle className='text-xl'>Top Purchased Items</CardTitle>
+            <CardDescription className='text-base'>
+              Most purchased products by quantity
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='p-0'>
+            <div className='overflow-x-auto'>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className='text-lg font-semibold'>Product</TableHead>
+                    <TableHead className='text-lg font-semibold'>Quantity Purchased</TableHead>
+                    <TableHead className='text-lg font-semibold'>Total Cost</TableHead>
+                    <TableHead className='text-lg font-semibold'>Avg Cost</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tables.topPurchasedItems?.length > 0 ? (
+                    tables.topPurchasedItems.map((item, index) => {
+                      const totalQuantityPurchased = Number(item.totalQuantityPurchased || 0);
+                      const totalCost = Number(item.totalCost || 0);
+                      const avgCost = Number(item.avgCost || 0);
+                      const isTopItem = index < 3;
+
+                      return (
+                        <TableRow key={`${item.productId}-${index}`} className='hover:bg-muted/50'>
+                          <TableCell className='py-3 text-base font-medium'>
+                            <div className="flex items-center gap-2">
+                              {item.productName}
+                              {isTopItem && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                                  <Package className="h-3 w-3" />
+                                  TOP {index + 1}
+                                </span>
+                              )}
+                            </div>
+                            {item.brand && (
+                              <div className="text-xs text-muted-foreground mt-1">{item.brand}</div>
+                            )}
+                          </TableCell>
+                          <TableCell className='py-3 text-base'>
+                            {formatQuantity(item, totalQuantityPurchased)}
+                          </TableCell>
+                          <TableCell className='py-3 text-base font-semibold text-purple-600'>
+                            {totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell className='py-3 text-base'>
+                            {avgCost.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className='py-8 text-center text-lg'>
+                        No purchased items data available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Aging Report - Full Width */}
@@ -634,21 +634,12 @@ export function TableDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className='text-lg font-semibold'>
-                    Item Name
-                  </TableHead>
-                  <TableHead className='text-lg font-semibold'>
-                    Batch Number
-                  </TableHead>
-                  <TableHead className='text-lg font-semibold'>
-                    Quantity
-                  </TableHead>
-                  <TableHead className='text-lg font-semibold'>
-                    Days in Inventory
-                  </TableHead>
-                  <TableHead className='text-lg font-semibold'>
-                    Status
-                  </TableHead>
+                  <TableHead className='text-lg font-semibold'>Item Name</TableHead>
+                  <TableHead className='text-lg font-semibold'>Brand</TableHead>
+                  <TableHead className='text-lg font-semibold'>Quantity</TableHead>
+                  <TableHead className='text-lg font-semibold'>Days in Inventory</TableHead>
+                  <TableHead className='text-lg font-semibold'>Inventory Value</TableHead>
+                  <TableHead className='text-lg font-semibold'>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -656,6 +647,8 @@ export function TableDashboard() {
                   tables.agingReport.map((item, index) => {
                     const colors = getAgingAlertColors(item.daysInInventory);
                     const daysInInventory = item.daysInInventory || 0;
+                    const quantity = Number(item.quantity || 0);
+                    const inventoryValue = Number(item.inventoryValue || 0);
 
                     return (
                       <TableRow
@@ -663,13 +656,21 @@ export function TableDashboard() {
                         className={`hover:bg-muted/50 ${colors.bg} ${colors.border}`}
                       >
                         <TableCell className={`py-3 text-base font-medium ${colors.text}`}>
-                          {item.productName}
+                          <div>
+                            {item.productName}
+                            {item.hasBox && item.boxSize && (
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                                <Box className="h-3 w-3" />
+                                Box: {item.boxSize} pcs/box
+                              </div>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className={`py-3 text-base ${colors.text}`}>
-                          {item.batchNumber || 'N/A'}
+                          {item.brandName || 'N/A'}
                         </TableCell>
                         <TableCell className={`py-3 text-base ${colors.text}`}>
-                          {Number(item.quantity || 0).toLocaleString()}
+                          {formatQuantity(item, quantity)}
                         </TableCell>
                         <TableCell className={`py-3 text-base font-medium ${colors.text}`}>
                           <div className="flex items-center gap-2">
@@ -681,6 +682,9 @@ export function TableDashboard() {
                               <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell className={`py-3 text-base ${colors.text}`}>
+                          {inventoryValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </TableCell>
                         <TableCell className={`py-3 text-base ${colors.text}`}>
                           <div className="flex items-center gap-2">
@@ -696,7 +700,7 @@ export function TableDashboard() {
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className='py-8 text-center text-lg'>
+                    <TableCell colSpan={6} className='py-8 text-center text-lg'>
                       No aging report data available
                     </TableCell>
                   </TableRow>
@@ -706,8 +710,6 @@ export function TableDashboard() {
           </div>
         </CardContent>
       </Card>
-
-   
     </div>
   );
 }

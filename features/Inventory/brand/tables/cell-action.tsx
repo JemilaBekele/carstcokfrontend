@@ -15,21 +15,20 @@ import {
 import { Modal } from '@/components/ui/modal';
 import { AlertModal } from '@/components/modal/alert-modal';
 
-import { deleteSubCategory } from '@/service/Category';
-import { ISubCategory } from '@/models/Category';
-import SubCategoryForm from '../form'; // Make sure you have a SubCategoryForm component
 
-import { IconDotsVertical, IconTrash, IconEdit } from '@tabler/icons-react';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 
-interface SubCategoryCellActionProps {
-  data: ISubCategory;
+import { IconDotsVertical, IconTrash, IconEdit } from '@tabler/icons-react';
+import BrandForm from '../form'; // Make sure you have a BrandForm component
+import { IBrand } from '@/models/brand';
+import { deleteBrand } from '@/service/brand';
+
+interface BrandCellActionProps {
+  data: IBrand;
 }
 
-export const SubCategoryCellAction: React.FC<SubCategoryCellActionProps> = ({
-  data
-}) => {
+export const BrandCellAction: React.FC<BrandCellActionProps> = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
@@ -37,18 +36,18 @@ export const SubCategoryCellAction: React.FC<SubCategoryCellActionProps> = ({
 
   const onConfirmDelete = async () => {
     if (!data?.id) {
-      toast.error('SubCategory ID is missing. Cannot delete subcategory.');
+      toast.error('Brand ID is missing. Cannot delete brand.');
       return;
     }
 
     setLoading(true);
     try {
-      await deleteSubCategory(data.id);
-      toast.success('SubCategory deleted successfully');
+      await deleteBrand(data.id);
+      toast.success('Brand deleted successfully');
       router.refresh();
       setOpenDeleteModal(false);
-    } catch  {
-      toast.error('Error deleting subcategory. Please try again.');
+    } catch {
+      toast.error('Error deleting brand. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -64,14 +63,14 @@ export const SubCategoryCellAction: React.FC<SubCategoryCellActionProps> = ({
         loading={loading}
       />
 
-      {/* Edit subcategory modal */}
+      {/* Edit brand modal */}
       <Modal
-        title='Edit SubCategory'
-        description='Update the subcategory details below.'
+        title='Edit Brand'
+        description='Update the brand details below.'
         isOpen={openEditModal}
         onClose={() => setOpenEditModal(false)}
       >
-        <SubCategoryForm
+        <BrandForm
           initialData={data}
           isEdit={true}
           closeModal={() => setOpenEditModal(false)}
@@ -81,29 +80,30 @@ export const SubCategoryCellAction: React.FC<SubCategoryCellActionProps> = ({
       {/* Action dropdown */}
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <Button variant='ghost' className='h-8 w-8 p-0'>
+          <Button variant='ghost' className='w-8 h-8 p-0'>
             <span className='sr-only'>Open menu</span>
-            <IconDotsVertical className='h-4 w-4' />
+            <IconDotsVertical className='w-4 h-4' />
           </Button>
         </DropdownMenuTrigger>
+
         <DropdownMenuContent align='end'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-          <PermissionGuard
-            requiredPermission={PERMISSIONS.SUBCATEGORY.UPDATE.name}
-          >
+          {/* <PermissionGuard
+            requiredPermission={PERMISSIONS.BRAND.UPDATE.name}
+          > */}
             <DropdownMenuItem onClick={() => setOpenEditModal(true)}>
-              <IconEdit className='mr-2 h-4 w-4' /> Update
+              <IconEdit className='w-4 h-4 mr-2' /> Update
             </DropdownMenuItem>
-          </PermissionGuard>
+          {/* </PermissionGuard> */}
 
-          <PermissionGuard
-            requiredPermission={PERMISSIONS.SUBCATEGORY.DELETE.name}
-          >
+          {/* <PermissionGuard
+            requiredPermission={PERMISSIONS.BRAND.DELETE.name}
+          > */}
             <DropdownMenuItem onClick={() => setOpenDeleteModal(true)}>
-              <IconTrash className='mr-2 h-4 w-4' /> Delete
+              <IconTrash className='w-4 h-4 mr-2' /> Delete
             </DropdownMenuItem>
-          </PermissionGuard>
+          {/* </PermissionGuard> */}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

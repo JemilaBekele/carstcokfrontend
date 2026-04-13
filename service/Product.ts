@@ -2,7 +2,7 @@
 import { IncomingMessage } from 'http';
 import { axiosWithAuth } from './cli';
 import { api } from './api';
-import { IProduct, IProductBatch } from '@/models/Product';
+import { IProduct } from '@/models/Product';
 import { IUnitOfMeasure } from '@/models/UnitOfMeasure';
 
 export interface GetParams {
@@ -40,20 +40,7 @@ export const getAllProducts = async ({
     throw error;
   }
 };
-export const getProductBatches = async (
-  productId: string,
-  req?: IncomingMessage
-): Promise<IProductBatch[]> => {
-  try {
-    const axiosInstance = axiosWithAuth(req);
-    const response = await axiosInstance.get(
-      `/products/get/all/${productId}/batches`
-    );
-    return response.data.batches as IProductBatch[];
-  } catch (error) {
-    throw error;
-  }
-};
+
 // Get Products (SSR-safe)
 export const getProducts = async (req?: IncomingMessage) => {
   try {
@@ -86,20 +73,22 @@ export const ActivegetProducts = async (req?: IncomingMessage) => {
 interface TopProductsOptions {
   searchTerm?: string;
   categoryName?: string;
-  subCategoryName?: string;
+  brandName?: string;
   req?: IncomingMessage;
 }
 
 export const TopProducts = async (options: TopProductsOptions = {}) => {
   try {
-    const { searchTerm, categoryName, subCategoryName, req } = options;
+    const { searchTerm, categoryName, brandName, req } = options;
     const axiosInstance = axiosWithAuth(req);
 
     // Build query parameters - using names instead of IDs
     const params: any = {};
     if (searchTerm?.trim()) params.searchTerm = searchTerm.trim();
     if (categoryName?.trim()) params.categoryName = categoryName.trim();
-    if (subCategoryName?.trim()) params.subCategoryName = subCategoryName.trim();
+    if (brandName?.trim()) params.brandName = brandName.trim();
+
+    console.log('TopProducts request params:', params);
 
     const response = await axiosInstance.get(
       `/products/get/all/Top/Selling/Products`,
@@ -107,6 +96,9 @@ export const TopProducts = async (options: TopProductsOptions = {}) => {
         params
       }
     );
+
+    console.log('TopProducts response status:', response.status);
+    console.log('TopProducts response data count:', response.data?.products?.length || 0);
 
     // ✅ Extract only the product info from each item
     const products = (response.data?.products || []).map((item: any) => {
@@ -121,6 +113,7 @@ export const TopProducts = async (options: TopProductsOptions = {}) => {
 
     return products as IProduct[];
   } catch (error) {
+    console.error('TopProducts error:', error);
     throw error;
   }
 };
@@ -176,31 +169,7 @@ export const createProduct = async (data: any, req?: IncomingMessage) => {
   }
 };
 
-// Create a product batch
-export const createProductBatch = async (
-  productId: string,
-  data: any | FormData,
-  req?: IncomingMessage
-) => {
-  try {
-    const axiosInstance = axiosWithAuth(req);
 
-    const config =
-      data instanceof FormData
-        ? { headers: { 'Content-Type': 'multipart/form-data' } }
-        : {};
-
-    const response = await axiosInstance.post(
-      `/products/${productId}/batches`,
-      data,
-      config
-    );
-
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
 
 // Update Product
 export const updateProduct = async (
@@ -233,18 +202,7 @@ export const deleteProduct = async (id: string, req?: IncomingMessage) => {
   }
 };
 
-export const createProductBatchSingle = async (
-  data: any,
-  req?: IncomingMessage
-) => {
-  try {
-    const axiosInstance = axiosWithAuth(req);
-    const response = await axiosInstance.post(`/products/Batch/single`, data);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
+
 export const getProductdetailaById = async (
   id: string,
   req?: IncomingMessage
@@ -265,9 +223,9 @@ export const getProductByShops = async (
   try {
     const axiosInstance = axiosWithAuth(req);
     const response = await axiosInstance.get(
-      `/products/Batch/shop/find/ByShops/${productId}`
+      `/products/shop/find/ByShops/${productId}`
     );
-    return response.data.batches; // ✅ returns array of batches with shops
+    return response.data.products; // ✅ returns array of products with shops
   } catch (error) {
     throw error;
   }

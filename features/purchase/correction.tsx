@@ -25,15 +25,10 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import {
-  getProductBatches,
-  getUnitOfMeasuresByProductId
-} from '@/service/Product';
-import { useCallback, useEffect, useState } from 'react';
+import { Switch } from '@/components/ui/switch';
+import { useEffect, useState } from 'react';
 import { IconTrash } from '@tabler/icons-react';
 import { getAvailableProductsBySource } from '@/service/productBatchService';
-import { IProductBatch } from '@/models/Product';
-import { IUnitOfMeasure } from '@/models/UnitOfMeasure';
 import { IStockCorrection } from '@/models/StockCorrection';
 import {
   createStockCorrection,
@@ -58,7 +53,9 @@ import {
   Package,
   Check,
   X,
-  Info
+  Info,
+  Box,
+  PackageOpen
 } from 'lucide-react';
 
 // Helper function to format dates
@@ -72,7 +69,7 @@ const formatDate = (dateString: string | Date) => {
   });
 };
 
-// Updated Zod schema to allow empty/null quantity and filter out zero quantities
+// Updated Zod schema - make isBox required with default
 const formSchema = z.object({
   storeId: z.string().min(1, 'Store ID is required'),
   reason: z.enum([
@@ -82,17 +79,14 @@ const formSchema = z.object({
     'DAMAGED',
     'MANUAL_ADJUSTMENT'
   ]),
-  purchaseId: z
-    .string()
-    .min(1, 'Purchase ID is required for purchase corrections'),
+  purchaseId: z.string().min(1, 'Purchase ID is required for purchase corrections'),
   reference: z.string().optional(),
   notes: z.string().optional(),
   items: z
     .array(
       z.object({
         productId: z.string().min(1, 'Product is required'),
-        batchId: z.string().optional(),
-        unitOfMeasureId: z.string().min(1, 'Unit of measure is required'),
+        isBox: z.boolean(),
         quantity: z.union([z.number(), z.null()]).optional()
       })
     )
@@ -109,99 +103,150 @@ const formSchema = z.object({
     )
 });
 
-// Updated interface to include purchaseData
+type FormValues = z.infer<typeof formSchema>;
+
 interface PurchaseCorrectionFormProps {
   purchaseId: string;
   initialData?: IStockCorrection | null;
   isEdit?: boolean;
-  purchaseData: IPurchase | null; // Added purchaseData prop
+  purchaseData: IPurchase | null;
+}
+
+interface StoreStockItem {
+  id: string;
+  storeId: string;
+  productId: string;
+  quantity: number;
+  status: string;
+  product: {
+    id: string;
+    productCode: string;
+    name: string;
+    hasBox: boolean;
+    boxSize: number | null;
+    UnitOfMeasure: string | null;
+  };
 }
 
 export default function PurchaseCorrectionForm({
   purchaseId,
   initialData,
   isEdit = false,
-  purchaseData // Destructure purchaseData prop
+  purchaseData
 }: PurchaseCorrectionFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [storeStockItems, setStoreStockItems] = useState<any[]>([]);
-  const [batches, setBatches] = useState<{ [key: string]: IProductBatch[] }>(
-    {}
-  );
-  const [unitsOfMeasure, setUnitsOfMeasure] = useState<{
-    [key: string]: IUnitOfMeasure[];
-  }>({});
+  const [storeStockItems, setStoreStockItems] = useState<StoreStockItem[]>([]);
   const [isMounted, setIsMounted] = useState(false);
-  const [loadingBatches, setLoadingBatches] = useState<{
-    [key: string]: boolean;
-  }>({});
-  const [loadingUOM, setLoadingUOM] = useState<{ [key: string]: boolean }>({});
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [initialItemsLoaded, setInitialItemsLoaded] = useState(false);
   const router = useRouter();
 
-  // Initialize form with null quantities instead of default values
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData
       ? {
-          ...initialData,
+          storeId: initialData.storeId || '',
+          reason: initialData.reason,
+          purchaseId: initialData.purchaseId || purchaseId,
+          reference: initialData.reference || '',
+          notes: initialData.notes || '',
           items: initialData.items.map((item) => ({
-            ...item,
-            quantity: null // Set quantity to null instead of past value
+            productId: item.productId,
+            isBox: item.isBox || false,
+            quantity: null
           }))
         }
       : {
-          storeId: purchaseData?.storeId || '', // Use purchaseData.storeId
+          storeId: purchaseData?.storeId || '',
           reason: 'PURCHASE_ERROR',
           purchaseId,
           reference: '',
           notes: '',
-          items: [
-            { productId: '', batchId: '', unitOfMeasureId: '', quantity: null }
-          ]
+          items: [{ productId: '', isBox: false, quantity: null }]
         }
   });
 
   const storeId = form.watch('storeId');
 
-  // Helper function to calculate available quantity in selected unit
-  const calculateAvailableQuantity = (
-    storeStockItem: any,
-    selectedUnitOfMeasureId: string
-  ) => {
-    if (!storeStockItem || !selectedUnitOfMeasureId) return 0;
-
-    const baseQuantity = storeStockItem.quantity;
-    const baseConversion = storeStockItem.unitOfMeasure?.conversionFactor || 1;
-    const selectedUnit = unitsOfMeasure[storeStockItem.product.id]?.find(
-      (unit: IUnitOfMeasure) => unit.id === selectedUnitOfMeasureId
-    );
-
-    if (!selectedUnit) return baseQuantity;
-    return (baseQuantity * baseConversion) / 1;
+  // Get available stock for a product
+  const getAvailableStock = (productId: string): StoreStockItem | undefined => {
+    return storeStockItems.find((stock) => stock.product.id.toString() === productId);
   };
 
-  // Helper function to get past quantity from purchase data
-  const getPastQuantity = (
-    productId: string,
-    batchId: string,
-    unitOfMeasureId: string
-  ) => {
-    if (!purchaseData?.items) return 0;
-
-    const purchaseItem = purchaseData.items.find(
-      (item) =>
-        item.productId.toString() === productId &&
-        (!batchId || item.batchId?.toString() === batchId) &&
-        (!unitOfMeasureId ||
-          item.unitOfMeasureId?.toString() === unitOfMeasureId)
-    );
-
-    return purchaseItem?.quantity || 0;
+  // Get available pieces in stock
+  const getAvailablePieces = (productId: string): number => {
+    const stock = getAvailableStock(productId);
+    return stock?.quantity || 0;
   };
 
-  // Helper function to get unique products from storeStockItems
+  // Get available boxes in stock
+  const getAvailableBoxes = (productId: string): number => {
+    const stock = getAvailableStock(productId);
+    if (!stock || !stock.product.hasBox || !stock.product.boxSize || stock.product.boxSize <= 0) return 0;
+    return Math.floor(stock.quantity / stock.product.boxSize);
+  };
+
+  // Get max allowed removal quantity based on isBox flag
+  const getMaxRemovalQuantity = (productId: string, isBox: boolean): number => {
+    if (!productId) return 0;
+    if (isBox) {
+      return getAvailableBoxes(productId);
+    } else {
+      return getAvailablePieces(productId);
+    }
+  };
+
+  // Validate if removal quantity is valid (doesn't exceed available stock)
+  const isValidRemoval = (productId: string, isBox: boolean, quantity: number | null | undefined): boolean => {
+    if (!productId || quantity === null || quantity === undefined) return true;
+    if (quantity >= 0) return true; // Additions are always valid
+    
+    const removalAmount = Math.abs(quantity);
+    const maxAllowed = getMaxRemovalQuantity(productId, isBox);
+    return removalAmount <= maxAllowed;
+  };
+
+  // Get display text for available stock
+  const getAvailableStockDisplay = (productId: string, isBox: boolean): string => {
+    if (!productId) return 'Select product';
+    
+    const stock = getAvailableStock(productId);
+    if (!stock) return 'Select product';
+    
+    const pieces = stock.quantity;
+    
+    if (isBox) {
+      if (!stock.product.hasBox) {
+        return 'Box not supported';
+      }
+      if (!stock.product.boxSize || stock.product.boxSize <= 0) {
+        return 'Box size not configured';
+      }
+      const boxes = Math.floor(pieces / stock.product.boxSize);
+      const remainingPieces = pieces % stock.product.boxSize;
+      if (boxes === 0) {
+        return '0 boxes available';
+      }
+      return `${boxes} box(es) available${remainingPieces > 0 ? ` (${remainingPieces} pieces left)` : ''}`;
+    } else {
+      return `${pieces} piece(s) available`;
+    }
+  };
+
+  // Get box size info
+  const getBoxSizeInfo = (productId: string): string => {
+    const stock = getAvailableStock(productId);
+    if (!stock?.product.hasBox || !stock.product.boxSize) return '';
+    return `${stock.product.boxSize} pieces per box`;
+  };
+
+  // Check if product supports boxing
+  const doesProductSupportBox = (productId: string): boolean => {
+    const stock = getAvailableStock(productId);
+    return stock?.product.hasBox || false;
+  };
+
+  // Get unique products from storeStockItems
   const getUniqueProducts = () => {
     const seenProductIds = new Set<string>();
     return storeStockItems.filter((item) => {
@@ -217,63 +262,12 @@ export default function PurchaseCorrectionForm({
     setIsMounted(true);
   }, []);
 
-  const fetchUnitsOfMeasure = useCallback(
-    async (productId: string) => {
-      if (!productId) return;
-
-      if (!unitsOfMeasure[productId] && !loadingUOM[productId]) {
-        setLoadingUOM((prev) => ({ ...prev, [productId]: true }));
-        try {
-          const uomData = await getUnitOfMeasuresByProductId(productId);
-          setUnitsOfMeasure((prev) => ({
-            ...prev,
-            [productId]: Array.isArray(uomData)
-              ? uomData
-              : uomData
-                ? [uomData]
-                : []
-          }));
-        } catch  {
-          toast.error('Failed to load units of measure');
-          setUnitsOfMeasure((prev) => ({ ...prev, [productId]: [] }));
-        } finally {
-          setLoadingUOM((prev) => ({ ...prev, [productId]: false }));
-        }
-      }
-    },
-    [unitsOfMeasure, loadingUOM]
-  );
-
-  const fetchBatches = useCallback(
-    async (productId: string) => {
-      if (!batches[productId]) {
-        setLoadingBatches((prev) => ({ ...prev, [productId]: true }));
-        try {
-          const batchData = await getProductBatches(productId);
-          setBatches((prev) => ({ ...prev, [productId]: batchData }));
-        } catch  {
-          toast.error('Failed to load batches');
-        } finally {
-          setLoadingBatches((prev) => ({ ...prev, [productId]: false }));
-        }
-      }
-    },
-    [batches]
-  );
-
-  // Load units for initial items when editing
+  // Load initial items when editing
   useEffect(() => {
     if (isEdit && initialData && !initialItemsLoaded) {
-      const loadInitialUnits = async () => {
-        for (const item of initialData.items) {
-          const productId = item.productId.toString();
-          await fetchUnitsOfMeasure(productId);
-        }
-        setInitialItemsLoaded(true);
-      };
-      loadInitialUnits();
+      setInitialItemsLoaded(true);
     }
-  }, [isEdit, initialData, initialItemsLoaded, fetchUnitsOfMeasure]);
+  }, [isEdit, initialData, initialItemsLoaded]);
 
   useEffect(() => {
     const fetchProductsFromStore = async () => {
@@ -286,7 +280,7 @@ export default function PurchaseCorrectionForm({
           storeId
         );
         setStoreStockItems(stockData);
-      } catch  {
+      } catch {
         toast.error('Failed to load products from store');
       } finally {
         setLoadingProducts(false);
@@ -342,9 +336,27 @@ export default function PurchaseCorrectionForm({
     })
   };
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     try {
+      // First, validate all removal quantities against available stock
+      for (const item of data.items) {
+        if (item.quantity !== null && item.quantity !== undefined && item.quantity < 0) {
+          const productStock = getAvailableStock(item.productId);
+          const removalAmount = Math.abs(item.quantity);
+          const maxAllowed = getMaxRemovalQuantity(item.productId, item.isBox);
+          
+          if (removalAmount > maxAllowed) {
+            const productName = productStock?.product.name || 'Product';
+            const unit = item.isBox ? 'boxes' : 'pieces';
+            const available = item.isBox ? getAvailableBoxes(item.productId) : getAvailablePieces(item.productId);
+            toast.error(`${productName}: Cannot remove ${removalAmount} ${unit}. Only ${available} ${unit} available in stock.`);
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
+
       // Filter out items with null, undefined, or zero quantities
       const filteredItems = data.items.filter(
         (item) =>
@@ -353,7 +365,6 @@ export default function PurchaseCorrectionForm({
           item.quantity !== 0
       );
 
-      // Check if there are any items left after filtering
       if (filteredItems.length === 0) {
         toast.error('At least one item must have a quantity');
         setIsLoading(false);
@@ -363,7 +374,8 @@ export default function PurchaseCorrectionForm({
       const payload = {
         ...data,
         items: filteredItems.map((item) => ({
-          ...item,
+          productId: item.productId,
+          isBox: item.isBox,
           quantity: Number(item.quantity)
         }))
       };
@@ -551,7 +563,7 @@ export default function PurchaseCorrectionForm({
             </div>
           </div>
 
-          {/* Purchased Items Table Section */}
+          {/* Purchased Items Table Section - Updated for isBox */}
           {purchaseData.items && purchaseData.items.length > 0 ? (
             <div className='space-y-4'>
               <h3 className='text-lg font-semibold'>Purchased Items</h3>
@@ -559,7 +571,7 @@ export default function PurchaseCorrectionForm({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Product</TableHead>
-                    <TableHead>Batch</TableHead>
+                    <TableHead>Type</TableHead>
                     <TableHead>Unit</TableHead>
                     <TableHead>Quantity</TableHead>
                     <TableHead>Unit Price</TableHead>
@@ -574,10 +586,22 @@ export default function PurchaseCorrectionForm({
                           {item.product?.name || 'Unknown Product'}
                         </TableCell>
                         <TableCell>
-                          {item.batch?.batchNumber || 'N/A'}
+                          <Badge variant={item.isBox ? 'default' : 'secondary'} className='text-xs'>
+                            {item.isBox ? (
+                              <>
+                                <Box className='mr-1 h-3 w-3' />
+                                Box
+                              </>
+                            ) : (
+                              <>
+                                <PackageOpen className='mr-1 h-3 w-3' />
+                                Piece
+                              </>
+                            )}
+                          </Badge>
                         </TableCell>
                         <TableCell>
-                          {item.unitOfMeasure?.name || 'Unknown Unit'}
+                          {item.product?.UnitOfMeasure || 'N/A'}
                         </TableCell>
                         <TableCell>{item.quantity || 0}</TableCell>
                         <TableCell>
@@ -688,89 +712,50 @@ export default function PurchaseCorrectionForm({
                     )}
                     <FormControl>
                       <div className='space-y-4'>
-                        <div className='grid grid-cols-7 gap-4 text-sm font-semibold text-gray-700 dark:text-gray-300'>
+                        <div className='grid grid-cols-6 gap-4 text-sm font-semibold text-gray-700 dark:text-gray-300'>
                           <div>Product</div>
-                          <div>Batch</div>
+                          <div>Box/Piece</div>
+                          <div>Adjust by (Quantity)</div>
+                          <div>Available Stock</div>
                           <div>Unit</div>
-                          <div>Past Quantity</div>
-                          <div>Adjust by (Quantity) </div>
-                          <div>Available</div>
                           <div>Action</div>
                         </div>
                         {field.value.map((item, index) => {
-                          const storeStockItem = storeStockItems.find(
-                            (stock) =>
-                              stock.product.id.toString() === item.productId &&
-                              (!item.batchId || stock.batchId === item.batchId)
-                          );
-                          const availableInSelectedUnit =
-                            storeStockItem && item.unitOfMeasureId
-                              ? calculateAvailableQuantity(
-                                  storeStockItem,
-                                  item.unitOfMeasureId
-                                )
-                              : storeStockItem?.quantity || 0;
-                          const pastQuantity = getPastQuantity(
-                            item.productId,
-                            item.batchId || '',
-                            item.unitOfMeasureId
-                          );
+                          const stockItem = getAvailableStock(item.productId);
+                          const isBox = item.isBox;
+                          const pieces = stockItem?.quantity || 0;
+                          const boxSize = stockItem?.product.boxSize || 1;
+                          const boxes = Math.floor(pieces / boxSize);
+                          const hasBox = stockItem?.product.hasBox || false;
+                          
+                          const maxRemoval = getMaxRemovalQuantity(item.productId, isBox);
+                          const availableDisplay = getAvailableStockDisplay(item.productId, isBox);
+                          const boxSizeInfo = getBoxSizeInfo(item.productId);
+                          const supportsBox = doesProductSupportBox(item.productId);
+                          
+                          // Check if current quantity is valid
+                          const currentQuantity = item.quantity;
+                          const isRemovalValid = isValidRemoval(item.productId, isBox, currentQuantity);
+                          
                           const uniqueProducts = getUniqueProducts();
-                          const productOptions =
-                            isEdit && initialItemsLoaded
-                              ? [
-                                  ...uniqueProducts.map((storeStockItem) => ({
-                                    value: storeStockItem.product.id.toString(),
-                                    label: `${storeStockItem.product.name}`,
-                                    data: storeStockItem
-                                  })),
-                                  ...(item.productId &&
-                                  !uniqueProducts.some(
-                                    (stock) =>
-                                      stock.product.id.toString() ===
-                                      item.productId
-                                  )
-                                    ? [
-                                        {
-                                          value: item.productId,
-                                          label: `[Current] ${
-                                            initialData?.items.find(
-                                              (i) =>
-                                                i.productId.toString() ===
-                                                item.productId
-                                            )?.product?.name || item.productId
-                                          }`,
-                                          data: null
-                                        }
-                                      ]
-                                    : [])
-                                ]
-                              : uniqueProducts.map((storeStockItem) => ({
-                                  value: storeStockItem.product.id.toString(),
-                                  label: `${storeStockItem.product.name}`,
-                                  data: storeStockItem
-                                }));
+                          const productOptions = uniqueProducts.map((s) => ({
+                            value: s.product.id.toString(),
+                            label: s.product.name,
+                          }));
+
                           return (
-                            <div
-                              key={index}
-                              className='grid grid-cols-7 items-center gap-4'
-                            >
+                            <div key={index} className='grid grid-cols-6 items-center gap-4'>
+                              {/* Product Selection */}
                               <div>
                                 <Select
                                   instanceId={`product-select-${index}`}
                                   options={productOptions}
                                   onChange={async (newValue) => {
                                     const newItems = [...field.value];
-                                    newItems[index].productId =
-                                      newValue?.value || '';
-                                    newItems[index].batchId = '';
-                                    newItems[index].unitOfMeasureId = '';
-                                    newItems[index].quantity = null; // Set to null instead of 1
+                                    newItems[index].productId = newValue?.value || '';
+                                    newItems[index].isBox = false;
+                                    newItems[index].quantity = null;
                                     field.onChange(newItems);
-                                    if (newValue?.value) {
-                                      await fetchBatches(newValue.value);
-                                      await fetchUnitsOfMeasure(newValue.value);
-                                    }
                                   }}
                                   value={
                                     productOptions.find(
@@ -787,149 +772,91 @@ export default function PurchaseCorrectionForm({
                                   styles={isDark ? darkStyles : {}}
                                 />
                               </div>
+
+                              {/* isBox Switch */}
                               <div>
-                                <Select
-                                  key={`batch-${item.productId}-${batches[item.productId]?.length || 0}`}
-                                  instanceId={`batch-select-${index}`}
-                                  options={storeStockItems
-                                    .filter(
-                                      (stock) =>
-                                        stock.product.id.toString() ===
-                                        item.productId
-                                    )
-                                    .map((stock) => ({
-                                      value: stock.batchId.toString(),
-                                      label: `${stock.batch?.batchNumber || 'N/A'}`
-                                    }))}
-                                  onChange={(newValue) => {
-                                    const newItems = [...field.value];
-                                    newItems[index].batchId =
-                                      newValue?.value || '';
-                                    const selectedStock = storeStockItems.find(
-                                      (stock) =>
-                                        stock.batchId === newValue?.value &&
-                                        stock.product.id.toString() ===
-                                          item.productId
-                                    );
-                                    newItems[index].unitOfMeasureId =
-                                      selectedStock?.unitOfMeasureId || '';
-                                    field.onChange(newItems);
-                                  }}
-                                  value={
-                                    storeStockItems
-                                      .filter(
-                                        (stock) =>
-                                          stock.product.id.toString() ===
-                                          item.productId
-                                      )
-                                      .map((stock) => ({
-                                        value: stock.batchId.toString(),
-                                        label: stock.batch?.batchNumber || 'N/A'
-                                      }))
-                                      .find((b) => b.value === item.batchId) ||
-                                    null
-                                  }
-                                  placeholder={
-                                    loadingBatches[item.productId]
-                                      ? 'Loading...'
-                                      : 'Select batch'
-                                  }
-                                  isSearchable
-                                  isDisabled={
-                                    !item.productId ||
-                                    loadingBatches[item.productId]
-                                  }
-                                  isLoading={loadingBatches[item.productId]}
-                                  styles={isDark ? darkStyles : {}}
-                                />
+                                <div className='flex items-center justify-center'>
+                                  <Switch
+                                    checked={isBox}
+                                    onCheckedChange={(checked) => {
+                                      const newItems = [...field.value];
+                                      newItems[index].isBox = checked;
+                                      newItems[index].quantity = null;
+                                      field.onChange(newItems);
+                                    }}
+                                    disabled={!item.productId || loadingProducts || !supportsBox}
+                                    className='data-[state=checked]:bg-primary'
+                                  />
+                                </div>
                               </div>
-                              <div>
-                                <Select
-                                  instanceId={`unit-select-${index}`}
-                                  options={
-                                    unitsOfMeasure[item.productId]?.map(
-                                      (unit) => ({
-                                        value: unit.id.toString(),
-                                        label: `${unit.name}`
-                                      })
-                                    ) || []
-                                  }
-                                  onChange={(newValue) => {
-                                    const newItems = [...field.value];
-                                    newItems[index].unitOfMeasureId =
-                                      newValue?.value || '';
-                                    field.onChange(newItems);
-                                  }}
-                                  value={
-                                    unitsOfMeasure[item.productId]
-                                      ?.map((u) => ({
-                                        value: u.id.toString(),
-                                        label: `${u.name}`
-                                      }))
-                                      .find(
-                                        (u) => u.value === item.unitOfMeasureId
-                                      ) ||
-                                    (unitsOfMeasure[item.productId]?.length > 0
-                                      ? {
-                                          value:
-                                            unitsOfMeasure[
-                                              item.productId
-                                            ][0].id.toString(),
-                                          label:
-                                            unitsOfMeasure[item.productId][0]
-                                              .name
-                                        }
-                                      : null)
-                                  }
-                                  placeholder='Search unit'
-                                  isSearchable
-                                  isDisabled={
-                                    !item.productId ||
-                                    unitsOfMeasure[item.productId]?.length === 1
-                                  }
-                                  styles={isDark ? darkStyles : {}}
-                                />
-                              </div>
-                              <div className='text-muted-foreground flex items-center justify-center rounded-md bg-gray-50 px-3 py-2 text-sm dark:bg-gray-800'>
-                                {pastQuantity}
-                              </div>
+
+                              {/* Quantity Input */}
                               <div>
                                 <Input
                                   type='number'
-                                  placeholder='Enter new quantity'
-                                  value={
-                                    item.quantity === null ? '' : item.quantity
-                                  }
+                                  placeholder='Enter quantity (+ for add, - for remove)'
+                                  value={item.quantity === null ? '' : item.quantity}
                                   onChange={(e) => {
                                     const newItems = [...field.value];
                                     const value = e.target.value;
-
-                                    // Handle empty input
                                     if (value === '') {
                                       newItems[index].quantity = null;
                                     } else {
                                       const quantity = Number(value);
-                                      newItems[index].quantity = isNaN(quantity)
-                                        ? null
-                                        : quantity;
+                                      newItems[index].quantity = isNaN(quantity) ? null : quantity;
                                     }
-
                                     field.onChange(newItems);
                                   }}
+                                  className={
+                                    !isRemovalValid && currentQuantity !== undefined && currentQuantity !== null && currentQuantity < 0
+                                      ? 'border-red-500 focus:ring-red-500'
+                                      : ''
+                                  }
                                 />
+                                {currentQuantity !== null && currentQuantity !== undefined && currentQuantity < 0 && !isRemovalValid && (
+                                  <div className='mt-1 text-xs text-red-500'>
+                                    Maximum removal: {maxRemoval} {isBox ? 'box(es)' : 'piece(s)'}
+                                  </div>
+                                )}
                                 <div className='mt-1 text-xs text-gray-500'>
-                                  {item.quantity != null && item.quantity < 0
-                                    ? 'Subtraction'
-                                    : item.quantity != null && item.quantity > 0
-                                      ? 'Addition'
+                                  {currentQuantity != null && currentQuantity < 0
+                                    ? '⚠️ Removing stock'
+                                    : currentQuantity != null && currentQuantity > 0
+                                      ? '➕ Adding stock'
                                       : ''}
                                 </div>
                               </div>
+
+                              {/* Available Stock Display */}
                               <div className='text-muted-foreground text-sm'>
-                                {availableInSelectedUnit > 0
-                                  ? `${Math.floor(availableInSelectedUnit)} available`
-                                  : 'Out of stock'}
+                                {loadingProducts ? (
+                                  <div className='flex items-center gap-1'>
+                                    <div className='h-3 w-3 animate-spin rounded-full border-b-2 border-gray-400'></div>
+                                    <span>Loading...</span>
+                                  </div>
+                                ) : item.productId ? (
+                                  <div className='space-y-1'>
+                                    <div className={isBox ? 'font-semibold text-blue-600 dark:text-blue-400' : ''}>
+                                      {availableDisplay}
+                                    </div>
+                                    {isBox && boxSizeInfo && (
+                                      <div className='text-xs text-gray-500'>{boxSizeInfo}</div>
+                                    )}
+                                    {isBox && !supportsBox && (
+                                      <div className='text-xs text-red-500'>Box not supported</div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  'Select product'
+                                )}
                               </div>
+
+                              {/* Unit of Measure */}
+                              <div className='text-muted-foreground text-sm'>
+                                {stockItem?.product?.UnitOfMeasure || <span className='text-gray-400'>Select product</span>}
+                              </div>
+
+                              {/* Delete Button */}
                               <div>
                                 <Button
                                   type='button'
@@ -948,20 +875,6 @@ export default function PurchaseCorrectionForm({
                             </div>
                           );
                         })}
-                        <div className='flex justify-end'>
-                          {/* <Button
-                            type="button"
-                            onClick={() => {
-                              field.onChange([
-                                ...field.value,
-                                { productId: '', batchId: '', unitOfMeasureId: '', quantity: null },
-                              ]);
-                            }}
-                            disabled={loadingProducts}
-                          >
-                            Add Item
-                          </Button> */}
-                        </div>
                       </div>
                     </FormControl>
                     <FormMessage />

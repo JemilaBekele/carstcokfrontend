@@ -10,6 +10,7 @@ export interface ITransferItem {
   transferId: string;
   productId: string;
   batchId: string;
+  isBox: boolean; // ✅ Box or Piece
   quantity: number;
   unitOfMeasureId: string; // foreign key
   unitOfMeasure?: IUnitOfMeasure;

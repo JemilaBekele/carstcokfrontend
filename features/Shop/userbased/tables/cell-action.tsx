@@ -85,7 +85,7 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
           >
             <Edit className='mr-2 h-4 w-4' /> View
           </DropdownMenuItem>
-          {data.saleStatus === 'DELIVERED' && (
+          {/* {data.saleStatus === 'DELIVERED' && (
                                     <PermissionGuard requiredPermission={PERMISSIONS.SELL_STOCK_CORRECTION.CREATE.name}>
 
             <DropdownMenuItem
@@ -99,7 +99,7 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
             </DropdownMenuItem>
                         </PermissionGuard>
 
-          )}
+          )} */}
 
           {data.saleStatus !== 'DELIVERED' && (
             <PermissionGuard requiredPermission={PERMISSIONS.SELL.DELETE.name}>

@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { Modal } from '@/components/ui/modal';
 import { IProduct, IAdditionalPrice } from '@/models/Product';
-import { ICategory, ISubCategory } from '@/models/Category';
+import { ICategory } from '@/models/Category';
 import { ISell, ISellItem, SaleStatus } from '@/models/Sell';
 import { ICustomer } from '@/models/customer';
 import { getCustomer } from '@/service/customer';
@@ -42,8 +42,11 @@ import { getProductByShops } from '@/service/Product';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import SelectReac from 'react-select';
+import { Package, PackageOpen, Info } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { IBrand } from '@/models/brand';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://ordere.net';
+const BACKEND_URL = 'http://192.168.1.4:5000';
 
 // Helper functions
 const normalizeImagePath = (path?: string | File) => {
@@ -70,26 +73,15 @@ interface ProductCardProps {
   onSelectProduct: (product: IProduct) => void;
 }
 
-interface ProductSearchProps {
-  products: any[];
-  categories: any[];
-  subCategories: any[];
-  initialSearchTerm?: string;
-  initialCategoryName?: string; // Changed from initialCategoryId
-  initialSubCategoryName?: string; // Changed from initialSubCategoryId
-}
 
-interface SearchFilters {
-  category: string; // Now stores category name instead of ID
-  subCategory: string; // Now stores subcategory name instead of ID
-  productName: string;
-}
 
 interface CartItem extends ISellItem {
   product: IProduct;
   shop: IShop;
   selectedPrice: number;
   availableQuantity: number;
+  isBox: boolean;
+  boxQuantity?: number;
 }
 
 // Shop stock interface based on getProductByShops response
@@ -98,19 +90,30 @@ interface IShopStockInfo {
   shopName: string;
   branchName: string;
   quantity: number;
+  availableBoxes: number;
+  remainingPieces: number;
+  boxSize: number | null;
+  hasBox: boolean;
   additionalPrices: IAdditionalPrice[];
   totalPrice?: number;
+  UnitOfMeasure?: string;
 }
 
 export interface IProductShopAvailability {
   totalAvailableQuantity: number;
   shops: IShopStockInfo[];
   hasStock: boolean;
+  product: {
+    hasBox: boolean;
+    boxSize: number | null;
+    UnitOfMeasure: string;
+    name: string;
+    productCode: string;
+  };
 }
 
-// ProductCard Component
+// ProductCard Component - Updated with UnitOfMeasure and Description
 const ProductCard = ({ product, onSelectProduct }: ProductCardProps) => {
-  // Check if product is nested inside a wrapper object
   const actualProduct = product;
 
   const [imageError, setImageError] = useState(false);
@@ -163,7 +166,6 @@ const ProductCard = ({ product, onSelectProduct }: ProductCardProps) => {
             onError={() => setImageError(true)}
           />
 
-          {/* Image navigation buttons */}
           {hasMultipleImages && (
             <>
               <button
@@ -179,7 +181,6 @@ const ProductCard = ({ product, onSelectProduct }: ProductCardProps) => {
                 ›
               </button>
 
-              {/* Image pagination indicator */}
               <div className='absolute bottom-2 left-1/2 flex -translate-x-1/2 transform space-x-1'>
                 {imageUrls.map((_, index) => (
                   <div
@@ -196,9 +197,32 @@ const ProductCard = ({ product, onSelectProduct }: ProductCardProps) => {
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className='space-y-2'>
         <h3 className='truncate text-lg font-semibold'>{actualProduct.name}</h3>
         <p className='text-sm text-gray-600'>{actualProduct.productCode}</p>
+        
+        {/* Unit of Measure */}
+        {actualProduct.UnitOfMeasure && (
+          <div className='flex items-center gap-1 text-xs text-gray-500'>
+            <Package className='h-3 w-3' />
+            <span>Unit: {actualProduct.UnitOfMeasure}</span>
+          </div>
+        )}
+        
+        {/* Description */}
+        {actualProduct.description && (
+          <p className='line-clamp-2 text-xs text-gray-500'>
+            {actualProduct.description}
+          </p>
+        )}
+        
+        {/* Box Support Badge */}
+        {actualProduct.hasBox && actualProduct.boxSize && (
+          <div className='flex items-center gap-1 text-xs text-blue-600'>
+            <Package className='h-3 w-3' />
+            <span>Box: {actualProduct.boxSize} pcs/box</span>
+          </div>
+        )}
       </CardContent>
       <CardFooter>
         <p className='text-primary text-xl font-bold'>{formattedPrice}</p>
@@ -207,14 +231,13 @@ const ProductCard = ({ product, onSelectProduct }: ProductCardProps) => {
   );
 };
 
-// Shop and Batch Selection Modal
 interface ShopBatchModalProps {
   product: IProduct | null;
   isOpen: boolean;
   onClose: () => void;
   onAddToCart: (item: CartItem) => void;
 }
-
+// Shop and Batch Selection Modal - Updated with isBox
 const ShopBatchModal = ({
   product,
   isOpen,
@@ -226,9 +249,10 @@ const ShopBatchModal = ({
   const [shopAvailability, setShopAvailability] =
     useState<IProductShopAvailability | null>(null);
   const [selectedPriceOption, setSelectedPriceOption] =
-    useState<string>('base');
+    useState<string>('custom');
   const [customPrice, setCustomPrice] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
+  const [isBox, setIsBox] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, setCustomers] = useState<ICustomer[]>([]);
@@ -255,7 +279,7 @@ const ShopBatchModal = ({
         setLoading(true);
         const shopsData = await getShopsBasedOnUser();
         setShops(shopsData);
-      } catch  {
+      } catch {
         setError('Failed to fetch shops');
       } finally {
         setLoading(false);
@@ -277,11 +301,10 @@ const ShopBatchModal = ({
         const availabilityData = await getProductByShops(product.id);
         setShopAvailability(availabilityData);
 
-        // Auto-select the first shop with available stock
         if (availabilityData?.shops?.length > 0) {
           const firstAvailableShop = shops.find((shop) =>
             availabilityData.shops.some(
-              (avail: { shopId: string; quantity: number }) =>
+              (avail: IShopStockInfo) =>
                 avail.shopId === shop.id && avail.quantity > 0
             )
           );
@@ -289,7 +312,7 @@ const ShopBatchModal = ({
             setSelectedShop(firstAvailableShop);
           }
         }
-      } catch  {
+      } catch {
         setError('Failed to fetch product availability');
       } finally {
         setLoading(false);
@@ -301,13 +324,50 @@ const ShopBatchModal = ({
     }
   }, [isOpen, product, shops]);
 
-  const getAvailableStockForSelectedShop = (): number => {
+  const getAvailableStockInPieces = (): number => {
     if (!selectedShop || !shopAvailability) return 0;
 
     const shopStock = shopAvailability.shops.find(
       (shop) => shop.shopId === selectedShop.id
     );
     return shopStock?.quantity || 0;
+  };
+
+  const getAvailableStockInBoxes = (): number => {
+    const pieces = getAvailableStockInPieces();
+    if (!product?.hasBox || !product?.boxSize || product.boxSize <= 0) {
+      return pieces;
+    }
+    return Math.floor(pieces / product.boxSize);
+  };
+
+  const getMaxAvailableQuantity = (): number => {
+    if (isBox) {
+      return getAvailableStockInBoxes();
+    } else {
+      return getAvailableStockInPieces();
+    }
+  };
+
+  const getAvailableStockDisplay = (): string => {
+    const pieces = getAvailableStockInPieces();
+    
+    if (isBox) {
+      if (!product?.hasBox || !product?.boxSize || product.boxSize <= 0) {
+        return `${pieces} pieces (Box not supported)`;
+      }
+      const boxes = Math.floor(pieces / product.boxSize);
+      const remainingPieces = pieces % product.boxSize;
+      if (boxes === 0) {
+        return `${pieces} pieces available`;
+      }
+      if (remainingPieces === 0) {
+        return `${boxes} box(es) available`;
+      }
+      return `${boxes} box(es) + ${remainingPieces} pieces available`;
+    } else {
+      return `${pieces} pieces available`;
+    }
   };
 
   const getAdditionalPricesForSelectedShop = (): IAdditionalPrice[] => {
@@ -323,10 +383,8 @@ const ShopBatchModal = ({
     if (!product) return 0;
 
     if (selectedPriceOption === 'custom') {
-      // Return custom price if set, otherwise 0 (empty)
       return parseFloat(customPrice) || 0;
     } else {
-      // Only custom and additional price options remain
       const additionalPrice = getAdditionalPricesForSelectedShop().find(
         (option) => option.id === selectedPriceOption
       );
@@ -338,25 +396,34 @@ const ShopBatchModal = ({
     if (!product || !selectedShop) return;
 
     const unitPrice = getUnitPrice();
+    const availableQuantity = getMaxAvailableQuantity();
 
-    const availableQuantity = getAvailableStockForSelectedShop();
+    // Validate stock based on isBox flag
+    if (quantity > availableQuantity) {
+      toast.error(`Not enough stock. Only ${getAvailableStockDisplay()} available.`);
+      return;
+    }
+
+    // Calculate total pieces for display and validation in the backend
+    const totalPieces = isBox && product.boxSize ? quantity * product.boxSize : quantity;
 
     const cartItem: CartItem = {
       id: `temp-${Date.now()}`,
       sellId: '',
       shopId: selectedShop.id,
       productId: product.id,
-      unitOfMeasureId: product.unitOfMeasureId,
       itemSaleStatus: 'PENDING' as any,
-      quantity,
+      quantity: quantity, // Send raw quantity (boxes or pieces)
       unitPrice,
-      totalPrice: unitPrice * quantity,
+      totalPrice: unitPrice * totalPieces, // Total price based on pieces for consistency
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       product,
       shop: selectedShop,
       selectedPrice: unitPrice,
-      availableQuantity
+      availableQuantity: availableQuantity,
+      isBox, // Send isBox flag so backend knows how to interpret quantity
+      boxQuantity: isBox ? quantity : 0
     };
 
     onAddToCart(cartItem);
@@ -366,10 +433,11 @@ const ShopBatchModal = ({
 
   const resetModal = () => {
     setSelectedShop(null);
-    setSelectedPriceOption('base');
+    setSelectedPriceOption('custom');
     setCustomPrice('');
     setShopAvailability(null);
     setQuantity(1);
+    setIsBox(false);
     setError(null);
   };
 
@@ -379,35 +447,38 @@ const ShopBatchModal = ({
   };
 
   const handleShopSelect = (shop: IShop) => {
-    // When shop changes, reset quantity to empty
     setSelectedShop(shop);
     setQuantity(1);
+    setIsBox(false);
   };
 
   const handleQuantityChange = (value: string) => {
     if (value === '') {
-      // Allow empty input
-      setQuantity(0); // We'll use 0 to represent empty
+      setQuantity(0);
     } else {
       const numValue = Number(value);
-      // Allow any number including 0
-      setQuantity(numValue);
+      if (!isNaN(numValue)) {
+        setQuantity(numValue);
+      }
     }
   };
 
-  const availableStock = getAvailableStockForSelectedShop();
+  const availableStock = getMaxAvailableQuantity();
   const unitPrice = getUnitPrice();
-  // Use quantity if > 0, otherwise 0 for display
   const displayQuantity = quantity > 0 ? quantity : '';
-  const totalPrice = unitPrice * (quantity > 0 ? quantity : 0);
+  
+  // Calculate total pieces for display only (price calculation)
+  const totalPieces = (isBox && product?.hasBox && product?.boxSize) 
+    ? quantity * product.boxSize 
+    : quantity;
+  const totalPrice = unitPrice * totalPieces;
+  
   const additionalPrices = getAdditionalPricesForSelectedShop();
+  const canShowBoxes = product?.hasBox && product?.boxSize && product.boxSize > 0;
 
-  // Set default price when shop changes
   useEffect(() => {
     if (selectedShop) {
-      // Start with empty custom price instead of base price
       setCustomPrice('');
-      // Start with custom option selected
       setSelectedPriceOption('custom');
     }
   }, [selectedShop]);
@@ -422,27 +493,19 @@ const ShopBatchModal = ({
       className='w-full max-w-[95vw] sm:max-w-[80vw] md:max-w-4xl'
     >
       <div className='max-h-[80vh] space-y-4 overflow-y-auto py-2 sm:py-4'>
-        {/* Combined Shop Availability and Selection */}
         {shopAvailability && (
           <div className='space-y-3'>
             <Label className='text-sm font-semibold sm:text-base'>
               Available Shops
             </Label>
 
-            {/* Shop Selection with Availability */}
             <div className='overflow-hidden rounded-md border border-gray-300 dark:border-gray-600'>
               <Table>
                 <TableHeader>
                   <TableRow className='bg-gray-50 hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-800'>
-                    <TableHead className='w-10 text-gray-900 dark:text-gray-100'>
-                      Select
-                    </TableHead>
-                    <TableHead className='text-gray-900 dark:text-gray-100'>
-                      Shop Name
-                    </TableHead>
-                    <TableHead className='text-gray-900 dark:text-gray-100'>
-                      Available Quantity
-                    </TableHead>
+                    <TableHead className='w-10'>Select</TableHead>
+                    <TableHead>Shop Name</TableHead>
+                    <TableHead>Available Stock</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -450,6 +513,10 @@ const ShopBatchModal = ({
                     const shop = shops.find((s) => s.id === shopAvail.shopId);
                     const isSelected = selectedShop?.id === shopAvail.shopId;
                     const isAvailable = shopAvail.quantity > 0;
+                    const pieces = shopAvail.quantity;
+                    const boxes = shopAvail.availableBoxes;
+                    const remainingPieces = shopAvail.remainingPieces;
+                    const hasBox = shopAvail.hasBox;
 
                     return (
                       <TableRow
@@ -471,43 +538,55 @@ const ShopBatchModal = ({
                               onChange={() =>
                                 isAvailable && shop && handleShopSelect(shop)
                               }
-                              className='h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-blue-400'
+                              className='h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700'
                               disabled={!isAvailable}
                             />
                           </div>
                         </TableCell>
                         <TableCell className='font-medium'>
                           <div>
-                            <div className='font-semibold text-gray-900 dark:text-gray-100'>
+                            <div className='font-semibold'>
                               {shopAvail.shopName}
                             </div>
                             {shop?.branch?.name && (
-                              <div className='text-xs text-gray-500 dark:text-gray-400'>
+                              <div className='text-xs text-gray-500'>
                                 {shop.branch.name}
                               </div>
                             )}
                             {isSelected && (
-                              <div className='mt-1 text-xs font-semibold text-green-600 dark:text-green-400'>
+                              <div className='mt-1 text-xs font-semibold text-green-600'>
                                 ✓ Selected
                               </div>
                             )}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span
-                            className={`font-bold ${
-                              shopAvail.quantity > 0
-                                ? 'text-green-600 dark:text-green-400'
-                                : 'text-red-600 dark:text-red-400'
-                            }`}
-                          >
-                            {shopAvail.quantity} units
-                          </span>
-                          {!isAvailable && (
-                            <div className='mt-1 text-xs text-red-500 dark:text-red-400'>
-                              Out of stock
-                            </div>
-                          )}
+                          <div>
+                            <span
+                              className={`font-bold ${
+                                pieces > 0
+                                  ? 'text-green-600'
+                                  : 'text-red-600'
+                              }`}
+                            >
+                              {pieces} pieces
+                            </span>
+                            {hasBox && boxes > 0 && (
+                              <div className='text-xs text-gray-500'>
+                                ({boxes} box(es) + {remainingPieces} pieces)
+                              </div>
+                            )}
+                            {shopAvail.UnitOfMeasure && (
+                              <div className='text-xs text-gray-400'>
+                                Unit: {shopAvail.UnitOfMeasure}
+                              </div>
+                            )}
+                            {!isAvailable && (
+                              <div className='mt-1 text-xs text-red-500'>
+                                Out of stock
+                              </div>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -518,23 +597,57 @@ const ShopBatchModal = ({
           </div>
         )}
 
-        {/* Loading State */}
         {loading && !shopAvailability && (
           <div className='flex justify-center py-8'>
-            <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600 dark:border-blue-400'></div>
+            <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600'></div>
           </div>
         )}
 
-        {/* Price Selection - Always visible but disabled until shop is selected */}
-      <div className='space-y-4 border-t border-gray-200 pt-4 dark:border-gray-600'>
+        {/* Box/Piece Toggle */}
+        {selectedShop && canShowBoxes && (
+          <div className='space-y-2 border-t border-gray-200 pt-4'>
+            <div className='flex items-center justify-between rounded-lg border p-3'>
+              <div className='flex items-center gap-2'>
+                {isBox ? (
+                  <Package className='h-5 w-5 text-blue-500' />
+                ) : (
+                  <PackageOpen className='h-5 w-5 text-green-500' />
+                )}
+                <span className='text-sm font-medium'>
+                  {isBox ? 'Selling as Boxes' : 'Selling as Pieces'}
+                </span>
+              </div>
+              <div className='flex items-center gap-3'>
+                <span className='text-xs text-gray-500'>Pieces</span>
+                <Switch
+                  checked={isBox}
+                  onCheckedChange={(checked) => {
+                    setIsBox(checked);
+                    setQuantity(1);
+                  }}
+                  className='data-[state=checked]:bg-primary'
+                />
+                <span className='text-xs text-gray-500'>Boxes</span>
+              </div>
+            </div>
+            {isBox && (
+              <p className='text-xs text-gray-500'>
+                Box size: {product?.boxSize} pieces per box
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Price Selection */}
+        <div className='space-y-4 border-t border-gray-200 pt-4'>
           <div className='space-y-2'>
             <Label
               htmlFor='unitPrice'
-              className='flex items-center gap-2 text-sm text-gray-900 sm:text-base dark:text-gray-100'
+              className='flex items-center gap-2 text-sm'
             >
-              Unit Price
+              Unit Price (per {isBox ? 'box' : 'piece'})
               {!selectedShop && (
-                <span className='text-xs text-gray-500 dark:text-gray-400'>
+                <span className='text-xs text-gray-500'>
                   (Select a shop first)
                 </span>
               )}
@@ -549,20 +662,15 @@ const ShopBatchModal = ({
                 setSelectedPriceOption('custom');
                 setCustomPrice(e.target.value);
               }}
-              placeholder='Enter unit price'
-              className='w-full border-gray-300 bg-white text-sm text-gray-900 placeholder-gray-500 sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400'
+              placeholder={`Enter price per ${isBox ? 'box' : 'piece'}`}
+              className='w-full'
               disabled={!selectedShop}
             />
-            {/* REMOVED the base price display paragraph */}
           </div>
 
-          {/* Recommended Additional Prices */}
           {selectedShop && additionalPrices.length > 0 && (
             <div className='space-y-2'>
               <div className='flex flex-wrap gap-2'>
-                {/* REMOVED Base Price Option */}
-                
-                {/* Additional Price Options Only */}
                 {additionalPrices.map((option) => (
                   <Button
                     key={option.id}
@@ -575,9 +683,9 @@ const ShopBatchModal = ({
                       setSelectedPriceOption(option.id);
                       setCustomPrice(option.price.toString());
                     }}
-                    className='text-xs sm:text-sm'
+                    className='text-xs'
                   >
-                    {option.label}: {formatPrice(option.price)}
+                    {option.label}: {formatPrice(option.price)} per piece
                   </Button>
                 ))}
               </div>
@@ -585,16 +693,15 @@ const ShopBatchModal = ({
           )}
         </div>
 
-
         {/* Quantity Input */}
         <div className='space-y-2'>
           <Label
             htmlFor='quantity'
-            className='flex items-center gap-2 text-sm text-gray-900 sm:text-base dark:text-gray-100'
+            className='flex items-center gap-2 text-sm'
           >
-            Quantity
+            Quantity ({isBox ? 'Boxes' : 'Pieces'})
             {!selectedShop && (
-              <span className='text-xs text-gray-500 dark:text-gray-400'>
+              <span className='text-xs text-gray-500'>
                 (Select a shop first)
               </span>
             )}
@@ -602,33 +709,37 @@ const ShopBatchModal = ({
           <Input
             type='number'
             id='quantity'
-            min='0'
+            min='1'
+            max={availableStock}
             step='1'
             value={displayQuantity}
             onChange={(e) => handleQuantityChange(e.target.value)}
-            placeholder='Enter quantity'
-            className={`w-full border-gray-300 bg-white text-sm text-gray-900 placeholder-gray-500 sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 ${
-              quantity > availableStock && selectedShop
-                ? 'border-red-500 bg-red-50 dark:border-red-400 dark:bg-red-900/20'
+            placeholder={`Enter number of ${isBox ? 'boxes' : 'pieces'}`}
+            className={`w-full ${
+              quantity > availableStock && selectedShop && availableStock > 0
+                ? 'border-red-500 bg-red-50'
                 : ''
             }`}
-            disabled={!selectedShop}
+            disabled={!selectedShop || availableStock === 0}
           />
           <p
-            className={`text-xs sm:text-sm ${
-              quantity > availableStock && selectedShop
-                ? 'font-semibold text-red-600 dark:text-red-400'
-                : 'text-gray-500 dark:text-gray-400'
+            className={`text-xs ${
+              quantity > availableStock && selectedShop && availableStock > 0
+                ? 'font-semibold text-red-600'
+                : 'text-gray-500'
             }`}
           >
             {selectedShop ? (
               <>
-                Available: {availableStock} units
-                {quantity > availableStock &&
-                  ' - Quantity exceeds available stock!'}
-                {quantity <= 0 &&
-                  quantity !== 0 &&
-                  ' - Please enter a valid quantity greater than 0'}
+                {getAvailableStockDisplay()}
+                {quantity > availableStock && availableStock > 0 && (
+                  <span className='ml-2 block'>
+                    ⚠️ Quantity exceeds available stock!
+                  </span>
+                )}
+                {availableStock === 0 && (
+                  <span className='block text-red-500'>Out of stock</span>
+                )}
               </>
             ) : (
               'Select a shop to see available quantity'
@@ -636,46 +747,49 @@ const ShopBatchModal = ({
           </p>
         </div>
 
-        {/* Price Summary - Always visible but shows placeholder until shop is selected */}
-        <div className='rounded-md border border-gray-200 bg-gray-50 p-3 sm:p-4 dark:border-gray-600 dark:bg-gray-800'>
-          <h4 className='mb-3 text-sm font-semibold text-gray-900 sm:text-base dark:text-gray-100'>
-            Order Summary
-          </h4>
+        {/* Order Summary */}
+        <div className='rounded-md border border-gray-200 bg-gray-50 p-3'>
+          <h4 className='mb-3 text-sm font-semibold'>Order Summary</h4>
 
           <div className='space-y-2'>
             {selectedShop ? (
               <>
-                <div className='flex items-center justify-between text-sm sm:text-base'>
-                  <span className='font-medium text-gray-700 dark:text-gray-300'>
-                    Unit Price:
+                <div className='flex items-center justify-between text-sm'>
+                  <span className='font-medium text-gray-700'>
+                    Unit Price (per {isBox ? 'box' : 'piece'}):
                   </span>
-                  <span className='font-bold text-green-600 dark:text-green-400'>
+                  <span className='font-bold text-green-600'>
                     {formatPrice(unitPrice)}
                   </span>
                 </div>
 
-                <div className='flex items-center justify-between text-sm sm:text-base'>
-                  <span className='font-medium text-gray-700 dark:text-gray-300'>
-                    Quantity:
+                <div className='flex items-center justify-between text-sm'>
+                  <span className='font-medium text-gray-700'>
+                    Quantity ({isBox ? 'Boxes' : 'Pieces'}):
                   </span>
-                  <span className='text-gray-900 dark:text-gray-100'>
-                    {quantity > 0 ? quantity : 'Enter quantity'}
-                  </span>
+                  <span>{quantity > 0 ? quantity : 'Enter quantity'}</span>
                 </div>
 
-                <div className='mt-2 border-t border-gray-200 pt-2 dark:border-gray-600'>
-                  <div className='flex items-center justify-between text-sm font-bold sm:text-base'>
-                    <span className='text-gray-900 dark:text-gray-100'>
-                      Total:
+                {isBox && product?.boxSize && (
+                  <div className='flex items-center justify-between text-sm'>
+                    <span className='font-medium text-gray-700'>
+                      Total Pieces:
                     </span>
-                    <span className='text-blue-600 dark:text-blue-400'>
+                    <span>{quantity * product.boxSize} pieces</span>
+                  </div>
+                )}
+
+                <div className='mt-2 border-t border-gray-200 pt-2'>
+                  <div className='flex items-center justify-between text-sm font-bold'>
+                    <span>Total:</span>
+                    <span className='text-blue-600'>
                       {quantity > 0 ? formatPrice(totalPrice) : '--'}
                     </span>
                   </div>
                 </div>
               </>
             ) : (
-              <div className='py-4 text-center text-sm text-gray-500 dark:text-gray-400'>
+              <div className='py-4 text-center text-sm text-gray-500'>
                 Select a shop to see order summary
               </div>
             )}
@@ -683,17 +797,16 @@ const ShopBatchModal = ({
         </div>
 
         {error && (
-          <div className='rounded-md bg-red-100 p-2 text-sm text-red-700 sm:text-base dark:bg-red-900/20 dark:text-red-400'>
+          <div className='rounded-md bg-red-100 p-2 text-sm text-red-700'>
             {error}
           </div>
         )}
 
-        {/* Action Buttons */}
         <div className='flex flex-col justify-end space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:space-x-2'>
           <Button
             variant='outline'
             onClick={handleClose}
-            className='w-full border-gray-300 py-2 text-sm text-gray-700 hover:bg-gray-50 sm:w-auto sm:py-2.5 sm:text-base dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'
+            className='w-full sm:w-auto'
           >
             Cancel
           </Button>
@@ -706,19 +819,9 @@ const ShopBatchModal = ({
               quantity <= 0 ||
               availableStock === 0
             }
-            className={`w-full py-2 text-sm sm:w-auto sm:py-2.5 sm:text-base ${
-              quantity > availableStock && selectedShop
-                ? 'bg-red-500 text-white hover:bg-red-600'
-                : quantity <= 0
-                  ? 'cursor-not-allowed bg-gray-400 text-white hover:bg-gray-500'
-                  : ''
-            }`}
+            className='w-full sm:w-auto'
           >
-            {quantity > availableStock && selectedShop
-              ? 'Quantity Too High'
-              : quantity <= 0
-                ? 'Enter Valid Quantity'
-                : 'Add to Cart'}
+            Add to Cart
           </Button>
         </div>
       </div>
@@ -726,6 +829,7 @@ const ShopBatchModal = ({
   );
 };
 
+// Cart Component remains the same (omitted for brevity - keep your existing Cart component)
 // Cart Component
 interface CartProps {
   items: CartItem[];
@@ -798,7 +902,7 @@ const Cart = ({
       sellId: item.sellId,
       shopId: item.shop.id,
       productId: item.product.id,
-      unitOfMeasureId: item.product.unitOfMeasureId,
+      isBox: item.isBox,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       totalPrice: item.totalPrice,
@@ -867,7 +971,7 @@ const Cart = ({
 
   return (
     <>
-      <Card className='mx-auto w-full max-w-[100vw] sm:max-w-4xl lg:max-w-5xl'>
+      <Card className='mx-auto w-full max-w-screen sm:max-w-4xl lg:max-w-5xl'>
         <CardHeader className='py-3 sm:py-4'>
           <h2 className='text-lg font-bold sm:text-xl'>Order Summary</h2>
         </CardHeader>
@@ -1489,14 +1593,31 @@ const Cart = ({
   );
 };
 
+// ... (keep all the helper functions and other components like ProductCard, ShopBatchModal, Cart)
+
+// Update ProductSearchProps interface
+interface ProductSearchProps {
+  products: any[];
+  categories: ICategory[];
+  brands: IBrand[]; // Add brands prop
+  initialSearchTerm?: string;
+  initialCategoryName?: string;
+  initialBrandName?: string; // Changed from initialSubCategoryName
+}
+
+interface SearchFilters {
+  category: string;
+  brand: string; // Changed from subCategory to brand
+  productName: string;
+}
 
 export const ProductSearch = ({
   products,
   categories,
-  subCategories,
+  brands,
   initialSearchTerm = '',
   initialCategoryName = 'all',
-  initialSubCategoryName = 'all'
+  initialBrandName = 'all' // Changed from initialSubCategoryName
 }: ProductSearchProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -1504,32 +1625,16 @@ export const ProductSearch = ({
   // Initialize state with props directly
   const [searchFilters, setSearchFilters] = useState<SearchFilters>(() => {
     // Use URL params first, then fall back to initial props
-    const urlCategory = searchParams.get('categoryName') || searchParams.get('categoryId'); // Support both
-    const urlSubCategory = searchParams.get('subCategoryName') || searchParams.get('subCategoryId'); // Support both
+    const urlCategory = searchParams.get('categoryName') || searchParams.get('categoryId');
+    const urlBrand = searchParams.get('brandName') || searchParams.get('brandId'); // Add brand URL param
     const urlSearchTerm = searchParams.get('searchTerm');
     
     return {
       category: urlCategory || initialCategoryName || 'all',
-      subCategory: urlSubCategory || initialSubCategoryName || 'all',
+      brand: urlBrand || initialBrandName || 'all', // Add brand filter
       productName: urlSearchTerm || initialSearchTerm || ''
     };
   });
-
-  // Compute filteredSubCategories directly from state and props
-  const filteredSubCategories = useMemo(() => {
-    if (searchFilters.category === 'all') {
-      return subCategories || [];
-    } else {
-      // Find category by name to get its ID for filtering subcategories
-      const selectedCategory = categories.find(cat => cat.name === searchFilters.category);
-      if (selectedCategory) {
-        return (subCategories || []).filter(
-          (subCat) => subCat.categoryId === selectedCategory.id
-        );
-      }
-      return [];
-    }
-  }, [searchFilters.category, subCategories, categories]);
 
   // Compute filteredProducts directly from state and props
   const filteredProducts = useMemo(() => {
@@ -1543,11 +1648,11 @@ export const ProductSearch = ({
       });
     }
 
-    // Filter by subcategory name
-    if (searchFilters.subCategory !== 'all') {
+    // Filter by brand name
+    if (searchFilters.brand !== 'all') {
       filtered = filtered.filter((product) => {
-        const subCategoryName = product.subCategory?.name || product.subCategory;
-        return subCategoryName === searchFilters.subCategory;
+        const productBrandName = product.brand?.name || product.brand;
+        return productBrandName === searchFilters.brand;
       });
     }
 
@@ -1589,10 +1694,10 @@ export const ProductSearch = ({
       params.delete('categoryName');
     }
 
-    if (searchFilters.subCategory !== 'all') {
-      params.set('subCategoryName', searchFilters.subCategory);
+    if (searchFilters.brand !== 'all') {
+      params.set('brandName', searchFilters.brand);
     } else {
-      params.delete('subCategoryName');
+      params.delete('brandName');
     }
 
     // Update URL without page refresh using Next.js router
@@ -1604,19 +1709,6 @@ export const ProductSearch = ({
   useEffect(() => {
     updateUrl();
   }, [updateUrl]);
-
-  // Effect to reset subcategory if it's not in the filtered list
-  useEffect(() => {
-    if (
-      searchFilters.subCategory !== 'all' &&
-      !filteredSubCategories.some((subCat) => subCat.name === searchFilters.subCategory)
-    ) {
-      // Use setTimeout to avoid state update during render
-      setTimeout(() => {
-        setSearchFilters((prev) => ({ ...prev, subCategory: 'all' }));
-      }, 0);
-    }
-  }, [filteredSubCategories, searchFilters.subCategory]);
 
   // Get current products for pagination
   const indexOfLastProduct = currentPage * productsPerPage;
@@ -1633,17 +1725,6 @@ export const ProductSearch = ({
   const handleFilterChange = (key: keyof SearchFilters, value: string) => {
     setSearchFilters((prev) => {
       const newFilters = { ...prev, [key]: value };
-      
-      // If category changed and subcategory is no longer valid, reset it
-      if (key === 'category' && value !== 'all') {
-        const isValidSubCategory = filteredSubCategories.some(
-          (subCat) => subCat.name === prev.subCategory
-        );
-        if (!isValidSubCategory) {
-          newFilters.subCategory = 'all';
-        }
-      }
-      
       return newFilters;
     });
     // Reset to page 1 when filters change
@@ -1653,7 +1734,7 @@ export const ProductSearch = ({
   const clearFilters = () => {
     setSearchFilters({
       category: 'all',
-      subCategory: 'all',
+      brand: 'all',
       productName: ''
     });
     setCurrentPage(1);
@@ -1711,10 +1792,10 @@ export const ProductSearch = ({
   const handleCreateOrder = async (orderData: Partial<ISell>) => {
     try {
       await createSell(orderData);
-      alert('Order created successfully!');
+      toast.success('Order created successfully!');
       return Promise.resolve();
     } catch (error) {
-      alert('Failed to create order. Please try again.');
+      toast.error('Failed to create order. Please try again.');
       return Promise.reject(error);
     }
   };
@@ -1732,7 +1813,7 @@ export const ProductSearch = ({
             Search Products
           </h2>
 
-          <div className='mb-3 grid grid-cols-1 gap-3 sm:mb-4 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4'>
+          <div className='mb-3 grid grid-cols-1 gap-3 sm:mb-4 sm:grid-cols-3'>
             {/* Category Select */}
             <div>
               <label className='mb-1 block text-xs font-medium sm:mb-2 sm:text-sm'>
@@ -1762,41 +1843,34 @@ export const ProductSearch = ({
               </Select>
             </div>
 
-            {/* Subcategory Select */}
-           <div>
-  <label className='mb-1 block text-xs font-medium sm:mb-2 sm:text-sm'>
-    Subcategory
-  </label>
-  <Select
-    value={searchFilters.subCategory}
-    onValueChange={(value) =>
-      handleFilterChange('subCategory', value)
-    }
-  >
-    <SelectTrigger className='w-full text-xs sm:text-sm'>
-      <SelectValue placeholder='Select subcategory' />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value='all' className='text-xs sm:text-sm'>
-        All Subcategories
-      </SelectItem>
-      {/* Group by name and show only unique names */}
-      {Array.from(
-        new Map(
-          filteredSubCategories.map(subCat => [subCat.name, subCat])
-        ).values() // This keeps the first occurrence of each unique name
-      ).map((subCategory) => (
-        <SelectItem
-          key={subCategory.id}
-          value={subCategory.name} // Just the name for display/filtering
-          className='text-xs sm:text-sm'
-        >
-          {subCategory.name}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-</div>
+            {/* Brand Select */}
+            <div>
+              <label className='mb-1 block text-xs font-medium sm:mb-2 sm:text-sm'>
+                Brand
+              </label>
+              <Select
+                value={searchFilters.brand}
+                onValueChange={(value) => handleFilterChange('brand', value)}
+              >
+                <SelectTrigger className='w-full text-xs sm:text-sm'>
+                  <SelectValue placeholder='Select brand' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='all' className='text-xs sm:text-sm'>
+                    All Brands
+                  </SelectItem>
+                  {brands.map((brand) => (
+                    <SelectItem
+                      key={brand.id}
+                      value={brand.name}
+                      className='text-xs sm:text-sm'
+                    >
+                      {brand.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Product Name Search */}
             <div>

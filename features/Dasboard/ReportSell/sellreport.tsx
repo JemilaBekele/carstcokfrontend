@@ -129,18 +129,7 @@ export const getColumns = (router: any): ColumnDef<ISell>[] => [
       return <div>{date ? date.toLocaleDateString('en-GB') : '-'}</div>;
     }
   },
-  {
-    accessorKey: 'NetTotal',
-    header: () => <div className='text-right'>Net Total</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('NetTotal') as string);
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'ETB'
-      }).format(amount);
-      return <div className='text-right font-medium'>{formatted}</div>;
-    }
-  },
+
   {
     accessorKey: 'grandTotal',
     header: () => <div className='text-right'>Total</div>,
@@ -420,7 +409,6 @@ export function SellsDataTable() {
         'Sale Date': sell.saleDate
           ? new Date(sell.saleDate).toLocaleDateString('en-GB') // Use en-GB format for DD/MM/YYYY
           : '-',
-        'Net Total': sell.NetTotal,
         'Grand Total': sell.grandTotal,
         Branch: sell.branch?.name || '-',
         Customer: sell.customer?.name || '-',
@@ -501,7 +489,7 @@ export function SellsDataTable() {
             
             {/* ALWAYS SHOW TOTAL SALES - NEW SECTION */}
             <div className='flex items-center gap-4'>
-              <div className='flex flex-col items-end'>
+              {/* <div className='flex flex-col items-end'>
                 <div className='flex items-center gap-2 text-sm font-medium text-gray-600'>
                   Total Net Sales:
                 </div>
@@ -511,7 +499,7 @@ export function SellsDataTable() {
                     currency: 'ETB'
                   }).format(totalNetSales)}
                 </div>
-              </div>
+              </div> */}
               <div className='flex flex-col items-end'>
                 <div className='flex items-center gap-2 text-sm font-medium text-gray-600'>
                   Total Sales:

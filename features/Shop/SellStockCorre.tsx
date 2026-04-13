@@ -97,16 +97,10 @@ export default function SellCorrectionForm({
           return {
             productId: item.productId,
             shopId: item.shopId,
-            unitOfMeasureId: item.unitOfMeasureId,
             quantity: 0, // Start with 0 adjustment
             unitPrice: Number(item.unitPrice),
             totalPrice: totalPrice,
-            batches:
-              item.batches?.map((sellBatch) => ({
-                batchId: sellBatch.batchId,
-                quantity: 0 // Start with 0 adjustment
-              })) || []
-          };
+        
         }) || []
     };
   }, [initialData, sellData]);

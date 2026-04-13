@@ -1,23 +1,18 @@
 import { IEmployee } from './employee';
-import { IProduct, IProductBatch } from './Product';
+import { IProduct } from './Product';
 import { IStore } from './store';
 import { ISupplier } from './supplier';
-import { IUnitOfMeasure } from './UnitOfMeasure';
 
 export interface PurchaseItem {
-  batchId: string;
     productId: string;
 
-  unitOfMeasureId: string; // foreign key
-  unitOfMeasure?: IUnitOfMeasure;
+ isBox: boolean; // ✅ Box or Piece
     product: IProduct;
 
   quantity: number;
   unitPrice: number;
   totalPrice: number;
   id?: string;
-
-  batch: IProductBatch;
 
 }
 export enum PaymentStatus {

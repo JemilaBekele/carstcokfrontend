@@ -2,8 +2,7 @@ import { IBranch } from './Branch';
 import { ICustomer } from './customer';
 import { IEmployee } from './employee';
 import { IShop } from './shop';
-import { IUnitOfMeasure } from './UnitOfMeasure';
-import { IProduct, IProductBatch } from './Product'; // Replaces IProductBatch
+import { IProduct } from './Product'; // Replaces IProductBatch
 import { ISellStockCorrection } from './SellStockCorrection';
 
 export enum SaleStatus {
@@ -68,8 +67,7 @@ export interface ISellItem {
   shopId: string;
   shop?: IShop;
 
-  unitOfMeasureId: string;
-  unitOfMeasure?: IUnitOfMeasure;
+ isBox: boolean; // ✅ Box or Piece
 
   itemSaleStatus: ItemSaleStatus;
 
@@ -80,17 +78,7 @@ export interface ISellItem {
   createdAt: string;
   updatedAt: string;
 
-  batches?: ISellItemBatch[];
 }
 
 // ✅ SellItemBatch Model Interface
-export interface ISellItemBatch {
-  id: string;
-  sellItemId: string;
-  sellItem?: ISellItem;
 
-  batchId: string;
-  batch?: IProductBatch;
-
-  quantity: number;
-}

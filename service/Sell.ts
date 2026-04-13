@@ -277,7 +277,6 @@ export interface DeliveryData {
 
 export interface DeliveryItem {
   itemId: string;
-  batches: BatchAssignment[];
 }
 
 export interface BatchAssignment {

@@ -31,8 +31,6 @@ function StatusCard({
     | 'delivered'
     | 'cancelled'
     | 'total'
-    | 'stock-pending'
-    | 'stock-partial';
   needsAttention?: boolean;
   selected?: boolean;
   href: string;
@@ -275,7 +273,7 @@ export default async function SellListingPage({}: SellListingPageProps) {
           className='space-y-3'
           value={statusFilter}
         >
-          <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-8'>
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5'>
             <StatusCard
               title='All Sells'
               count={totalSells}
@@ -316,24 +314,7 @@ export default async function SellListingPage({}: SellListingPageProps) {
               value={SaleStatus.CANCELLED}
               href={buildQueryString(SaleStatus.CANCELLED)}
             />
-            {/* Stock Correction Status Cards */}
-            <StatusCard
-              title='Stock Pending'
-              count={stockPendingCount}
-              variant='stock-pending'
-              selected={statusFilter === 'stock-PENDING'}
-              value='stock-PENDING'
-              href={buildQueryString('stock-PENDING')}
-              needsAttention={stockPendingCount > 0}
-            />
-            <StatusCard
-              title='Stock Partial'
-              count={stockPartialCount}
-              variant='stock-partial'
-              selected={statusFilter === 'stock-PARTIAL'}
-              value='stock-PARTIAL'
-              href={buildQueryString('stock-PARTIAL')}
-            />
+      
           </div>
         </RadioGroup>
 

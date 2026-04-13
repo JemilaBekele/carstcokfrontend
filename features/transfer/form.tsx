@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { getStores, getStoresall } from '@/service/store';
 import { getShops, getShopsall } from '@/service/shop';
 import { createTransfer, updateTransfer } from '@/service/transfer';
@@ -30,7 +31,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { IconTrash } from '@tabler/icons-react';
 import { ITransfer, TransferEntityType } from '@/models/transfer';
 import { getAvailableProductsBySource } from '@/service/productBatchService';
-import { IUnitOfMeasure } from '@/models/UnitOfMeasure';
 
 interface FormData {
   reference?: string;
@@ -43,9 +43,8 @@ interface FormData {
   notes?: string;
   items: Array<{
     productId: string;
-    batchId: string;
+    isBox: boolean;
     quantity: number;
-    // Removed: unitOfMeasureId: string;
   }>;
 }
 
@@ -57,22 +56,15 @@ interface TransferFormProps {
 interface StoreStockItem {
   id: string;
   storeId: string;
-  batchId: string;
+  productId: string;
   quantity: number;
   status: string;
-  unitOfMeasureId: string;
   createdAt: string;
   updatedAt: string;
   store: {
     id: string;
     name: string;
     branchId: string;
-  };
-  batch: {
-    id: string;
-    batchNumber: string;
-    expiryDate: string | null;
-    price: number | null;
   };
   product: {
     id: string;
@@ -83,13 +75,12 @@ interface StoreStockItem {
     sellPrice: number | null;
     imageUrl: string;
     isActive: boolean;
+    hasBox: boolean;
+    boxSize: number | null;
+    UnitOfMeasure: string | null;
     category: any;
-    subCategory: any | null;
-    unitOfMeasure: IUnitOfMeasure;
+    brand: any;
   };
-  unitOfMeasure: IUnitOfMeasure;
-  availableQuantity: number;
-  conversionFactor: number;
 }
 
 export default function TransferForm({
@@ -106,7 +97,6 @@ export default function TransferForm({
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [loadingStoresShops, setLoadingStoresShops] = useState(true);
   
-  // Add refs to track API calls
   const hasFetchedProductsRef = useRef(false);
   const lastSourceRef = useRef<string>('');
   
@@ -124,10 +114,9 @@ export default function TransferForm({
       notes: initialData?.notes || '',
       items: initialData?.items?.map((item) => ({
         productId: item.productId.toString(),
-        batchId: item.batchId.toString(),
+        isBox: item.isBox || false,
         quantity: Number(item.quantity)
-        // Removed: unitOfMeasureId: item.unitOfMeasureId.toString(),
-      })) || [{ productId: '', batchId: '', quantity: 1 }] // Removed unitOfMeasureId
+      })) || [{ productId: '', isBox: false, quantity: 1 }]
     }
   });
 
@@ -136,35 +125,42 @@ export default function TransferForm({
   const sourceShopId = form.watch('sourceShopId');
   const destinationType = form.watch('destinationType');
 
-  // Create a stable source identifier
   const currentSource = `${sourceType}-${sourceType === TransferEntityType.STORE ? sourceStoreId : sourceShopId}`;
 
-  // Get unique products from storeStockItems
-  const getUniqueProducts = (): StoreStockItem[] => {
-    const seenProductIds = new Set<string>();
-    return storeStockItems.filter((item) => {
-      if (!seenProductIds.has(item.product.id)) {
-        seenProductIds.add(item.product.id);
-        return true;
+  // Helper: get available stock item by productId
+  const getAvailableStock = (productId: string): StoreStockItem | undefined => {
+    return storeStockItems.find((stock) => stock.product.id.toString() === productId);
+  };
+
+
+
+
+
+
+  // Cross-check before submit: convert to pieces and compare with available pieces
+  const validateItemsPieces = (items: FormData['items']): boolean => {
+    for (const item of items) {
+      if (!item.productId) continue;
+      const stock = getAvailableStock(item.productId);
+      if (!stock) {
+        toast.error(`Product not found in stock`);
+        return false;
       }
-      return false;
-    });
-  };
-
-  // Get all batches for a specific product from storeStockItems
-  const getBatchesForProduct = (productId: string): Array<{ id: string; batchNumber: string }> => {
-    return storeStockItems
-      .filter((item) => item.product.id === productId)
-      .map((item) => ({
-        id: item.batchId,
-        batchNumber: item.batch.batchNumber
-      }));
-  };
-
-  // Get unit of measure for a specific product
-  const getUnitOfMeasureForProduct = (productId: string): IUnitOfMeasure | null => {
-    const productItem = storeStockItems.find(item => item.product.id === productId);
-    return productItem?.product.unitOfMeasure || null;
+      let requestedPieces = item.quantity;
+      if (item.isBox) {
+        const boxSize = stock.product.boxSize;
+        if (!boxSize) {
+          toast.error(`Product ${stock.product.name} has no box size defined`);
+          return false;
+        }
+        requestedPieces = item.quantity * boxSize;
+      }
+      if (requestedPieces > stock.quantity) {
+        toast.error(`${stock.product.name}: Not enough stock. Available: ${stock.quantity} pieces, Requested: ${requestedPieces} pieces.`);
+        return false;
+      }
+    }
+    return true;
   };
 
   useEffect(() => {
@@ -186,7 +182,7 @@ export default function TransferForm({
         setShops(shopsData);
         setDisshops(disstoresData);
         setDisstores(disshopsData);
-      } catch  {
+      } catch {
         toast.error('Failed to load stores or shops');
       } finally {
         setLoadingStoresShops(false);
@@ -195,9 +191,8 @@ export default function TransferForm({
     fetchData();
   }, []);
 
-  // Optimized: Fetch products from source
+  // Fetch products from source
   const fetchProductsFromSource = useCallback(async () => {
-    // Don't fetch if no source is selected
     if (
       (sourceType === TransferEntityType.STORE && !sourceStoreId) ||
       (sourceType === TransferEntityType.SHOP && !sourceShopId)
@@ -208,13 +203,10 @@ export default function TransferForm({
       return;
     }
 
-    // Skip if we've already fetched for this source
     if (currentSource === lastSourceRef.current && hasFetchedProductsRef.current) {
       return;
     }
 
-    console.log(`Fetching products for source: ${currentSource}`);
-    
     setLoadingProducts(true);
     hasFetchedProductsRef.current = true;
     lastSourceRef.current = currentSource;
@@ -224,51 +216,36 @@ export default function TransferForm({
       if (!sourceId) return;
 
       const storeStockData = await getAvailableProductsBySource(sourceType, sourceId);
+      console.log('Fetched store stock data:', storeStockData.map((s: { product: { name: any; hasBox: any; boxSize: any; }; quantity: any; }) => ({
+        productName: s.product.name,
+        quantity: s.quantity,
+        hasBox: s.product.hasBox,
+        boxSize: s.product.boxSize
+      })));
       setStoreStockItems(storeStockData);
-
-      // For edit mode, pre-select items
-      if (isEdit) {
-        const items = form.getValues('items');
-        // No additional API calls needed
-      }
     } catch {
       toast.error('Failed to load products from source');
       setStoreStockItems([]);
     } finally {
       setLoadingProducts(false);
     }
-  }, [currentSource, sourceType, sourceStoreId, sourceShopId, form, isEdit]);
+  }, [currentSource, sourceType, sourceStoreId, sourceShopId]);
 
-  const calculateAvailableQuantity = (
-    storeStockItem: any
-  ): number => {
-    if (!storeStockItem) return 0;
-    return storeStockItem.quantity;
-  };
-
-  // Debounced fetch effect
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchProductsFromSource();
-    }, 300); // 300ms debounce
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
+    }, 300);
+    return () => clearTimeout(timeoutId);
   }, [fetchProductsFromSource]);
 
   const [isDark, setIsDark] = useState(false);
-
   useEffect(() => {
     const checkDark = () => {
       setIsDark(document.documentElement.classList.contains('dark'));
     };
     checkDark();
     const observer = new MutationObserver(checkDark);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     return () => observer.disconnect();
   }, []);
 
@@ -279,156 +256,99 @@ export default function TransferForm({
       borderColor: '#374151',
       color: '#f9fafb'
     }),
-    menu: (base: any) => ({
-      ...base,
-      backgroundColor: '#1f2937',
-      color: '#f9fafb'
-    }),
+    menu: (base: any) => ({ ...base, backgroundColor: '#1f2937', color: '#f9fafb' }),
     option: (base: any, state: any) => ({
       ...base,
       backgroundColor: state.isFocused ? '#374151' : '#1f2937',
       color: '#f9fafb'
     }),
-    singleValue: (base: any) => ({
-      ...base,
-      color: '#f9fafb'
-    }),
-    input: (base: any) => ({
-      ...base,
-      color: '#f9fafb'
-    }),
-    placeholder: (base: any) => ({
-      ...base,
-      color: '#9ca3af'
-    })
+    singleValue: (base: any) => ({ ...base, color: '#f9fafb' }),
+    input: (base: any) => ({ ...base, color: '#f9fafb' }),
+    placeholder: (base: any) => ({ ...base, color: '#9ca3af' })
   };
 
- const onSubmit = async (data: FormData) => {
-  setIsLoading(true);
-  try {
-    // Debug: Log the raw data
-    console.log('Raw form data:', data);
-    console.log('Raw items:', data.items);
-    console.log('Items count:', data.items.length);
+  const onSubmit = async (data: FormData) => {
+    setIsLoading(true);
+    try {
+      // Basic validations
+      if (data.sourceType === TransferEntityType.STORE && !data.sourceStoreId) {
+        toast.error('Source store is required');
+        setIsLoading(false);
+        return;
+      }
+      if (data.sourceType === TransferEntityType.SHOP && !data.sourceShopId) {
+        toast.error('Source shop is required');
+        setIsLoading(false);
+        return;
+      }
+      if (data.destinationType === TransferEntityType.STORE && !data.destStoreId) {
+        toast.error('Destination store is required');
+        setIsLoading(false);
+        return;
+      }
+      if (data.destinationType === TransferEntityType.SHOP && !data.destShopId) {
+        toast.error('Destination shop is required');
+        setIsLoading(false);
+        return;
+      }
+      if (
+        (data.sourceType === TransferEntityType.STORE && data.destinationType === TransferEntityType.STORE && data.sourceStoreId === data.destStoreId) ||
+        (data.sourceType === TransferEntityType.SHOP && data.destinationType === TransferEntityType.SHOP && data.sourceShopId === data.destShopId)
+      ) {
+        toast.error('Source and destination cannot be the same');
+        setIsLoading(false);
+        return;
+      }
 
-    // Validate source
-    if (data.sourceType === TransferEntityType.STORE && !data.sourceStoreId) {
-      toast.error('Source store is required');
+      // Filter out incomplete items
+      const validItems = data.items.filter(item => item.productId && item.quantity > 0);
+      if (validItems.length === 0) {
+        toast.error('Please add at least one valid item');
+        setIsLoading(false);
+        return;
+      }
+
+      // ** Cross-check stock in pieces (ultimate validation) **
+      if (!validateItemsPieces(validItems)) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Prepare payload
+      const cleanedPayload = {
+        ...data,
+        reference: data.reference?.trim() || undefined,
+        notes: data.notes?.trim() || undefined,
+        sourceStoreId: data.sourceStoreId || undefined,
+        sourceShopId: data.sourceShopId || undefined,
+        destStoreId: data.destStoreId || undefined,
+        destShopId: data.destShopId || undefined,
+        items: validItems.map(item => ({
+          productId: item.productId.toString(),
+          isBox: item.isBox,
+          quantity: Number(item.quantity)
+        }))
+      };
+
+      if (isEdit && initialData?.id) {
+        await updateTransfer(initialData.id, cleanedPayload);
+        toast.success('Transfer updated successfully');
+        router.push(`/dashboard/Transfer/view?id=${initialData?.id}`);
+      } else {
+        const newTransfer = await createTransfer(cleanedPayload);
+        toast.success('Transfer created successfully');
+        router.push(`/dashboard/Transfer/view?id=${newTransfer.transfer.id}`);
+      }
+      router.refresh();
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'An error occurred while saving transfer.';
+      toast.error(message);
+    } finally {
       setIsLoading(false);
-      return;
     }
+  };
 
-    if (data.sourceType === TransferEntityType.SHOP && !data.sourceShopId) {
-      toast.error('Source shop is required');
-      setIsLoading(false);
-      return;
-    }
-
-    // Validate destination
-    if (data.destinationType === TransferEntityType.STORE && !data.destStoreId) {
-      toast.error('Destination store is required');
-      setIsLoading(false);
-      return;
-    }
-
-    if (data.destinationType === TransferEntityType.SHOP && !data.destShopId) {
-      toast.error('Destination shop is required');
-      setIsLoading(false);
-      return;
-    }
-
-    // Check if source and destination are the same
-    if (
-      (data.sourceType === TransferEntityType.STORE && 
-       data.destinationType === TransferEntityType.STORE && 
-       data.sourceStoreId === data.destStoreId) ||
-      (data.sourceType === TransferEntityType.SHOP && 
-       data.destinationType === TransferEntityType.SHOP && 
-       data.sourceShopId === data.destShopId)
-    ) {
-      toast.error('Source and destination cannot be the same');
-      setIsLoading(false);
-      return;
-    }
-
-    // Debug each item
-    data.items.forEach((item, index) => {
-      console.log(`Item ${index + 1}:`, {
-        productId: item.productId,
-        batchId: item.batchId,
-        quantity: item.quantity,
-        productIdTruthy: !!item.productId,
-        batchIdTruthy: !!item.batchId,
-        quantityValid: item.quantity > 0,
-        passesAll: item.productId && item.batchId && item.quantity > 0
-      });
-    });
-
-    // Filter out incomplete items (removed unitOfMeasureId check)
-    const validItems = data.items.filter(
-      (item) => 
-        item.productId && 
-        item.batchId && 
-        item.quantity > 0
-    );
-    
-    console.log('Valid items found:', validItems);
-    console.log('Valid items count:', validItems.length);
-
-    // If no valid items, show error
-    if (validItems.length === 0) {
-      toast.error('Please add at least one valid item');
-      setIsLoading(false);
-      return;
-    }
-
-    // Clean the payload
-    const cleanedPayload = {
-      ...data,
-      reference: data.reference?.trim() || undefined,
-      notes: data.notes?.trim() || undefined,
-      sourceStoreId: data.sourceStoreId || undefined,
-      sourceShopId: data.sourceShopId || undefined,
-      destStoreId: data.destStoreId || undefined,
-      destShopId: data.destShopId || undefined,
-      items: validItems.map((item) => ({
-        productId: item.productId.toString(),
-        batchId: item.batchId.toString(),
-        quantity: Number(item.quantity)
-        // Removed: unitOfMeasureId: item.unitOfMeasureId.toString(),
-      }))
-    };
-
-    console.log('Cleaned payload:', cleanedPayload);
-    
-    let transferId: string | undefined;
-
-    if (isEdit && initialData?.id) {
-      const updatedTransfer = await updateTransfer(initialData.id, cleanedPayload);
-      transferId = updatedTransfer.id;
-      toast.success('Transfer updated successfully');
-      router.push(`/dashboard/Transfer/view?id=${initialData?.id}`);
-    } else {
-      const newTransfer = await createTransfer(cleanedPayload);
-      transferId = newTransfer.transfer.id;
-      toast.success('Transfer created successfully');
-    }
-
-    if (transferId) {
-      router.push(`/dashboard/Transfer/view?id=${transferId}`);
-    }
-    router.refresh();
-  } catch (error: any) {
-    const message =
-      error?.response?.data?.message ||
-      'An error occurred while saving transfer.';
-    toast.error(message);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-  if (!isMounted) {
+  if (!isMounted || loadingStoresShops) {
     return (
       <Card className='mx-auto w-full'>
         <CardHeader>
@@ -440,28 +360,7 @@ export default function TransferForm({
           <div className='flex items-center justify-center py-8'>
             <div className='text-center'>
               <div className='border-primary mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-b-2'></div>
-              <div>Loading form...</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Show loading state while stores/shops are loading
-  if (loadingStoresShops) {
-    return (
-      <Card className='mx-auto w-full'>
-        <CardHeader>
-          <CardTitle className='text-left text-2xl font-bold'>
-            {isEdit ? 'Edit Transfer' : 'Create Transfer'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className='flex items-center justify-center py-8'>
-            <div className='text-center'>
-              <div className='border-primary mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-b-2'></div>
-              <div>Loading stores and shops...</div>
+              <div>Loading...</div>
             </div>
           </div>
         </CardContent>
@@ -487,26 +386,20 @@ export default function TransferForm({
                   <FormItem>
                     <FormLabel>Reference (Optional)</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder='Enter transfer reference'
-                        {...field}
-                      />
+                      <Input placeholder='Enter transfer reference' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              {/* Empty column for spacing - aligns with Source/Destination Type column */}
               <div></div>
             </div>
 
-            {/* Source and Destination Section - Aligned in same columns */}
+            {/* Source and Destination Section */}
             <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
               {/* Source Column */}
               <div className='space-y-4'>
                 <h3 className='text-lg font-semibold'>Source</h3>
-
                 <FormField
                   control={form.control}
                   name='sourceType'
@@ -517,40 +410,24 @@ export default function TransferForm({
                         value={field.value}
                         onValueChange={(value: TransferEntityType) => {
                           field.onChange(value);
-                          if (value === TransferEntityType.STORE) {
-                            form.setValue('sourceShopId', '');
-                          } else {
-                            form.setValue('sourceStoreId', '');
-                          }
-                          form.setValue('items', [
-                            {
-                              productId: '',
-                              batchId: '',
-                              quantity: 1
-                            }
-                          ]);
+                          if (value === TransferEntityType.STORE) form.setValue('sourceShopId', '');
+                          else form.setValue('sourceStoreId', '');
+                          form.setValue('items', [{ productId: '', isBox: false, quantity: 1 }]);
                           setStoreStockItems([]);
                         }}
                       >
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder='Select source type' />
-                          </SelectTrigger>
+                          <SelectTrigger><SelectValue placeholder='Select source type' /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value={TransferEntityType.STORE}>
-                            Store
-                          </SelectItem>
-                          <SelectItem value={TransferEntityType.SHOP}>
-                            Shop
-                          </SelectItem>
+                          <SelectItem value={TransferEntityType.STORE}>Store</SelectItem>
+                          <SelectItem value={TransferEntityType.SHOP}>Shop</SelectItem>
                         </SelectContent>
                       </ShadcnSelect>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
                 {sourceType === TransferEntityType.STORE && (
                   <FormField
                     control={form.control}
@@ -562,29 +439,16 @@ export default function TransferForm({
                           value={field.value}
                           onValueChange={(value) => {
                             field.onChange(value);
-                            form.setValue('items', [
-                              {
-                                productId: '',
-                                batchId: '',
-                                quantity: 1
-                              }
-                            ]);
+                            form.setValue('items', [{ productId: '', isBox: false, quantity: 1 }]);
                             setStoreStockItems([]);
                           }}
                         >
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder='Select source store' />
-                            </SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder='Select source store' /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {stores.map((store) => (
-                              <SelectItem
-                                key={store.id}
-                                value={store.id.toString()}
-                              >
-                                {store.name}
-                              </SelectItem>
+                              <SelectItem key={store.id} value={store.id.toString()}>{store.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </ShadcnSelect>
@@ -593,7 +457,6 @@ export default function TransferForm({
                     )}
                   />
                 )}
-
                 {sourceType === TransferEntityType.SHOP && (
                   <FormField
                     control={form.control}
@@ -605,29 +468,16 @@ export default function TransferForm({
                           value={field.value}
                           onValueChange={(value) => {
                             field.onChange(value);
-                            form.setValue('items', [
-                              {
-                                productId: '',
-                                batchId: '',
-                                quantity: 1
-                              }
-                            ]);
+                            form.setValue('items', [{ productId: '', isBox: false, quantity: 1 }]);
                             setStoreStockItems([]);
                           }}
                         >
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder='Select source shop' />
-                            </SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder='Select source shop' /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {shops.map((shop) => (
-                              <SelectItem
-                                key={shop.id}
-                                value={shop.id.toString()}
-                              >
-                                {shop.name}
-                              </SelectItem>
+                              <SelectItem key={shop.id} value={shop.id.toString()}>{shop.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </ShadcnSelect>
@@ -641,7 +491,6 @@ export default function TransferForm({
               {/* Destination Column */}
               <div className='space-y-4'>
                 <h3 className='text-lg font-semibold'>Destination</h3>
-
                 <FormField
                   control={form.control}
                   name='destinationType'
@@ -652,32 +501,22 @@ export default function TransferForm({
                         value={field.value}
                         onValueChange={(value: TransferEntityType) => {
                           field.onChange(value);
-                          if (value === TransferEntityType.STORE) {
-                            form.setValue('destShopId', '');
-                          } else {
-                            form.setValue('destStoreId', '');
-                          }
+                          if (value === TransferEntityType.STORE) form.setValue('destShopId', '');
+                          else form.setValue('destStoreId', '');
                         }}
                       >
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder='Select destination type' />
-                          </SelectTrigger>
+                          <SelectTrigger><SelectValue placeholder='Select destination type' /></SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value={TransferEntityType.STORE}>
-                            Store
-                          </SelectItem>
-                          <SelectItem value={TransferEntityType.SHOP}>
-                            Shop
-                          </SelectItem>
+                          <SelectItem value={TransferEntityType.STORE}>Store</SelectItem>
+                          <SelectItem value={TransferEntityType.SHOP}>Shop</SelectItem>
                         </SelectContent>
                       </ShadcnSelect>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
                 {destinationType === TransferEntityType.STORE && (
                   <FormField
                     control={form.control}
@@ -685,23 +524,13 @@ export default function TransferForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Store</FormLabel>
-                        <ShadcnSelect
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
+                        <ShadcnSelect value={field.value} onValueChange={field.onChange}>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder='Select destination store' />
-                            </SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder='Select destination store' /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {disstores.map((store) => (
-                              <SelectItem
-                                key={store.id}
-                                value={store.id.toString()}
-                              >
-                                {store.name}
-                              </SelectItem>
+                              <SelectItem key={store.id} value={store.id.toString()}>{store.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </ShadcnSelect>
@@ -710,7 +539,6 @@ export default function TransferForm({
                     )}
                   />
                 )}
-
                 {destinationType === TransferEntityType.SHOP && (
                   <FormField
                     control={form.control}
@@ -718,23 +546,13 @@ export default function TransferForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Shop</FormLabel>
-                        <ShadcnSelect
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
+                        <ShadcnSelect value={field.value} onValueChange={field.onChange}>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder='Select destination shop' />
-                            </SelectTrigger>
+                            <SelectTrigger><SelectValue placeholder='Select destination shop' /></SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {disshops.map((shop) => (
-                              <SelectItem
-                                key={shop.id}
-                                value={shop.id.toString()}
-                              >
-                                {shop.name}
-                              </SelectItem>
+                              <SelectItem key={shop.id} value={shop.id.toString()}>{shop.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </ShadcnSelect>
@@ -746,207 +564,202 @@ export default function TransferForm({
               </div>
             </div>
 
+            {/* Items Section */}
             <FormField
               control={form.control}
               name='items'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Items</FormLabel>
-                  <FormControl>
-                    <div className='space-y-4'>
-                      {/* Updated grid columns: removed "Unit" column */}
-                      <div className='grid grid-cols-6 gap-4 text-sm font-semibold text-gray-700 dark:text-gray-300'>
-                        <div>Product</div>
-                        <div>Batch</div>
-                        <div>Quantity</div>
-                        <div>Available</div>
-                        <div>Unit</div>
-                        <div>Action</div>
-                      </div>
+              render={({ field }) => {
+                // Force re-render when form values change
+                const formValues = form.watch();
+                
+                return (
+                  <FormItem>
+                    <FormLabel>Items</FormLabel>
+                    <FormControl>
+                      <div className='space-y-4'>
+                        <div className='grid grid-cols-6 gap-4 text-sm font-semibold text-gray-700 dark:text-gray-300'>
+                          <div>Product</div>
+                          <div>Box/Piece</div>
+                          <div>Quantity</div>
+                          <div>Available Stock</div>
+                          <div>Unit</div>
+                          <div>Action</div>
+                        </div>
 
-                      {field.value.map((item, index) => {
-                        const storeStockItem = storeStockItems.find(
-                          (stock) =>
-                            stock.product.id.toString() === item.productId &&
-                            stock.batchId === item.batchId
-                        );
-
-                        const availableQuantity = storeStockItem?.quantity || 0;
-                        
-                        // Get unit of measure from the product
-                        const productUnitOfMeasure = storeStockItem?.product.unitOfMeasure;
-
-                        const uniqueProducts = getUniqueProducts();
-                        const productOptions = uniqueProducts.map((storeStockItem) => ({
-                          value: storeStockItem.product.id.toString(),
-                          label: `${storeStockItem.product.name}`,
-                          data: storeStockItem
-                        }));
-
-                        return (
-                          <div
-                            key={index}
-                            className='grid grid-cols-6 items-center gap-4'
-                          >
-                            <div>
-                              <Select
-                                instanceId={`product-select-${index}`}
-                                options={productOptions}
-                                onChange={(newValue: any) => {
-                                  const newItems = [...field.value];
-                                  newItems[index].productId =
-                                    newValue?.value || '';
-                                  newItems[index].batchId = '';
-                                  newItems[index].quantity = 1;
-                                  field.onChange(newItems);
-                                }}
-                                value={
-                                  productOptions.find(
-                                    (p) => p.value === item.productId
-                                  ) || null
-                                }
-                                placeholder={'Search product'}
-                                isSearchable
-                                isDisabled={loadingProducts}
-                                isLoading={loadingProducts}
-                                styles={isDark ? darkStyles : {}}
-                              />
-                            </div>
-
-                            <div>
-                              <Select
-                                key={`batch-${item.productId}`}
-                                instanceId={`batch-select-${index}`}
-                                options={getBatchesForProduct(item.productId).map((batch) => ({
-                                  value: batch.id,
-                                  label: batch.batchNumber
-                                }))}
-                                onChange={(newValue: any) => {
-                                  const newItems = [...field.value];
-                                  newItems[index].batchId =
-                                    newValue?.value || '';
-                                  
-                                  field.onChange(newItems);
-                                }}
-                                value={
-                                  getBatchesForProduct(item.productId)
-                                    .find((b) => b.id === item.batchId) 
-                                    ? {
-                                        value: item.batchId,
-                                        label: getBatchesForProduct(item.productId)
-                                          .find((b) => b.id === item.batchId)?.batchNumber || ''
-                                      }
-                                    : null
-                                }
-                                placeholder={
-                                  !item.productId || loadingProducts
-                                    ? 'Select product first'
-                                    : 'Select batch'
-                                }
-                                isSearchable
-                                isDisabled={
-                                  !item.productId || loadingProducts
-                                }
-                                isLoading={loadingProducts}
-                                styles={isDark ? darkStyles : {}}
-                              />
-                            </div>
-
-                            <div>
-                              <Input
-                                type='number'
-                                placeholder='Qty'
-                                value={item.quantity}
-                                min={1}
-                                max={Math.floor(availableQuantity)}
-                                onChange={(e) => {
-                                  const newItems = [...field.value];
-                                  const quantity = Number(e.target.value);
-                                  const maxQuantity = Math.floor(availableQuantity);
-
-                                  newItems[index].quantity = Math.min(
-                                    isNaN(quantity) ? 0 : quantity,
-                                    maxQuantity
-                                  );
-                                  field.onChange(newItems);
-                                }}
-                                disabled={loadingProducts}
-                              />
-                            </div>
-
-                            <div className='text-muted-foreground text-sm'>
-                              {loadingProducts ? (
-                                <div className='flex items-center gap-1'>
-                                  <div className='h-3 w-3 animate-spin rounded-full border-b-2 border-gray-400'></div>
-                                  <span>Loading...</span>
-                                </div>
-                              ) : availableQuantity > 0 ? (
-                                `${Math.floor(availableQuantity)} available`
-                              ) : (
-                                'Out of stock'
-                              )}
-                            </div>
-
-                            {/* Display unit of measure from product (read-only) */}
-                            <div className='text-muted-foreground text-sm'>
-                              {productUnitOfMeasure ? (
-                                productUnitOfMeasure.name
-                              ) : (
-                                <span className='text-gray-400'>Select product</span>
-                              )}
-                            </div>
-
-                            <div>
-                              <Button
-                                type='button'
-                                variant='destructive'
-                                size='sm'
-                                onClick={() => {
-                                  const newItems = [...field.value];
-                                  newItems.splice(index, 1);
-                                  field.onChange(newItems);
-                                }}
-                                disabled={
-                                  field.value.length <= 1 || loadingProducts
-                                }
-                              >
-                                <IconTrash size={16} />
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      <div className='flex justify-end'>
-                        <Button
-                          type='button'
-                          onClick={() => {
-                            field.onChange([
-                              ...field.value,
-                              {
-                                productId: '',
-                                batchId: '',
-                                quantity: 1
+                        {field.value.map((item, index) => {
+                          const stockItem = getAvailableStock(item.productId);
+                          const isBox = item.isBox;
+                          const pieces = stockItem?.quantity || 0;
+                          const boxSize = stockItem?.product.boxSize || 1;
+                          const boxes = Math.floor(pieces / boxSize);
+                          const remainingPieces = pieces % boxSize;
+                          const hasBox = stockItem?.product.hasBox || false;
+                          
+                          // Calculate max quantity based on current isBox state
+                          const maxQuantity = isBox ? boxes : pieces;
+                          
+                          // Determine available stock display
+                          let availableDisplay = 'Select product';
+                          if (item.productId && stockItem) {
+                            if (isBox) {
+                              if (!hasBox) {
+                                availableDisplay = 'Box not supported';
+                              } else if (boxes === 0) {
+                                availableDisplay = '0 boxes available';
+                              } else {
+                                availableDisplay = `${boxes} box(es) available${remainingPieces > 0 ? ` (${remainingPieces} pieces left)` : ''}`;
                               }
-                            ]);
-                          }}
-                          disabled={loadingProducts}
-                        >
-                          {loadingProducts ? (
-                            <div className='flex items-center gap-2'>
-                              <div className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></div>
-                              Loading...
+                            } else {
+                              availableDisplay = `${pieces} piece(s) available`;
+                            }
+                          } else if (item.productId) {
+                            availableDisplay = 'Loading...';
+                          }
+                          
+                          const uniqueProducts = Array.from(
+                            new Map(storeStockItems.map(s => [s.product.id, s])).values()
+                          );
+                          const productOptions = uniqueProducts.map((s) => ({
+                            value: s.product.id.toString(),
+                            label: s.product.name,
+                          }));
+
+                          console.log(`Item ${index} render:`, { isBox, pieces, boxes, maxQuantity, availableDisplay, hasBox, boxSize });
+
+                          return (
+                            <div key={index} className='grid grid-cols-6 items-center gap-4'>
+                              {/* Product */}
+                              <div>
+                                <Select
+                                  instanceId={`product-select-${index}`}
+                                  options={productOptions}
+                                  onChange={(newValue: any) => {
+                                    const newItems = [...field.value];
+                                    newItems[index].productId = newValue?.value || '';
+                                    newItems[index].isBox = false;
+                                    newItems[index].quantity = 1;
+                                    field.onChange(newItems);
+                                  }}
+                                  value={productOptions.find(p => p.value === item.productId) || null}
+                                  placeholder='Search product'
+                                  isSearchable
+                                  isDisabled={loadingProducts}
+                                  isLoading={loadingProducts}
+                                  styles={isDark ? darkStyles : {}}
+                                />
+                              </div>
+
+                              {/* Box/Piece Switch */}
+                              <div>
+                                <div className='flex items-center justify-center'>
+                                  <Switch
+                                    checked={isBox}
+                                    onCheckedChange={(checked) => {
+                                      console.log(`Toggling isBox for item ${index} to:`, checked);
+                                      const newItems = [...field.value];
+                                      newItems[index].isBox = checked;
+                                      newItems[index].quantity = 1; // Reset quantity on toggle
+                                      field.onChange(newItems);
+                                    }}
+                                    disabled={!item.productId || loadingProducts || !hasBox}
+                                    className='data-[state=checked]:bg-primary'
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Quantity */}
+                              <div>
+                                <Input
+                                  type='number'
+                                  placeholder='Qty'
+                                  value={item.quantity}
+                                  min={1}
+                                  max={maxQuantity}
+                                  onChange={(e) => {
+                                    const newItems = [...field.value];
+                                    let qty = Number(e.target.value);
+                                    if (isNaN(qty)) qty = 0;
+                                    if (qty > maxQuantity && maxQuantity > 0) {
+                                      qty = maxQuantity;
+                                      toast.warning(`Maximum ${maxQuantity} ${isBox ? 'boxes' : 'pieces'} available`);
+                                    }
+                                    if (qty < 0) qty = 0;
+                                    newItems[index].quantity = qty;
+                                    field.onChange(newItems);
+                                  }}
+                                  disabled={!item.productId || loadingProducts || maxQuantity === 0}
+                                />
+                              </div>
+
+                              {/* Available Stock Display */}
+                              <div className='text-muted-foreground text-sm'>
+                                {loadingProducts ? (
+                                  <div className='flex items-center gap-1'>
+                                    <div className='h-3 w-3 animate-spin rounded-full border-b-2 border-gray-400'></div>
+                                    <span>Loading...</span>
+                                  </div>
+                                ) : item.productId ? (
+                                  <div className='space-y-1'>
+                                    <div className={isBox ? 'font-semibold text-blue-600 dark:text-blue-400' : ''}>
+                                      {availableDisplay}
+                                    </div>
+                                    {isBox && hasBox && boxSize > 0 && (
+                                      <div className='text-xs text-gray-500'>{boxSize} pieces per box</div>
+                                    )}
+                                    {isBox && !hasBox && (
+                                      <div className='text-xs text-red-500'>Box not supported</div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  'Select product'
+                                )}
+                              </div>
+
+                              {/* Unit of Measure */}
+                              <div className='text-muted-foreground text-sm'>
+                                {stockItem?.product?.UnitOfMeasure || <span className='text-gray-400'>Select product</span>}
+                              </div>
+
+                              {/* Delete Button */}
+                              <div>
+                                <Button
+                                  type='button'
+                                  variant='destructive'
+                                  size='sm'
+                                  onClick={() => {
+                                    const newItems = [...field.value];
+                                    newItems.splice(index, 1);
+                                    field.onChange(newItems);
+                                  }}
+                                  disabled={field.value.length <= 1 || loadingProducts}
+                                >
+                                  <IconTrash size={16} />
+                                </Button>
+                              </div>
                             </div>
-                          ) : (
-                            'Add Item'
-                          )}
-                        </Button>
+                          );
+                        })}
+
+                        <div className='flex justify-end'>
+                          <Button
+                            type='button'
+                            onClick={() => {
+                              field.onChange([
+                                ...field.value,
+                                { productId: '', isBox: false, quantity: 1 }
+                              ]);
+                            }}
+                            disabled={loadingProducts}
+                          >
+                            Add Item
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <FormField
@@ -964,11 +777,7 @@ export default function TransferForm({
             />
 
             <div className='flex justify-end gap-2'>
-              <Button
-                type='submit'
-                disabled={isLoading}
-                className='min-w-24'
-              >
+              <Button type='submit' disabled={isLoading} className='min-w-24'>
                 {isLoading ? (
                   <div className='flex items-center gap-2'>
                     <div className='h-4 w-4 animate-spin rounded-full border-b-2 border-white'></div>

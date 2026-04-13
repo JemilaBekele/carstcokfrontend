@@ -5,48 +5,48 @@ import { useState, useEffect } from 'react';
 import FormCardSkeleton from '@/components/form-card-skeleton';
 import PageContainer from '@/components/layout/page-container';
 import { ProductSearch } from '@/features/Shop/list';
-import { getCategories, getSubCategories } from '@/service/Category';
+import { getCategories } from '@/service/Category';
+import { getBrands } from '@/service/brand';
 import { TopProducts } from '@/service/Product';
 import { useSearchParams } from 'next/navigation';
 
 export default function Page() {
-const searchParams = useSearchParams();
-const searchTerm = searchParams?.get('searchTerm') || '';
-const categoryName = searchParams?.get('categoryName') || '';
-const subCategoryName = searchParams?.get('subCategoryName') || '';
+  const searchParams = useSearchParams();
+  const searchTerm = searchParams?.get('searchTerm') || '';
+  const categoryName = searchParams?.get('categoryName') || '';
+  const brandName = searchParams?.get('brandName') || ''; // Changed from subCategoryName to brandName
 
-const [products, setProducts] = useState<any[]>([]);
-const [categories, setCategories] = useState<any[]>([]);
-const [subCategories, setSubCategories] = useState<any[]>([]);
-const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [brands, setBrands] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const [productsData, categoriesData, subCategoriesData] =
-        await Promise.all([
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [productsData, categoriesData, brandsData] = await Promise.all([
           TopProducts({
             searchTerm: searchTerm || undefined,
             categoryName: categoryName || undefined,
-            subCategoryName: subCategoryName || undefined
+            brandName: brandName || undefined, // Added brandName
           }),
           getCategories(),
-          getSubCategories()
+          getBrands(), // Fetch brands
         ]);
 
-      setProducts(productsData || []);
-      setCategories(categoriesData || []);
-      setSubCategories(subCategoriesData || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      // Handle error appropriately
-    } finally {
-      setLoading(false);
-    }
-  };
+        setProducts(productsData || []);
+        setCategories(categoriesData || []);
+        setBrands(brandsData || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchData();
-}, [searchTerm, categoryName, subCategoryName]); // Updated dependencies
+    fetchData();
+  }, [searchTerm, categoryName, brandName]); // Updated dependencies (removed subCategoryName, added brandName)
+
   if (loading) {
     return (
       <PageContainer scrollable>
@@ -63,10 +63,10 @@ useEffect(() => {
         <ProductSearch
           products={products}
           categories={categories}
-          subCategories={subCategories}
+          brands={brands} // Pass brands to ProductSearch
           initialSearchTerm={searchTerm}
           initialCategoryName={categoryName}
-          initialSubCategoryName={subCategoryName}
+          initialBrandName={brandName} // Changed from initialSubCategoryName
         />
       </div>
     </PageContainer>

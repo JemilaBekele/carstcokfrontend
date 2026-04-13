@@ -27,8 +27,7 @@ console.log('purchaseId:', purchaseId);
         items:
           purchase?.items?.map((item) => ({
             productId: item.productId.toString(),
-            batchId: item.batchId?.toString() || '',
-            unitOfMeasureId: item.unitOfMeasureId.toString(),
+            isBox: item.isBox, // ✅ Box or Piece
             quantity: Number(item.quantity)
           })) || [],
         reference: '',

@@ -22,12 +22,12 @@ export const navItems: NavItem[] = [
     permission: 'VIEW_MAIN_DASHBOARD',
     items: [] // Empty array as there are no child items for Dashboard Own_dashboard
   },
-  {
-    title: 'Company',
-    url: '/dashboard/Company',
-    icon: 'billing',
-    permission: 'VIEW_COMPANY'
-  },
+  // {
+  //   title: 'Company',
+  //   url: '/dashboard/Company',
+  //   icon: 'billing',
+  //   permission: 'VIEW_COMPANY'
+  // },
   {
     title: 'Report',
     url: '/dashboard/',
@@ -149,18 +149,11 @@ export const navItems: NavItem[] = [
         permission: 'VIEW_ALL_CATEGORIES'
       },
       {
-        title: 'Subcategory',
-        url: '/dashboard/subcategory', // Update to your actual subcategory page route
+        title: 'Brand',
+        url: '/dashboard/brand', // Update to your actual category page route
         // icon: 'userPen',
-        shortcut: ['s', 's'],
-        permission: 'VIEW_ALL_SUBCATEGORIES'
-      },
-      {
-        title: 'Unit OfMeasure',
-        url: '/dashboard/UnitOfMeasure', // Update to your actual subcategory page route UnitOfMeasure ProductUnit
-        // icon: 'userPen',
-        shortcut: ['u', 'u'],
-        permission: 'VIEW_ALL_UNIT_OF_MEASURE'
+        shortcut: ['b', 'b'],
+        permission: 'VIEW_ALL_CATEGORIES'
       },
       {
         title: 'Products',
@@ -169,14 +162,6 @@ export const navItems: NavItem[] = [
         shortcut: ['u', 'u'],
         permission: 'VIEW_PRODUCT_ALL'
       },
-      {
-        title: 'Product Batch',
-        url: '/dashboard/ProductBatch', // Update to your actual subcategory page route UnitOfMeasure
-        // icon: 'userPen',
-        shortcut: ['o', 'o'],
-        permission: 'VIEW_ALL_PRODUCT_BATCHES'
-      },
-
       {
         title: 'Purchase',
         url: '/dashboard/purchase', // Update to your actual subcategory page route UnitOfMeasure  Transfer

@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IncomingMessage } from 'http';
 import { axiosWithAuth } from './cli';
 import { api } from './api';
-import { SalesReportResponse } from '@/models/sellreport';
+import { SalesReportResponse } from '@/features/Dasboard/ReportSell/staticgenerate';
 
 // ========================= SELL REPORTS ========================= //
 
@@ -74,6 +75,7 @@ export interface SellItem {
   NetTotal: number;
   branch?: any;
   customer?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createdBy?: any;
   items?: any[];
   _count?: { items: number };
