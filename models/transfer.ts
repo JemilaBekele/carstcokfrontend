@@ -1,8 +1,7 @@
 import { IEmployee } from './employee';
-import { IProduct, IProductBatch } from './Product';
+import { IProduct } from './Product';
 import { IShop } from './shop';
 import { IStore } from './store';
-import { IUnitOfMeasure } from './UnitOfMeasure';
 
 // Types
 export interface ITransferItem {
@@ -13,8 +12,7 @@ export interface ITransferItem {
   isBox: boolean; // ✅ Box or Piece
   quantity: number;
   unitOfMeasureId: string; // foreign key
-  unitOfMeasure?: IUnitOfMeasure;
-  batch: IProductBatch;
+  
   product: IProduct;
 }
 

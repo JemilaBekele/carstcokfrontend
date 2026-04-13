@@ -43,9 +43,6 @@ export const formatProductDataForExcel = (products: IProduct[]) => {
     'Generic Name': product.generic || 'N/A',
     'Description': product.description || 'N/A',
     'Category': product.category?.name || 'N/A',
-    'Sub Category': product.subCategory?.name || 'N/A',
-    'Unit': product.unit,
-    'Selling Price': `$${product.sellPrice.toFixed(2)}`,
     'Status': product.isActive ? 'Active' : 'Inactive',
     'Created Date': new Date(product.createdAt).toLocaleDateString('en-US'),
   }));

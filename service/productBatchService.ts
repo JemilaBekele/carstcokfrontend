@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IncomingMessage } from 'http';
 import { axiosWithAuth } from './cli';
 import { api } from './api';
-import { IProductBatch } from '@/models/Product';
 import { TransferEntityType } from '@/models/transfer';
 
 // Pagination + filters
@@ -16,7 +16,7 @@ export interface ProductBatchParams {
 interface ProductBatchResponse {
   success: boolean;
   count: number;
-  productBatches: IProductBatch[];
+  productBatches: any[];
 }
 
 // ✅ Get all product batches
@@ -26,7 +26,7 @@ export const getAllProductBatches = async ({
   startDate,
   endDate
 }: ProductBatchParams = {}): Promise<{
-  data: IProductBatch[];
+  data: any[];
   totalCount: number;
   success?: boolean;
 }> => {
@@ -61,7 +61,7 @@ export const getProductBatchById = async (
   try {
     const axiosInstance = req ? axiosWithAuth(req) : api;
     const response = await axiosInstance.get(`/product-batches/${id}`);
-    return response.data.batch as IProductBatch;
+    return response.data.batch as any;
   } catch (error) {
     throw error;
   }
@@ -70,7 +70,7 @@ export const getProductBatchId = async (id: string, req?: IncomingMessage) => {
   try {
     const axiosInstance = axiosWithAuth(req);
     const response = await axiosInstance.get(`/product-batches/${id}`);
-    return response.data.batch as IProductBatch;
+    return response.data.batch as any;
   } catch (error) {
     throw error;
   }
@@ -125,7 +125,7 @@ export const getAvailableProductsBySource = async (
 
 // ✅ Create product batch
 export const createProductBatch = async (
-  data: Partial<IProductBatch> | FormData,
+  data: Partial<any> | FormData,
   req?: IncomingMessage
 ) => {
   try {
@@ -146,7 +146,7 @@ export const createProductBatch = async (
 // ✅ Update product batch
 export const updateProductBatch = async (
   id: string,
-  data: Partial<IProductBatch> | FormData,
+  data: Partial<any> | FormData,
   req?: IncomingMessage
 ) => {
   try {

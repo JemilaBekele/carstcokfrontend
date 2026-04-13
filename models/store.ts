@@ -1,8 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IBranch } from './Branch';
 import { IEmployee } from './employee';
-import { IProductBatch } from './Product';
 import { IShop } from './shop';
-import { IUnitOfMeasure } from './UnitOfMeasure';
 
 export interface IStore {
   id: string;
@@ -33,14 +32,14 @@ export interface IStoreStock {
   storeId: string;
   store?: IStore;
   batchId: number;
-  batch?: IProductBatch;
+  batch?: any;
   quantity: number;
   status: StockStatus;
   branch?: IBranch;
   createdAt: string; // ISO date
   updatedAt: string;
   unitOfMeasureId: string; // foreign key
-  unitOfMeasure?: IUnitOfMeasure; // ISO date
+  unitOfMeasure?: any; // ISO date
 }
 
 // ShopStock
@@ -49,23 +48,23 @@ export interface IShopStock {
   shopId: string;
   shop?: IShop;
   batchId: number;
-  batch?: IProductBatch;
+  batch?: any;
   quantity: number;
   status: StockStatus;
   createdAt: string; // ISO date
   updatedAt: string;
   unitOfMeasureId: string;
   // foreign key
-  unitOfMeasure?: IUnitOfMeasure; // ISO date
+  unitOfMeasure?: any; // ISO date
 }
 
 // StockLedger
 export interface IStockLedger {
   id: string;
   batchId: number;
-  batch?: IProductBatch;
+  batch?: any;
   unitOfMeasureId: string; // foreign key
-  unitOfMeasure?: IUnitOfMeasure;
+  unitOfMeasure?: any;
   storeId?: string;
   store?: IStore;
 

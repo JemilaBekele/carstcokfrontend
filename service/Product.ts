@@ -3,7 +3,6 @@ import { IncomingMessage } from 'http';
 import { axiosWithAuth } from './cli';
 import { api } from './api';
 import { IProduct } from '@/models/Product';
-import { IUnitOfMeasure } from '@/models/UnitOfMeasure';
 
 export interface GetParams {
   page?: number;
@@ -128,19 +127,7 @@ export const getProductById = async (id: string) => {
     throw error;
   }
 };
-export const getUnitOfMeasuresByProductId = async (
-  productId: string,
-  req?: IncomingMessage
-): Promise<IUnitOfMeasure[]> => {
-  try {
-    const axiosInstance = axiosWithAuth(req);
 
-    const response = await axiosInstance.get(`/products/${productId}`);
-    return response.data.product.unitOfMeasure;
-  } catch (error) {
-    throw error;
-  }
-};
 
 // Get Product by Code
 export const getProductByCode = async (code: string, req?: IncomingMessage) => {

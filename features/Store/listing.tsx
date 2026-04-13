@@ -186,36 +186,23 @@ export default async function SellListingPage({}: SellListingPageProps) {
       // Check sale status enum value directly (case-sensitive)
       const saleStatusEnumMatch = item.saleStatus.includes(search);
 
-      // Check SellStockCorrection status
-      const hasStockCorrection = item.SellStockCorrection?.some(correction => 
-        correction.status.toLowerCase().includes(searchLower)
-      );
-
+ 
       return (
         invoiceMatch || 
         customerMatch || 
         saleStatusMatch || 
-        saleStatusEnumMatch ||
-        hasStockCorrection
-      );
+        saleStatusEnumMatch       );
     });
 
     // Apply status filter if not 'all'
     if (statusFilter !== 'all') {
       // Check if it's a stock correction filter
-      if (statusFilter.startsWith('stock-')) {
-        const stockStatus = statusFilter.replace('stock-', '').toUpperCase();
-        filteredData = filteredData.filter(
-          (item) => item.SellStockCorrection?.some(
-            correction => correction.status === stockStatus
-          )
-        );
-      } else {
+ 
         // Regular sale status filter
         filteredData = filteredData.filter(
           (item) => item.saleStatus === statusFilter
         );
-      }
+    
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -239,18 +226,7 @@ export default async function SellListingPage({}: SellListingPageProps) {
       ).length
     };
 
-    // Count SellStockCorrection statuses
-    const stockPendingCount = data.filter(
-      (item) => item.SellStockCorrection?.some(
-        correction => correction.status === 'PENDING'
-      )
-    ).length;
 
-    const stockPartialCount = data.filter(
-      (item) => item.SellStockCorrection?.some(
-        correction => correction.status === 'PARTIAL'
-      )
-    ).length;
 
     const totalSells = data.length;
     const needsApprovalCount = allStatusCounts[SaleStatus.NOT_APPROVED];
@@ -344,33 +320,7 @@ export default async function SellListingPage({}: SellListingPageProps) {
           </div>
         )}
 
-        {/* Attention Banner if there are pending approvals or stock corrections */}
-        {(needsApprovalCount > 0 || stockPendingCount > 0) && (
-          <div className='rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20'>
-            <div className='flex items-center gap-2'>
-              <AlertCircle className='h-5 w-5 text-amber-600 dark:text-amber-400' />
-              <h3 className='font-semibold text-amber-800 dark:text-amber-300'>
-                Attention Required
-              </h3>
-            </div>
-            <p className='mt-1 text-sm text-amber-700 dark:text-amber-400'>
-              {needsApprovalCount > 0 && stockPendingCount > 0 ? (
-                <>
-                  You have {needsApprovalCount} sale{needsApprovalCount === 1 ? '' : 's'} waiting for approval and {stockPendingCount} stock correction{stockPendingCount === 1 ? '' : 's'} pending. Please review them.
-                </>
-              ) : needsApprovalCount > 0 ? (
-                <>
-                  You have {needsApprovalCount} sale{needsApprovalCount === 1 ? '' : 's'} waiting for approval. Please review and approve them to proceed with delivery.
-                </>
-              ) : (
-                <>
-                  You have {stockPendingCount} stock correction{stockPendingCount === 1 ? '' : 's'} pending. Please review them.
-                </>
-              )}
-            </p>
-          </div>
-        )}
-
+     
         {/* Data Table */}
         <DataTable
           data={paginatedData}

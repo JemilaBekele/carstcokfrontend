@@ -3,7 +3,6 @@ import { ICustomer } from './customer';
 import { IEmployee } from './employee';
 import { IShop } from './shop';
 import { IProduct } from './Product'; // Replaces IProductBatch
-import { ISellStockCorrection } from './SellStockCorrection';
 
 export enum SaleStatus {
   NOT_APPROVED = 'NOT_APPROVED',
@@ -52,7 +51,6 @@ export interface ISell {
 
   // Relations
   items?: ISellItem[];
-  SellStockCorrection?: ISellStockCorrection[];
 }
 
 // ✅ SellItem Model Interface

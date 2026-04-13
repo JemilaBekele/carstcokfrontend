@@ -18,13 +18,10 @@ import {
   ShoppingCart,
   Truck,
   CreditCard,
-  AlertTriangle,
   Printer,
-  DollarSign,
-  Tag,
+
   Scale,
-  Plus,
-  Minus,
+
   Box,
   PackageOpen
 } from 'lucide-react';
@@ -36,66 +33,18 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+
 import { Checkbox } from '@/components/ui/checkbox';
 import { ISell, ISellItem, SaleStatus, ItemSaleStatus } from '@/models/Sell';
-import {
-  ISellStockCorrection,
-  SellStockCorrectionStatus,
-  ISellStockCorrectionItem
-} from '@/models/SellStockCorrection';
 import { cancelSale, getSellId, updateSaleStatus } from '@/service/Sell';
-import {
-  approveSellStockCorrection,
-  deleteSellStockCorrection,
-  getSellStockCorrectionsBySellId,
-  rejectSellStockCorrection
-} from '@/service/SellStockCorrection';
-import { AlertModal } from '@/components/modal/alert-modal';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from '@/components/ui/alert-dialog';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
+
 
 type SaleViewProps = {
   id?: string;
 };
 
-interface NetTotalAdjustment {
-  totalAdjustment: number;
-  adjustments: Array<{
-    productName: string;
-    quantity: number;
-    unitPrice: number;
-    adjustmentValue: number;
-    type: 'increase' | 'decrease';
-    reason: string;
-  }>;
-}
-
 interface PrintableSaleData {
   sale: ISell;
-  stockCorrections: ISellStockCorrection[];
-  netTotalAdjustment: NetTotalAdjustment | null;
   printedAt: string;
 }
 
@@ -115,85 +64,17 @@ interface PriceAnalysis {
 
 const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
   const [sale, setSale] = useState<ISell | null>(null);
-  const [stockCorrections, setStockCorrections] = useState<
-    ISellStockCorrection[]
-  >([]);
   const [loading, setLoading] = useState(true);
-  const [loadingCorrections, setLoadingCorrections] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [open, setOpen] = useState(false);
-  const [selectedCorrectionId, setSelectedCorrectionId] = useState<
-    string | null
-  >(null);
-  const [actionType, setActionType] = useState<
-    'approve' | 'reject' | 'delete' | null
-  >(null);
   const [statusUpdateDialog, setStatusUpdateDialog] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<SaleStatus | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
-  const [netTotalAdjustment, setNetTotalAdjustment] =
-    useState<NetTotalAdjustment | null>(null);
   const [priceAnalysisModalOpen, setPriceAnalysisModalOpen] = useState(false);
   const [priceAnalysis, setPriceAnalysis] = useState<PriceAnalysis[]>([]);
   const [loadingPriceAnalysis, setLoadingPriceAnalysis] = useState(false);
-
-  const calculateNetTotalAdjustment = useCallback(
-    (corrections: ISellStockCorrection[], currentSale: ISell | null) => {
-      if (!currentSale || !currentSale.items || corrections.length === 0) {
-        setNetTotalAdjustment(null);
-        return;
-      }
-
-      const adjustments: NetTotalAdjustment['adjustments'] = [];
-      let totalAdjustment = 0;
-
-      corrections.forEach((correction) => {
-        if (
-          !correction.items ||
-          correction.status !== SellStockCorrectionStatus.APPROVED
-        ) {
-          return;
-        }
-
-        correction.items.forEach((correctionItem: ISellStockCorrectionItem) => {
-          const saleItem = currentSale.items?.find(
-            (item) =>
-              item.product?.id === correctionItem.productId &&
-              item.shop?.id === correctionItem.shopId
-          );
-
-          if (saleItem && correctionItem.quantity !== 0) {
-            const adjustmentValue =
-              correctionItem.quantity * saleItem.unitPrice;
-            const type = correctionItem.quantity > 0 ? 'decrease' : 'increase';
-            const absoluteQuantity = Math.abs(correctionItem.quantity);
-
-            adjustments.push({
-              productName: correctionItem.product?.name || 'Unknown Product',
-              quantity: absoluteQuantity,
-              unitPrice: saleItem.unitPrice,
-              adjustmentValue: Math.abs(adjustmentValue),
-              type,
-              reason:
-                correctionItem.quantity > 0
-                  ? `Items returned to stock (overstated sale)`
-                  : `Items deducted from stock (understated sale)`
-            });
-
-            totalAdjustment -= adjustmentValue;
-          }
-        });
-      });
-
-      setNetTotalAdjustment({
-        totalAdjustment,
-        adjustments
-      });
-    },
-    []
-  );
 
   const analyzePrices = async () => {
     if (!sale || !sale.items) return;
@@ -249,47 +130,28 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
   };
 
   useEffect(() => {
-    const fetchSaleAndCorrections = async () => {
+    const fetchSale = async () => {
       if (!id) return;
 
       setLoading(true);
       try {
         const saleData = await getSellId(id);
         setSale(saleData);
-
-        setLoadingCorrections(true);
-        const corrections = await getSellStockCorrectionsBySellId(id);
-        setStockCorrections(corrections);
-
-        calculateNetTotalAdjustment(corrections, saleData);
       } catch {
         toast.error('Failed to fetch sale details');
       } finally {
         setLoading(false);
-        setLoadingCorrections(false);
       }
     };
 
-    fetchSaleAndCorrections();
-  }, [id, refreshTrigger, calculateNetTotalAdjustment]);
-
-  useEffect(() => {
-    if (sale && stockCorrections.length > 0) {
-      calculateNetTotalAdjustment(stockCorrections, sale);
-    } else {
-      setNetTotalAdjustment(null);
-    }
-  }, [sale, stockCorrections, calculateNetTotalAdjustment]);
+    fetchSale();
+  }, [id, refreshTrigger]);
 
   const handlePrint = () => {
     if (!sale) return;
 
     const printableData: PrintableSaleData = {
       sale,
-      stockCorrections: stockCorrections.filter(
-        (corr) => corr.status === SellStockCorrectionStatus.APPROVED
-      ),
-      netTotalAdjustment,
       printedAt: new Date().toLocaleString()
     };
 
@@ -331,70 +193,7 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
   };
 
   const generatePrintHTML = (data: PrintableSaleData) => {
-    const { sale, stockCorrections, printedAt } = data;
-    const netTotal = sale.NetTotal || 0;
-
-    const combinedItemsMap = new Map();
-
-    if (sale.items) {
-      sale.items.forEach((item) => {
-        const key = `${item.product?.name}-${item.shop?.name}`;
-
-        combinedItemsMap.set(key, {
-          type: 'sale',
-          product: item.product?.name || 'Unknown Product',
-          shop: item.shop?.name || 'N/A',
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          totalPrice: item.totalPrice,
-          status: item.itemSaleStatus,
-          isBox: item.isBox,
-          operation: 'sale',
-          adjustments: [],
-          finalQuantity: item.quantity
-        });
-      });
-    }
-
-    stockCorrections
-      .filter((corr) => corr.status === SellStockCorrectionStatus.APPROVED)
-      .forEach((correction) => {
-        correction.items?.forEach((item: ISellStockCorrectionItem) => {
-          const key = `${item.product?.name}-${item.shop?.name}`;
-          const isAddition = item.quantity > 0;
-
-          if (combinedItemsMap.has(key)) {
-            const existingItem = combinedItemsMap.get(key);
-            existingItem.adjustments.push({
-              type: 'correction',
-              quantity: item.quantity,
-              operation: isAddition ? 'addition' : 'reduction',
-              reason: correction.notes || 'Stock Correction',
-              reference: correction.reference
-            });
-            existingItem.finalQuantity += item.quantity;
-            existingItem.totalPrice =
-              existingItem.finalQuantity * existingItem.unitPrice;
-          } else {
-            combinedItemsMap.set(key, {
-              type: 'correction',
-              product: item.product?.name || 'Unknown Product',
-              shop: item.shop?.name || 'N/A',
-              quantity: item.quantity,
-              unitPrice: item.unitPrice || 0,
-              totalPrice: item.totalPrice || 0,
-              status: 'ADJUSTMENT',
-              operation: isAddition ? 'addition' : 'reduction',
-              adjustments: [],
-              finalQuantity: item.quantity,
-              reason: correction.notes || 'Stock Correction',
-              reference: correction.reference
-            });
-          }
-        });
-      });
-
-    const combinedItems = Array.from(combinedItemsMap.values());
+    const { sale, printedAt } = data;
 
     return `
       <!DOCTYPE html>
@@ -417,14 +216,7 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
               .text-right { text-align: right; }
               .text-center { text-align: center; }
               .bold { font-weight: bold; }
-              .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-              .badge-approved { background-color: #d1fae5; color: #065f46; }
-              .badge-pending { background-color: #fef3c7; color: #92400e; }
-              .badge-adjustment { background-color: #e0e7ff; color: #3730a3; }
               .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #000; text-align: center; font-size: 10px; color: #666; }
-              .row-sale { background-color: #ffffff; }
-              .row-correction { background-color: #f8fafc; }
-              .row-combined { background-color: #f0f9ff; }
             }
           </style>
         </head>
@@ -445,7 +237,6 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
               <table>
                 <thead>
                   <tr>
-                    <th>Type</th>
                     <th>Product</th>
                     <th>Shop</th>
                     <th class="text-right">Quantity</th>
@@ -454,12 +245,11 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  ${combinedItems.map((item) => `
-                    <tr class="${item.type === 'sale' ? 'row-sale' : 'row-correction'}">
-                      <td>${item.type === 'sale' ? 'Sale' : 'Correction'}</td>
-                      <td>${item.product}</td>
-                      <td>${item.shop}</td>
-                      <td class="text-right">${item.finalQuantity}</td>
+                  ${sale.items?.map((item) => `
+                    <tr>
+                      <td>${item.product?.name || 'Unknown Product'}</td>
+                      <td>${item.shop?.name || 'N/A'}</td>
+                      <td class="text-right">${item.quantity}</td>
                       <td class="text-right">${item.unitPrice.toFixed(2)}</td>
                       <td class="text-right">${item.totalPrice.toFixed(2)}</td>
                     </tr>
@@ -474,6 +264,7 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                   <p><strong>Sub Total:</strong> ${(sale.subTotal || 0).toFixed(2)}</p>
                   ${sale.discount > 0 ? `<p><strong>Discount:</strong> -${sale.discount.toFixed(2)}</p>` : ''}
                   ${sale.vat > 0 ? `<p><strong>VAT:</strong> ${sale.vat.toFixed(2)}</p>` : ''}
+                  <p><strong>Grand Total:</strong> ${(sale.grandTotal || 0).toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -487,75 +278,12 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
     `;
   };
 
-  const handleStatusUpdate = async (newStatus: SaleStatus) => {
-    if (!id) return;
 
-    setSelectedStatus(newStatus);
-    setStatusUpdateDialog(true);
-  };
 
-  const confirmStatusUpdate = async () => {
-    if (!id || !selectedStatus) return;
 
-    setUpdating(true);
-    try {
-      const updatedSale = await updateSaleStatus(id, selectedStatus);
-      setSale(updatedSale);
-      toast.success(`Sale status updated to ${selectedStatus}`);
-      setRefreshTrigger((prev) => prev + 1);
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message ||
-          `Failed to update sale status to ${selectedStatus}`
-      );
-    } finally {
-      setUpdating(false);
-      setStatusUpdateDialog(false);
-      setSelectedStatus(null);
-    }
-  };
 
-  const handleCorrectionAction = async (
-    correctionId: string,
-    action: 'approve' | 'reject' | 'delete'
-  ) => {
-    setOpen(true);
-    setActionType(action);
-    setSelectedCorrectionId(correctionId);
-  };
 
-  const onConfirm = async () => {
-    if (!id && !selectedCorrectionId && actionType !== 'delete') return;
 
-    setUpdating(true);
-    try {
-      if (actionType === 'delete' && !selectedCorrectionId) {
-        const updatedSale = await cancelSale(id!);
-        setSale(updatedSale);
-        toast.success('Sale cancelled successfully');
-      } else if (actionType === 'approve' && selectedCorrectionId) {
-        await approveSellStockCorrection(selectedCorrectionId);
-        toast.success('Stock correction approved successfully');
-      } else if (actionType === 'reject' && selectedCorrectionId) {
-        await rejectSellStockCorrection(selectedCorrectionId);
-        toast.success('Stock correction rejected successfully');
-      } else if (actionType === 'delete' && selectedCorrectionId) {
-        await deleteSellStockCorrection(selectedCorrectionId);
-        toast.success('Stock correction deleted successfully');
-      }
-      setRefreshTrigger((prev) => prev + 1);
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message ||
-          `Failed to ${actionType} ${selectedCorrectionId ? 'stock correction' : 'sale'}`
-      );
-    } finally {
-      setUpdating(false);
-      setOpen(false);
-      setActionType(null);
-      setSelectedCorrectionId(null);
-    }
-  };
 
   const handleItemSelection = (itemId: string) => {
     setSelectedItems((prev) =>
@@ -596,9 +324,7 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
     );
   }
 
-  const isImmutable = [SaleStatus.DELIVERED, SaleStatus.CANCELLED].includes(
-    sale.saleStatus
-  );
+
   const hasUndeliveredItems = sale.items?.some(
     (item) => item.itemSaleStatus !== ItemSaleStatus.DELIVERED
   );
@@ -624,12 +350,23 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
   };
 
   const grandTotal = sale.grandTotal || 0;
-  const netTotal = sale.NetTotal || 0;
 
   return (
     <div className='container mx-auto space-y-6 p-4 md:p-8'>
       <div className='flex justify-end gap-2'>
-     
+        <Button
+          onClick={analyzePrices}
+          variant='outline'
+          className='flex items-center gap-2'
+          disabled={loadingPriceAnalysis}
+        >
+          {loadingPriceAnalysis ? (
+            <Loader2 className='h-4 w-4 animate-spin' />
+          ) : (
+            <Scale className='h-4 w-4' />
+          )}
+          Price Analysis
+        </Button>
         <Button
           onClick={handlePrint}
           variant='outline'
@@ -640,11 +377,14 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
         </Button>
       </div>
 
+     
 
+    
 
-  
+   
 
-  
+ 
+
       <Card className='shadow-lg'>
         <CardHeader>
           <CardTitle className='flex flex-col gap-2 text-xl font-bold sm:flex-row sm:items-center sm:gap-2 sm:text-2xl'>
@@ -766,17 +506,11 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                     </div>
                   )}
                   <div className='col-span-2 border-t pt-2'>
-                    <p className='font-medium text-sm sm:text-base'>Total:</p>
+                    <p className='font-medium text-sm sm:text-base'>Grand Total:</p>
                     <p className='text-muted-foreground text-base font-bold sm:text-lg'>
                       {grandTotal.toFixed(2)}
                     </p>
                   </div>
-                  {/* <div className='col-span-2'>
-                    <p className='font-medium text-sm sm:text-base'>Net Total:</p>
-                    <p className='text-muted-foreground text-base font-bold sm:text-lg'>
-                      {netTotal.toFixed(2)}
-                    </p>
-                  </div> */}
                 </div>
 
                 <div className='space-y-2 pt-2'>
@@ -812,7 +546,19 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
             <div className='space-y-4'>
               <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
                 <h3 className='text-base font-semibold sm:text-lg'>Sale Items</h3>
-          
+                {hasUndeliveredItems && (
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={handleSelectAll}
+                    disabled={updating}
+                    className='w-full sm:w-auto'
+                  >
+                    {selectedItems.length === undeliveredItemsCount
+                      ? 'Deselect All'
+                      : 'Select All'}
+                  </Button>
+                )}
               </div>
 
               {/* Mobile Card View */}
@@ -840,7 +586,14 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                               </p>
                             )}
                           </div>
-                    
+                          {hasUndeliveredItems && !isDelivered && (
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => handleItemSelection(item.id)}
+                              disabled={updating || isDelivered}
+                              className='mt-0.5'
+                            />
+                          )}
                         </div>
 
                         <div className='mt-3 grid grid-cols-2 gap-2'>
@@ -927,7 +680,18 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                     
+                          {hasUndeliveredItems && (
+                            <TableHead className='w-12 px-3'>
+                              <Checkbox
+                                checked={
+                                  selectedItems.length === undeliveredItemsCount &&
+                                  undeliveredItemsCount > 0
+                                }
+                                onCheckedChange={handleSelectAll}
+                                disabled={updating}
+                              />
+                            </TableHead>
+                          )}
                           <TableHead className='min-w-40'>Product</TableHead>
                           <TableHead className='min-w-28'>Shop</TableHead>
                           <TableHead className='min-w-24'>Type</TableHead>
@@ -949,7 +713,20 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                                 ${isDelivered ? 'opacity-80' : ''}
                               `}
                             >
-                      
+                              {hasUndeliveredItems && (
+                                <TableCell className='px-3'>
+                                  <Checkbox
+                                    checked={selectedItems.includes(item.id)}
+                                    onCheckedChange={() =>
+                                      handleItemSelection(item.id)
+                                    }
+                                    disabled={
+                                      updating ||
+                                      isDelivered
+                                    }
+                                  />
+                                </TableCell>
+                              )}
                               <TableCell className='font-medium'>
                                 <div className='flex flex-col'>
                                   <span className='font-medium'>
@@ -1051,8 +828,6 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
               <p className='mt-2'>No items found in this sale</p>
             </div>
           )}
-
-          {/* Stock Corrections Section - Removed as requested */}
         </CardContent>
       </Card>
     </div>

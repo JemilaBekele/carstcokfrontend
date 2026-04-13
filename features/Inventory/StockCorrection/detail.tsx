@@ -430,11 +430,9 @@ const handleApprove = async () => {
                     <TableCell className='whitespace-nowrap text-xs md:text-sm'>
                       {item.product?.name || 'Unknown Product'}
                     </TableCell>
+                  
                     <TableCell className='whitespace-nowrap text-xs md:text-sm'>
-                      {item.batch?.batchNumber || 'N/A'}
-                    </TableCell>
-                    <TableCell className='whitespace-nowrap text-xs md:text-sm'>
-                      {item.unitOfMeasure?.name || 'Unknown Unit'}
+                      {item.isBox ? 'Box' : 'piece'}
                     </TableCell>
                     <TableCell className='whitespace-nowrap text-xs md:text-sm'>
                       <div className='flex items-center'>{item.quantity}</div>

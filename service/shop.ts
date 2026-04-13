@@ -4,7 +4,6 @@ import { axiosWithAuth } from './cli';
 import { api } from './api';
 import { IShop } from '@/models/shop';
 import { GetParams } from './roleService';
-import { IProductBatch } from '@/models/Product';
 
 interface locationResponse {
   success: boolean;
@@ -143,7 +142,7 @@ export const deleteShop = async (id: string, req?: IncomingMessage) => {
   }
 };
 export interface IBatchesResponse {
-  batches: IProductBatch[];
+  batches: any[];
   count: number;
 }
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IncomingMessage } from 'http';
 import { axiosWithAuth } from './cli';
 // Get User by ID !QAZxsw2

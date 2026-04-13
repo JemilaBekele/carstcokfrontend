@@ -143,24 +143,13 @@ export default async function SellListingPage({}: SellListingPageProps) {
         }
       }
 
-      // Apply unchecked corrections filter
-      if (uncheckedCorrectionsFilter) {
-        // Check if the sell has any unchecked stock corrections
-        const hasUncheckedCorrections = item.SellStockCorrection?.some(
-          (correction) => !correction.isChecked
-        );
-        if (!hasUncheckedCorrections) {
-          return false;
-        }
-      }
+  
 
       return true;
     });
 
     // Count sells with unchecked corrections
-    const uncheckedCorrectionsCount = salesData.filter((item) => {
-      return item.SellStockCorrection?.some((correction) => !correction.isChecked);
-    }).length;
+
 
     // ────────────────────────────────────────────────────────────────
     // Count sell statuses (using ALL data, not filtered by status/employee)
@@ -349,33 +338,7 @@ export default async function SellListingPage({}: SellListingPageProps) {
           </div>
         )}
 
-        {/* Unchecked Corrections Attention Banner */}
-        {uncheckedCorrectionsCount > 0 && !uncheckedCorrectionsFilter && (
-          <div className='rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/20'>
-            <div className='flex items-center justify-between'>
-              <div className='flex items-center gap-2'>
-                <AlertCircle className='h-5 w-5 text-blue-600 dark:text-blue-400' />
-                <h3 className='font-semibold text-blue-800 dark:text-blue-300'>
-                  Stock Corrections Need Checking
-                </h3>
-              </div>
-              <Link
-                href={buildQueryStringLocal({
-                  unchecked: true,
-                  page: '1'
-                })}
-                className='text-blue-600 text-sm hover:underline dark:text-blue-400'
-              >
-                View All
-              </Link>
-            </div>
-            <p className='mt-1 text-sm text-blue-700 dark:text-blue-400'>
-              You have {uncheckedCorrectionsCount} sell
-              {uncheckedCorrectionsCount === 1 ? '' : 's'} with unchecked stock corrections.
-              Please review and mark them as checked.
-            </p>
-          </div>
-        )}
+  
 
         {/* Data Table */}
         <DataTable

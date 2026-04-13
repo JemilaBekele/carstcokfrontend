@@ -45,18 +45,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ISell, ISellItem, SaleStatus, ItemSaleStatus } from '@/models/Sell';
-import {
-  ISellStockCorrection,
-  SellStockCorrectionStatus,
-  ISellStockCorrectionItem
-} from '@/models/SellStockCorrection';
 import { cancelSale, getSellId, updateSaleStatus } from '@/service/Sell';
-import {
-  approveSellStockCorrection,
-  deleteSellStockCorrection,
-  getSellStockCorrectionsBySellId,
-  rejectSellStockCorrection
-} from '@/service/SellStockCorrection';
 import { AlertModal } from '@/components/modal/alert-modal';
 import {
   AlertDialog,
@@ -80,22 +69,8 @@ type SaleViewProps = {
   id?: string;
 };
 
-interface NetTotalAdjustment {
-  totalAdjustment: number;
-  adjustments: Array<{
-    productName: string;
-    quantity: number;
-    unitPrice: number;
-    adjustmentValue: number;
-    type: 'increase' | 'decrease';
-    reason: string;
-  }>;
-}
-
 interface PrintableSaleData {
   sale: ISell;
-  stockCorrections: ISellStockCorrection[];
-  netTotalAdjustment: NetTotalAdjustment | null;
   printedAt: string;
 }
 
@@ -115,85 +90,17 @@ interface PriceAnalysis {
 
 const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
   const [sale, setSale] = useState<ISell | null>(null);
-  const [stockCorrections, setStockCorrections] = useState<
-    ISellStockCorrection[]
-  >([]);
   const [loading, setLoading] = useState(true);
-  const [loadingCorrections, setLoadingCorrections] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [open, setOpen] = useState(false);
-  const [selectedCorrectionId, setSelectedCorrectionId] = useState<
-    string | null
-  >(null);
-  const [actionType, setActionType] = useState<
-    'approve' | 'reject' | 'delete' | null
-  >(null);
   const [statusUpdateDialog, setStatusUpdateDialog] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<SaleStatus | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
-  const [netTotalAdjustment, setNetTotalAdjustment] =
-    useState<NetTotalAdjustment | null>(null);
   const [priceAnalysisModalOpen, setPriceAnalysisModalOpen] = useState(false);
   const [priceAnalysis, setPriceAnalysis] = useState<PriceAnalysis[]>([]);
   const [loadingPriceAnalysis, setLoadingPriceAnalysis] = useState(false);
-
-  const calculateNetTotalAdjustment = useCallback(
-    (corrections: ISellStockCorrection[], currentSale: ISell | null) => {
-      if (!currentSale || !currentSale.items || corrections.length === 0) {
-        setNetTotalAdjustment(null);
-        return;
-      }
-
-      const adjustments: NetTotalAdjustment['adjustments'] = [];
-      let totalAdjustment = 0;
-
-      corrections.forEach((correction) => {
-        if (
-          !correction.items ||
-          correction.status !== SellStockCorrectionStatus.APPROVED
-        ) {
-          return;
-        }
-
-        correction.items.forEach((correctionItem: ISellStockCorrectionItem) => {
-          const saleItem = currentSale.items?.find(
-            (item) =>
-              item.product?.id === correctionItem.productId &&
-              item.shop?.id === correctionItem.shopId
-          );
-
-          if (saleItem && correctionItem.quantity !== 0) {
-            const adjustmentValue =
-              correctionItem.quantity * saleItem.unitPrice;
-            const type = correctionItem.quantity > 0 ? 'decrease' : 'increase';
-            const absoluteQuantity = Math.abs(correctionItem.quantity);
-
-            adjustments.push({
-              productName: correctionItem.product?.name || 'Unknown Product',
-              quantity: absoluteQuantity,
-              unitPrice: saleItem.unitPrice,
-              adjustmentValue: Math.abs(adjustmentValue),
-              type,
-              reason:
-                correctionItem.quantity > 0
-                  ? `Items returned to stock (overstated sale)`
-                  : `Items deducted from stock (understated sale)`
-            });
-
-            totalAdjustment -= adjustmentValue;
-          }
-        });
-      });
-
-      setNetTotalAdjustment({
-        totalAdjustment,
-        adjustments
-      });
-    },
-    []
-  );
 
   const analyzePrices = async () => {
     if (!sale || !sale.items) return;
@@ -249,47 +156,28 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
   };
 
   useEffect(() => {
-    const fetchSaleAndCorrections = async () => {
+    const fetchSale = async () => {
       if (!id) return;
 
       setLoading(true);
       try {
         const saleData = await getSellId(id);
         setSale(saleData);
-
-        setLoadingCorrections(true);
-        const corrections = await getSellStockCorrectionsBySellId(id);
-        setStockCorrections(corrections);
-
-        calculateNetTotalAdjustment(corrections, saleData);
       } catch {
         toast.error('Failed to fetch sale details');
       } finally {
         setLoading(false);
-        setLoadingCorrections(false);
       }
     };
 
-    fetchSaleAndCorrections();
-  }, [id, refreshTrigger, calculateNetTotalAdjustment]);
-
-  useEffect(() => {
-    if (sale && stockCorrections.length > 0) {
-      calculateNetTotalAdjustment(stockCorrections, sale);
-    } else {
-      setNetTotalAdjustment(null);
-    }
-  }, [sale, stockCorrections, calculateNetTotalAdjustment]);
+    fetchSale();
+  }, [id, refreshTrigger]);
 
   const handlePrint = () => {
     if (!sale) return;
 
     const printableData: PrintableSaleData = {
       sale,
-      stockCorrections: stockCorrections.filter(
-        (corr) => corr.status === SellStockCorrectionStatus.APPROVED
-      ),
-      netTotalAdjustment,
       printedAt: new Date().toLocaleString()
     };
 
@@ -331,70 +219,7 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
   };
 
   const generatePrintHTML = (data: PrintableSaleData) => {
-    const { sale, stockCorrections, printedAt } = data;
-    const netTotal = sale.NetTotal || 0;
-
-    const combinedItemsMap = new Map();
-
-    if (sale.items) {
-      sale.items.forEach((item) => {
-        const key = `${item.product?.name}-${item.shop?.name}`;
-
-        combinedItemsMap.set(key, {
-          type: 'sale',
-          product: item.product?.name || 'Unknown Product',
-          shop: item.shop?.name || 'N/A',
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          totalPrice: item.totalPrice,
-          status: item.itemSaleStatus,
-          isBox: item.isBox,
-          operation: 'sale',
-          adjustments: [],
-          finalQuantity: item.quantity
-        });
-      });
-    }
-
-    stockCorrections
-      .filter((corr) => corr.status === SellStockCorrectionStatus.APPROVED)
-      .forEach((correction) => {
-        correction.items?.forEach((item: ISellStockCorrectionItem) => {
-          const key = `${item.product?.name}-${item.shop?.name}`;
-          const isAddition = item.quantity > 0;
-
-          if (combinedItemsMap.has(key)) {
-            const existingItem = combinedItemsMap.get(key);
-            existingItem.adjustments.push({
-              type: 'correction',
-              quantity: item.quantity,
-              operation: isAddition ? 'addition' : 'reduction',
-              reason: correction.notes || 'Stock Correction',
-              reference: correction.reference
-            });
-            existingItem.finalQuantity += item.quantity;
-            existingItem.totalPrice =
-              existingItem.finalQuantity * existingItem.unitPrice;
-          } else {
-            combinedItemsMap.set(key, {
-              type: 'correction',
-              product: item.product?.name || 'Unknown Product',
-              shop: item.shop?.name || 'N/A',
-              quantity: item.quantity,
-              unitPrice: item.unitPrice || 0,
-              totalPrice: item.totalPrice || 0,
-              status: 'ADJUSTMENT',
-              operation: isAddition ? 'addition' : 'reduction',
-              adjustments: [],
-              finalQuantity: item.quantity,
-              reason: correction.notes || 'Stock Correction',
-              reference: correction.reference
-            });
-          }
-        });
-      });
-
-    const combinedItems = Array.from(combinedItemsMap.values());
+    const { sale, printedAt } = data;
 
     return `
       <!DOCTYPE html>
@@ -417,14 +242,7 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
               .text-right { text-align: right; }
               .text-center { text-align: center; }
               .bold { font-weight: bold; }
-              .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-              .badge-approved { background-color: #d1fae5; color: #065f46; }
-              .badge-pending { background-color: #fef3c7; color: #92400e; }
-              .badge-adjustment { background-color: #e0e7ff; color: #3730a3; }
               .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #000; text-align: center; font-size: 10px; color: #666; }
-              .row-sale { background-color: #ffffff; }
-              .row-correction { background-color: #f8fafc; }
-              .row-combined { background-color: #f0f9ff; }
             }
           </style>
         </head>
@@ -445,7 +263,6 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
               <table>
                 <thead>
                   <tr>
-                    <th>Type</th>
                     <th>Product</th>
                     <th>Shop</th>
                     <th class="text-right">Quantity</th>
@@ -454,12 +271,11 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  ${combinedItems.map((item) => `
-                    <tr class="${item.type === 'sale' ? 'row-sale' : 'row-correction'}">
-                      <td>${item.type === 'sale' ? 'Sale' : 'Correction'}</td>
-                      <td>${item.product}</td>
-                      <td>${item.shop}</td>
-                      <td class="text-right">${item.finalQuantity}</td>
+                  ${sale.items?.map((item) => `
+                    <tr>
+                      <td>${item.product?.name || 'Unknown Product'}</td>
+                      <td>${item.shop?.name || 'N/A'}</td>
+                      <td class="text-right">${item.quantity}</td>
                       <td class="text-right">${item.unitPrice.toFixed(2)}</td>
                       <td class="text-right">${item.totalPrice.toFixed(2)}</td>
                     </tr>
@@ -474,6 +290,7 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                   <p><strong>Sub Total:</strong> ${(sale.subTotal || 0).toFixed(2)}</p>
                   ${sale.discount > 0 ? `<p><strong>Discount:</strong> -${sale.discount.toFixed(2)}</p>` : ''}
                   ${sale.vat > 0 ? `<p><strong>VAT:</strong> ${sale.vat.toFixed(2)}</p>` : ''}
+                  <p><strong>Grand Total:</strong> ${(sale.grandTotal || 0).toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -515,45 +332,27 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
     }
   };
 
-  const handleCorrectionAction = async (
-    correctionId: string,
-    action: 'approve' | 'reject' | 'delete'
-  ) => {
+  const handleCancelSale = async () => {
+    if (!id) return;
     setOpen(true);
-    setActionType(action);
-    setSelectedCorrectionId(correctionId);
   };
 
-  const onConfirm = async () => {
-    if (!id && !selectedCorrectionId && actionType !== 'delete') return;
+  const onConfirmCancel = async () => {
+    if (!id) return;
 
     setUpdating(true);
     try {
-      if (actionType === 'delete' && !selectedCorrectionId) {
-        const updatedSale = await cancelSale(id!);
-        setSale(updatedSale);
-        toast.success('Sale cancelled successfully');
-      } else if (actionType === 'approve' && selectedCorrectionId) {
-        await approveSellStockCorrection(selectedCorrectionId);
-        toast.success('Stock correction approved successfully');
-      } else if (actionType === 'reject' && selectedCorrectionId) {
-        await rejectSellStockCorrection(selectedCorrectionId);
-        toast.success('Stock correction rejected successfully');
-      } else if (actionType === 'delete' && selectedCorrectionId) {
-        await deleteSellStockCorrection(selectedCorrectionId);
-        toast.success('Stock correction deleted successfully');
-      }
+      const updatedSale = await cancelSale(id);
+      setSale(updatedSale);
+      toast.success('Sale cancelled successfully');
       setRefreshTrigger((prev) => prev + 1);
     } catch (error: any) {
       toast.error(
-        error.response?.data?.message ||
-          `Failed to ${actionType} ${selectedCorrectionId ? 'stock correction' : 'sale'}`
+        error.response?.data?.message || 'Failed to cancel sale'
       );
     } finally {
       setUpdating(false);
       setOpen(false);
-      setActionType(null);
-      setSelectedCorrectionId(null);
     }
   };
 
@@ -624,7 +423,6 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
   };
 
   const grandTotal = sale.grandTotal || 0;
-  const netTotal = sale.NetTotal || 0;
 
   return (
     <div className='container mx-auto space-y-6 p-4 md:p-8'>
@@ -787,26 +585,10 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
       <AlertModal
         isOpen={open}
         onClose={() => setOpen(false)}
-        onConfirm={onConfirm}
+        onConfirm={onConfirmCancel}
         loading={updating}
-        title={
-          actionType === 'delete' && !selectedCorrectionId
-            ? 'Cancel Sale'
-            : actionType === 'approve'
-              ? 'Approve Correction'
-              : actionType === 'reject'
-                ? 'Reject Correction'
-                : 'Delete Correction'
-        }
-        description={
-          actionType === 'delete' && !selectedCorrectionId
-            ? 'Are you sure you want to cancel this sale? This action cannot be undone.'
-            : actionType === 'approve'
-              ? 'Are you sure you want to approve this stock correction?'
-              : actionType === 'reject'
-                ? 'Are you sure you want to reject this stock correction?'
-                : 'Are you sure you want to delete this stock correction?'
-        }
+        title='Cancel Sale'
+        description='Are you sure you want to cancel this sale? This action cannot be undone.'
       />
 
       <AlertDialog
@@ -874,6 +656,15 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                     </SelectContent>
                   </Select>
                 </div>
+                {sale.saleStatus !== SaleStatus.CANCELLED && (
+                  <Button
+                    variant='destructive'
+                    onClick={handleCancelSale}
+                    disabled={updating}
+                  >
+                    Cancel Sale
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
@@ -1001,17 +792,11 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                     </div>
                   )}
                   <div className='col-span-2 border-t pt-2'>
-                    <p className='font-medium text-sm sm:text-base'>Total:</p>
+                    <p className='font-medium text-sm sm:text-base'>Grand Total:</p>
                     <p className='text-muted-foreground text-base font-bold sm:text-lg'>
                       {grandTotal.toFixed(2)}
                     </p>
                   </div>
-                  {/* <div className='col-span-2'>
-                    <p className='font-medium text-sm sm:text-base'>Net Total:</p>
-                    <p className='text-muted-foreground text-base font-bold sm:text-lg'>
-                      {netTotal.toFixed(2)}
-                    </p>
-                  </div> */}
                 </div>
 
                 <div className='space-y-2 pt-2'>
@@ -1329,8 +1114,6 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
               <p className='mt-2'>No items found in this sale</p>
             </div>
           )}
-
-          {/* Stock Corrections Section - Removed as requested */}
         </CardContent>
       </Card>
     </div>
