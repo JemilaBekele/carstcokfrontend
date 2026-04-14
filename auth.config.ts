@@ -2,7 +2,6 @@
 import { api } from '@/service/api';
 import { NextAuthOptions, User } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { usePermissionStore } from '@/stores/auth.store';
 
 const authConfig: NextAuthOptions = {
   providers: [
@@ -26,24 +25,18 @@ const authConfig: NextAuthOptions = {
             throw new Error('Authentication failed');
           }
 
-          const permissions = user.role?.permissions || [];
-
-          if (typeof window !== 'undefined') {
-            usePermissionStore.getState().setPermissions(permissions);
-          }
-
           return {
             id: user.id,
             name: user.name,
             email: user.email,
-            role: user.role,
+            role: String(user.role || ''),
             phone: user.phone,
             roleType: user.roleType,
             token: accessToken,
-            status: user.status
+            status: user.status,
+            permissions: Array.isArray(user.permissions) ? user.permissions : []
           } as User;
-        } catch (error: unknown) {
-         
+        } catch {
           throw new Error(
             'Login failed. Please try again later.'
           );
@@ -63,6 +56,8 @@ const authConfig: NextAuthOptions = {
           phone: user.phone,
           roleType: user.roleType,
           accessToken: user.token,
+          status: user.status,
+          permissions: Array.isArray(user.permissions) ? user.permissions : [],
         };
       }
       return token;
@@ -79,15 +74,10 @@ const authConfig: NextAuthOptions = {
         roleType: token.roleType as string,
         accessToken: token.accessToken as string,
         status: token.status as string,
-        permissions: [] // empty here! will fetch separately
+        permissions: Array.isArray(token.permissions)
+          ? (token.permissions as string[])
+          : []
       };
-
-      if (typeof window !== 'undefined' && token.permissions) {
-        const permissionsArray = Array.isArray(token.permissions)
-          ? token.permissions
-          : [];
-        usePermissionStore.getState().setPermissions(permissionsArray);
-      }
 
       return session;
     }
@@ -95,18 +85,6 @@ const authConfig: NextAuthOptions = {
   session: {
     strategy: 'jwt',
     maxAge: 24 * 60 * 60
-  },
-  events: {
-    async signOut() {
-      if (typeof window !== 'undefined') {
-        usePermissionStore.getState().clearPermissions();
-      }
-    },
-    async signIn({ user }) {
-      if (user?.permissions && typeof window !== 'undefined') {
-        usePermissionStore.getState().setPermissions(user.permissions);
-      }
-    }
   },
   pages: {
     signIn: '/login',

@@ -5,6 +5,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
 import authConfig from '@/auth.config';
 
 export const metadata: Metadata = {
@@ -22,6 +23,9 @@ export default async function DashboardLayout({
 
   // Fetch session inside the layout
   const session = await getServerSession(authConfig);
+  if (!session?.user) {
+    redirect('/login');
+  }
 
   return (
     <KBar>

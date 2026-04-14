@@ -23,15 +23,16 @@ export default function SessionPermissionSync() {
 
   useEffect(() => {
     if (session?.user?.role) {
-      const roleName = session.user.role;
+      const roleName = String(session.user.role || '').trim();
+      if (!roleName) {
+        return;
+      }
 
       fetchPermissionsByRoleName(roleName)
         .then((perms) => {
           setPermissions(perms);
         })
-        .catch(() => {
-          setPermissions([]); // fallback to empty on error
-        });
+        .catch(() => undefined);
     }
   }, [session, setPermissions]);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn, getSession } from 'next-auth/react';
 import { usePermissionStore } from '@/stores/auth.store';
@@ -14,44 +14,12 @@ export default function SignInViewPage() {
   const router = useRouter();
   const clearPermissions = usePermissionStore((state) => state.clearPermissions);
 
-  // Clear all stored data before login
-  const clearAllStoredData = () => {
+  const clearAuthClientState = () => {
     try {
-      // Clear Zustand permission store
       clearPermissions();
-      
-      // Clear localStorage items
       localStorage.removeItem('permission-storage');
-      localStorage.removeItem('active_theme');
-      localStorage.removeItem('nuqs');
-      
-      // Clear sessionStorage
-      sessionStorage.clear();
-      
-      // Clear indexedDB (if used)
-      if ('indexedDB' in window) {
-        indexedDB.databases().then((databases) => {
-          databases.forEach((db) => {
-            if (db.name) {
-              indexedDB.deleteDatabase(db.name);
-            }
-          });
-        });
-      }
-      
-      // Clear cookies (only those we can access)
-      document.cookie.split(';').forEach((cookie) => {
-        const eqPos = cookie.indexOf('=');
-        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-        // Clear common auth cookies
-        if (name.includes('auth') || name.includes('session') || name.includes('token')) {
-          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        }
-      });
-      
-      console.log('All stored data cleared before login');
     } catch (error) {
-      console.warn('Error clearing stored data:', error);
+      console.warn('Error clearing auth client state:', error);
     }
   };
 
@@ -64,18 +32,11 @@ export default function SignInViewPage() {
       return;
     }
 
-    // Clear all previous data BEFORE login attempt
-    clearAllStoredData();
+    clearAuthClientState();
 
     setLoading(true);
 
     try {
-      // First, clear any existing session
-      await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {
-        // Ignore if endpoint doesn't exist
-      });
-
-      // Then sign in
       const result = await signIn('credentials', {
         redirect: false,
         email,
@@ -90,27 +51,26 @@ export default function SignInViewPage() {
       }
 
       if (result?.ok) {
-        // Get fresh session data
         const session = await getSession();
-        
+        const callbackUrl = result.url || '/dashboard/profile';
         if (session?.user) {
-          // Force a hard navigation to clear React state
-          window.location.href = '/dashboard/profile';
-        } else {
-          router.replace('/dashboard/profile');
+          router.replace(callbackUrl);
+          router.refresh();
+          return;
         }
       }
+      setError('Unable to establish session. Please try again.');
     } catch (error) {
       console.error('Login error:', error);
       setError('Something went wrong. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
 
-  // Clear data on component mount (when user visits login page)
-  useState(() => {
-    clearAllStoredData();
-  });
+  useEffect(() => {
+    clearAuthClientState();
+  }, []);
 
   return (
     <div className='flex min-h-screen bg-gray-900'>
