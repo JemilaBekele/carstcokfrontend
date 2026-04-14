@@ -84,7 +84,7 @@ const authConfig: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 24 * 60 * 60
+    maxAge: 8 * 60 * 60 // 8 hours — aligned with backend JWT_ACCESS_EXPIRATION_MINUTES
   },
   pages: {
     signIn: '/login',

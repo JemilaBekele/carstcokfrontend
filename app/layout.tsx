@@ -3,7 +3,6 @@ import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import NextTopLoader from 'nextjs-toploader';
 import './globals.css';
-import SessionPermissionSync from '@/stores/SessionPermissionSync';
 import ThemeProvider from '@/components/ThemeToggle/theme-provider';
 import { Toaster } from 'sonner';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
@@ -68,7 +67,6 @@ export default async function RootLayout({
               <Toaster />
               {children}
   <PermissionInitializer />
-              <SessionPermissionSync />
             </Providers>
           </ThemeProvider>
         </NuqsAdapter>

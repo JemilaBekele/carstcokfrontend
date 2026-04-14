@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn, getSession } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 import { usePermissionStore } from '@/stores/auth.store';
 
 export default function SignInViewPage() {
@@ -51,13 +51,9 @@ export default function SignInViewPage() {
       }
 
       if (result?.ok) {
-        const session = await getSession();
-        const callbackUrl = result.url || '/dashboard/profile';
-        if (session?.user) {
-          router.replace(callbackUrl);
-          router.refresh();
-          return;
-        }
+        router.replace(result.url || '/dashboard/profile');
+        router.refresh();
+        return;
       }
       setError('Unable to establish session. Please try again.');
     } catch (error) {
@@ -67,10 +63,6 @@ export default function SignInViewPage() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    clearAuthClientState();
-  }, []);
 
   return (
     <div className='flex min-h-screen bg-gray-900'>
