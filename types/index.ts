@@ -6,7 +6,6 @@ export type NavItem = {
   icon?: keyof typeof Icons;
   disabled?: boolean;
   description?: string;
-
   external?: boolean;
   isActive?: boolean;
   shortcut?: string[];
