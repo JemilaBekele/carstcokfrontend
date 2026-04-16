@@ -7,7 +7,7 @@ import { getSession } from 'next-auth/react';
 
 // export const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-export const apiUrl = 'http://system.ordere.net/api';
+export const apiUrl = 'https://system.ordere.net//api';
 
 
 // Utility to get the access token (SSR or CSR)

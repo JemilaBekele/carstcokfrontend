@@ -10,7 +10,7 @@ export type NavItem = {
   isActive?: boolean;
   shortcut?: string[];
   items?: NavItem[];
-  permission?: string; // Single permission required
+  permission?: string; //  required
   permissions?: string[]; // Multiple permissions required
   permissionMode?: 'all' | 'any'; // How to evaluate multiple permissions
 };

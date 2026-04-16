@@ -1,9 +1,10 @@
-// authConfig.ts
+//  b authConfig.ts
 import { api } from '@/service/api';
 import { NextAuthOptions, User } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
 const authConfig: NextAuthOptions = {
+   useSecureCookies: true,
   providers: [
     CredentialsProvider({
       name: 'Credentials',
