@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //  b authConfig.ts
 import { api } from '@/service/api';
 import { NextAuthOptions, User } from 'next-auth';
@@ -13,15 +14,21 @@ const authConfig: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials): Promise<User | null> {
+            console.log("LOGIN TRY:", credentials);
+
         try {
           const response = await api.post('/login', {
             email: credentials?.email,
             password: credentials?.password
           });
+    console.log("LOGIN RESPONSE:", response.data);
 
           const user = response.data.user;
           const accessToken = response.data.tokens?.access?.token;
-
+    if (!user || !accessToken) {
+      console.log("INVALID LOGIN RESPONSE");
+      return null; // IMPORTANT
+    }
           if (!accessToken || !user) {
             throw new Error('Authentication failed');
           }
@@ -37,11 +44,10 @@ const authConfig: NextAuthOptions = {
             status: user.status,
             permissions: Array.isArray(user.permissions) ? user.permissions : []
           } as User;
-        } catch {
-          throw new Error(
-            'Login failed. Please try again later.'
-          );
-        }
+        } catch (err: any) {
+    console.log("LOGIN ERROR:", err?.response?.data || err.message);
+    return null; // IMPORTANT
+  }
       }
     })
   ],
