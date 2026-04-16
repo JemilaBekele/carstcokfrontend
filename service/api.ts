@@ -3,7 +3,7 @@ import authConfig from '@/auth.config';
 import axios from 'axios';
 import { getServerSession } from 'next-auth/next';
 
-export const apiUrl = 'http://localhost:5000/api';
+export const apiUrl = 'http://system.ordere.net/api';
 // export const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 
