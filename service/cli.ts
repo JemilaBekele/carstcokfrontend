@@ -5,9 +5,8 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { getServerSession } from 'next-auth';
 import { getSession } from 'next-auth/react';
 
-// export const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+export const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-export const apiUrl='https://system.ordere.net/api';
 
 
 // Utility to get the access token (SSR or CSR)
