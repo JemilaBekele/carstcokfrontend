@@ -5,8 +5,7 @@ import { NextAuthOptions, User } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
 const authConfig: NextAuthOptions = {
-   useSecureCookies: true,
-  providers: [
+  debug: true,  providers: [
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -51,6 +50,17 @@ const authConfig: NextAuthOptions = {
       }
     })
   ],
+    cookies: {   // 👈 ADD HERE (same level as providers)
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true
+      }
+    }
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
