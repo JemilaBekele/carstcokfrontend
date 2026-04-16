@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 //  b authConfig.ts
 import { api } from '@/service/api';
+import axios from 'axios';
 import { NextAuthOptions, User } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
@@ -16,10 +17,13 @@ const authConfig: NextAuthOptions = {
             console.log("LOGIN TRY:", credentials);
 
         try {
-          const response = await api.post('/login', {
-            email: credentials?.email,
-            password: credentials?.password
-          });
+              const response = await axios.post(
+      "https://system.ordere.net/api/login",
+      {
+        email: credentials?.email,
+        password: credentials?.password
+      }
+    );
     console.log("LOGIN RESPONSE:", response.data);
 
           const user = response.data.user;
