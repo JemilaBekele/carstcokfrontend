@@ -13,178 +13,178 @@ export type Product = {
 
 //Info: The following data is used for the sidebar navigation and Cmd K bar.
 export const navItems: NavItem[] = [
-  {
-    title: 'Dashboard',
-    url: '/dashboard/overview',
-    icon: 'dashboard',
-    isActive: false,
-    shortcut: ['d', 'd'],
-    permission: 'VIEW_MAIN_DASHBOARD',
-    items: [] // Empty array as there are no child items for Dashboard Own_dashboard
-  },
+  // {
+  //   title: 'Dashboard',
+  //   url: '/dashboard/overview',
+  //   icon: 'dashboard',
+  //   isActive: false,
+  //   shortcut: ['d', 'd'],
+  //   permission: 'VIEW_MAIN_DASHBOARD',
+  //   items: [] // Empty array as there are no child items for Dashboard Own_dashboard
+  // },
   // {
   //   title: 'Company',
   //   url: '/dashboard/Company',
   //   icon: 'billing',
   //   permission: 'VIEW_COMPANY'
   // },
-  {
-    title: 'Report',
-    url: '/dashboard/',
-    icon: 'dashboard',
-    isActive: false,
-    shortcut: ['d', 'd'],
-    permission: 'VIEW_SALES_REPORT_VIEW_DASHBOARD',
+  // {
+  //   title: 'Report',
+  //   url: '/dashboard/',
+  //   icon: 'dashboard',
+  //   isActive: false,
+  //   shortcut: ['d', 'd'],
+  //   permission: 'VIEW_SALES_REPORT_VIEW_DASHBOARD',
 
-    items: [
-      {
-        title: 'All Sells Trend',
-        url: '/dashboard/Selllist',
-        // icon: 'userPen',
-        shortcut: ['ps', 'ps'],
-        permission: 'VIEW_ALL_SELLS_TREND'
-      },
-      {
-        title: 'Sales Rank',
-        url: '/dashboard/Reportsellstatic',
-        // icon: 'userPen',
-        shortcut: ['ps', 'ps'],
-        permission: 'VIEW_SALES_RANK'
-      }
-    ] // Empty  array as there are no child items for Dashboard Own_dashboard
-  },
-  {
-    title: 'POS',
-    url: '/dashboard/',
-    icon: 'dashboard',
-    isActive: false,
-    shortcut: ['d', 'd'],
-    permission: 'VIEW_SELL_DASHBOARD',
+  //   items: [
+  //     {
+  //       title: 'All Sells Trend',
+  //       url: '/dashboard/Selllist',
+  //       // icon: 'userPen',
+  //       shortcut: ['ps', 'ps'],
+  //       permission: 'VIEW_ALL_SELLS_TREND'
+  //     },
+  //     {
+  //       title: 'Sales Rank',
+  //       url: '/dashboard/Reportsellstatic',
+  //       // icon: 'userPen',
+  //       shortcut: ['ps', 'ps'],
+  //       permission: 'VIEW_SALES_RANK'
+  //     }
+  //   ] // Empty  array as there are no child items for Dashboard Own_dashboard
+  // },
+  // {
+  //   title: 'POS',
+  //   url: '/dashboard/',
+  //   icon: 'dashboard',
+  //   isActive: false,
+  //   shortcut: ['d', 'd'],
+  //   permission: 'VIEW_SELL_DASHBOARD',
 
-    items: [
-      // {
-      //   title: 'My Sales Report',
-      //   url: '/dashboard/SalesCreatorDashboard',
-      //   icon: 'userPen',
-      //   shortcut: ['ro', 'ro'],
-      //   permission: 'CREATE_SELL'
-      // },
-      {
-        title: 'Order',
-        url: '/dashboard/Pos',
-        // icon: 'userPen',
-        shortcut: ['ro', 'ro'],
-        permission: 'CREATE_SELL'
-      },
-      {
-        title: 'View All Orders',
-        url: '/dashboard/Sell',
-        // icon: 'userPen',
-        shortcut: ['rs', 'rs'],
-        permission: 'VIEW_ALL_SELLS'
-      },
-      {
-        title: 'My Orders ',
-        url: '/dashboard/UserBasedSell',
-        // icon: 'userPen',
-        shortcut: ['rs', 'rs'],
-        permission: 'CREATE_SELL'
-      }
-    ] // Empty array as there are no child items for Dashboard Own_dashboard
-  },
-  {
-    title: 'Manage Store and shops',
-    url: '/dashboard/',
-    icon: 'dashboard',
-    isActive: false,
-    shortcut: ['d', 'd'],
-    permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS',
+  //   items: [
+  //     // {
+  //     //   title: 'My Sales Report',
+  //     //   url: '/dashboard/SalesCreatorDashboard',
+  //     //   icon: 'userPen',
+  //     //   shortcut: ['ro', 'ro'],
+  //     //   permission: 'CREATE_SELL'
+  //     // },
+  //     {
+  //       title: 'Order',
+  //       url: '/dashboard/Pos',
+  //       // icon: 'userPen',
+  //       shortcut: ['ro', 'ro'],
+  //       permission: 'CREATE_SELL'
+  //     },
+  //     {
+  //       title: 'View All Orders',
+  //       url: '/dashboard/Sell',
+  //       // icon: 'userPen',
+  //       shortcut: ['rs', 'rs'],
+  //       permission: 'VIEW_ALL_SELLS'
+  //     },
+  //     {
+  //       title: 'My Orders ',
+  //       url: '/dashboard/UserBasedSell',
+  //       // icon: 'userPen',
+  //       shortcut: ['rs', 'rs'],
+  //       permission: 'CREATE_SELL'
+  //     }
+  //   ] // Empty array as there are no child items for Dashboard Own_dashboard
+  // },
+  // {
+  //   title: 'Manage Store and shops',
+  //   url: '/dashboard/',
+  //   icon: 'dashboard',
+  //   isActive: false,
+  //   shortcut: ['d', 'd'],
+  //   permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS',
 
-    items: [
-      // {
-      //   title: 'Report',
-      //   url: '/dashboard/StoreUserDashboard',
-      //   icon: 'userPen',
-      //   shortcut: ['ps', 'ps'],
-      //   permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS'
-      // },
-      {
-        title: 'Orders',
-        url: '/dashboard/StoreOrder',
-        // icon: 'userPen',
-        shortcut: ['so', 'so'],
-        permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS'
-      }
+  //   items: [
+  //     // {
+  //     //   title: 'Report',
+  //     //   url: '/dashboard/StoreUserDashboard',
+  //     //   icon: 'userPen',
+  //     //   shortcut: ['ps', 'ps'],
+  //     //   permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS'
+  //     // },
+  //     {
+  //       title: 'Orders',
+  //       url: '/dashboard/StoreOrder',
+  //       // icon: 'userPen',
+  //       shortcut: ['so', 'so'],
+  //       permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS'
+  //     }
 
-      // {
-      //   title: 'Shop Stock',
-      //   url: '/dashboard/ShopStock', // Update to your actual subcategory page route UnitOfMeasure
-      //   icon: 'userPen',
-      //   shortcut: ['l', 'l'],
-      //   permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS'
-      // },
+  //     // {
+  //     //   title: 'Shop Stock',
+  //     //   url: '/dashboard/ShopStock', // Update to your actual subcategory page route UnitOfMeasure
+  //     //   icon: 'userPen',
+  //     //   shortcut: ['l', 'l'],
+  //     //   permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS'
+  //     // },
 
-      // {
-      //   title: 'Store Stock',
-      //   url: '/dashboard/StoreStock', // Update to your actual subcategory page route UnitOfMeasure purchase
-      //   icon: 'userPen',
-      //   shortcut: ['s', 's'],
-      //   permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS'
-      // }
-    ] // Empty  array as there are no child items for Dashboard Own_dashboard
-  },
-  {
-    title: 'Product Management',
-    url: '#', // Placeholder as there is no direct link for the parent
-    icon: 'billing',
-    isActive: true,
-    permission: 'VIEW_PRODUCT_DASHBOARD',
+  //     // {
+  //     //   title: 'Store Stock',
+  //     //   url: '/dashboard/StoreStock', // Update to your actual subcategory page route UnitOfMeasure purchase
+  //     //   icon: 'userPen',
+  //     //   shortcut: ['s', 's'],
+  //     //   permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS'
+  //     // }
+  //   ] // Empty  array as there are no child items for Dashboard Own_dashboard
+  // },
+  // {
+  //   title: 'Product Management',
+  //   url: '#', // Placeholder as there is no direct link for the parent
+  //   icon: 'billing',
+  //   isActive: true,
+  //   permission: 'VIEW_PRODUCT_DASHBOARD',
 
-    items: [
-      {
-        title: 'Category',
-        url: '/dashboard/category', // Update to your actual category page route
-        // icon: 'userPen',
-        shortcut: ['c', 'c'],
-        permission: 'VIEW_ALL_CATEGORIES'
-      },
-      {
-        title: 'Brand',
-        url: '/dashboard/brand', // Update to your actual category page route
-        // icon: 'userPen',
-        shortcut: ['b', 'b'],
-        permission: 'VIEW_ALL_CATEGORIES'
-      },
-      {
-        title: 'Products',
-        url: '/dashboard/Products', // Update to your actual subcategory page route UnitOfMeasure ProductBatch
-        // icon: 'userPen',
-        shortcut: ['u', 'u'],
-        permission: 'VIEW_PRODUCT_ALL'
-      },
-      {
-        title: 'Purchase',
-        url: '/dashboard/purchase', // Update to your actual subcategory page route UnitOfMeasure  Transfer
-        // icon: 'userPen',
-        shortcut: ['P', 'P'],
-        permission: 'VIEW_ALL_PURCHASES'
-      },
-      {
-        title: 'Transfer',
-        url: '/dashboard/Transfer', // Update to your actual subcategory page route UnitOfMeasure
-        // icon: 'userPen',
-        shortcut: ['y', 'y'],
-        permission: 'VIEW_ALL_TRANSFERS'
-      },
-      {
-        title: 'Stock Correction',
-        url: '/dashboard/StockCorrection', // Update to your actual subcategory page route UnitOfMeasure
-        // icon: 'userPen',
-        shortcut: ['s', 's'],
-        permission: 'VIEW_ALL_STOCK_CORRECTIONS'
-      }
-    ]
-  },
+  //   items: [
+  //     {
+  //       title: 'Category',
+  //       url: '/dashboard/category', // Update to your actual category page route
+  //       // icon: 'userPen',
+  //       shortcut: ['c', 'c'],
+  //       permission: 'VIEW_ALL_CATEGORIES'
+  //     },
+  //     // {
+  //     //   title: 'Brand',
+  //     //   url: '/dashboard/brand', // Update to your actual category page route
+  //     //   // icon: 'userPen',
+  //     //   shortcut: ['b', 'b'],
+  //     //   permission: 'VIEW_ALL_CATEGORIES'
+  //     // },
+  //     // {
+  //     //   title: 'Products',
+  //     //   url: '/dashboard/Products', // Update to your actual subcategory page route UnitOfMeasure ProductBatch
+  //     //   // icon: 'userPen',
+  //     //   shortcut: ['u', 'u'],
+  //     //   permission: 'VIEW_PRODUCT_ALL'
+  //     // },
+  //     {
+  //       title: 'Purchase',
+  //       url: '/dashboard/purchase', // Update to your actual subcategory page route UnitOfMeasure  Transfer
+  //       // icon: 'userPen',
+  //       shortcut: ['P', 'P'],
+  //       permission: 'VIEW_ALL_PURCHASES'
+  //     },
+  //     {
+  //       title: 'Transfer',
+  //       url: '/dashboard/Transfer', // Update to your actual subcategory page route UnitOfMeasure
+  //       // icon: 'userPen',
+  //       shortcut: ['y', 'y'],
+  //       permission: 'VIEW_ALL_TRANSFERS'
+  //     },
+  //     {
+  //       title: 'Stock Correction',
+  //       url: '/dashboard/StockCorrection', // Update to your actual subcategory page route UnitOfMeasure
+  //       // icon: 'userPen',
+  //       shortcut: ['s', 's'],
+  //       permission: 'VIEW_ALL_STOCK_CORRECTIONS'
+  //     }
+  //   ]
+  // },
   {
     title: 'User',
     url: '#', // Placeholder as there is no direct link for the parent
