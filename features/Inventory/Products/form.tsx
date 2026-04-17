@@ -1307,33 +1307,39 @@ const onSubmit = async (data: ProductFormValues) => {
           : Boolean(data.isActive),
       hasBox: Boolean(data.hasBox),
       boxSize: data.hasBox ? data.boxSize : null,
-      warningQuantity: data.warningQuantity ? Number(data.warningQuantity) : null // Add this line
+      warningQuantity: data.warningQuantity ? Number(data.warningQuantity) : null
     };
 
     const { additionalPrices, ...formValues } = processedData;
 
+    // Ensure description is included even if empty
+    const descriptionValue = formValues.description || '';
+    
     // Append main product data
+    const importantFields = ['description', 'generic', 'viscosity', 'oilType', 'additiveType'];
+    
     Object.entries(formValues).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        if (typeof value === 'boolean') {
-          formData.append(key, value.toString());
-        } else {
-          formData.append(key, value.toString());
-        }
+      // For important fields, always send them (even if empty)
+      if (importantFields.includes(key)) {
+        const finalValue = value || '';
+        formData.append(key, String(finalValue)); // Convert to string
+      }
+      // For other fields, only send if they have values
+      else if (value !== undefined && value !== null && value !== '') {
+        formData.append(key, String(value)); // Convert to string
       }
     });
 
-    // Rest of your code remains the same...
     // Append additional prices
     additionalPrices.forEach((price, index) => {
       if (price.label && price.price > 0) {
-        formData.append(`additionalPrices[${index}][label]`, price.label);
+        formData.append(`additionalPrices[${index}][label]`, String(price.label));
         formData.append(
           `additionalPrices[${index}][price]`,
-          price.price.toString()
+          String(price.price)
         );
         if (price.shopId) {
-          formData.append(`additionalPrices[${index}][shopId]`, price.shopId);
+          formData.append(`additionalPrices[${index}][shopId]`, String(price.shopId));
         }
       }
     });
