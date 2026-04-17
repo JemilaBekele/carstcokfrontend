@@ -206,6 +206,30 @@ export const updateSell = async (
     throw error;
   }
 };
+// service/Sell.ts
+export const uploadSellFiles = async (
+  id: string,
+  data: FormData,
+  req?: IncomingMessage
+) => {
+  try {
+    const axiosInstance = axiosWithAuth(req);
+
+    const response = await axiosInstance.put(
+      `/sell/${id}/upload/file`,
+      data,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 // ✅ Delete a sell
 export const deleteSell = async (id: string, req?: IncomingMessage) => {

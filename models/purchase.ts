@@ -1,5 +1,6 @@
 import { IEmployee } from './employee';
 import { IProduct } from './Product';
+import { IShop } from './shop';
 import { IStore } from './store';
 import { ISupplier } from './supplier';
 
@@ -25,7 +26,9 @@ export interface IPurchase {
   id: string;
   invoiceNo: string;
   supplierId: string;
-  storeId: string;
+  storeId?: string;
+    shopId?: string;
+    shop?: IShop;
   purchaseDate: Date;
   paymentStatus: PaymentStatus;
   notes?: string;

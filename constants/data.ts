@@ -47,7 +47,14 @@ export const navItems: NavItem[] = [
       {
         title: 'Sales Rank',
         url: '/dashboard/Reportsellstatic',
-        // icon: 'userPen',
+        // icon: 'userPen', TopProductsReport
+        shortcut: ['ps', 'ps'],
+        permission: 'VIEW_SALES_RANK'
+      },
+        {
+        title: 'Top Product Report',
+        url: '/dashboard/TopProductsReport',
+        // icon: 'userPen', 
         shortcut: ['ps', 'ps'],
         permission: 'VIEW_SALES_RANK'
       }
@@ -148,20 +155,20 @@ export const navItems: NavItem[] = [
         shortcut: ['c', 'c'],
         permission: 'VIEW_ALL_CATEGORIES'
       },
-      // {
-      //   title: 'Brand',
-      //   url: '/dashboard/brand', // Update to your actual category page route
-      //   // icon: 'userPen',
-      //   shortcut: ['b', 'b'],
-      //   permission: 'VIEW_ALL_CATEGORIES'
-      // },
-      // {
-      //   title: 'Products',
-      //   url: '/dashboard/Products', // Update to your actual subcategory page route UnitOfMeasure ProductBatch
-      //   // icon: 'userPen',
-      //   shortcut: ['u', 'u'],
-      //   permission: 'VIEW_PRODUCT_ALL'
-      // },
+      {
+        title: 'Brand',
+        url: '/dashboard/brand', // Update to your actual category page route
+        // icon: 'userPen',
+        shortcut: ['b', 'b'],
+        permission: 'VIEW_ALL_CATEGORIES'
+      },
+      {
+        title: 'Products',
+        url: '/dashboard/Products', // Update to your actual subcategory page route UnitOfMeasure ProductBatch
+        // icon: 'userPen',
+        shortcut: ['u', 'u'],
+        permission: 'VIEW_PRODUCT_ALL'
+      },
       {
         title: 'Purchase',
         url: '/dashboard/purchase', // Update to your actual subcategory page route UnitOfMeasure  Transfer

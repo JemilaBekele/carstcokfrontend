@@ -315,6 +315,17 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
                     </div>
                   </div>
                 )}
+                    {purchase.shop && (
+                  <div className='flex items-center gap-2'>
+                    <User className='text-muted-foreground h-4 w-4 shrink-0' />
+                    <div>
+                      <p className='font-medium text-sm'>Shop:</p>
+                      <p className='text-muted-foreground text-sm'>
+                        {purchase.shop.name ?? 'Unknown Store'}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 
                 {purchase.createdBy && (
                   <div className='flex items-center gap-2'>
@@ -464,7 +475,7 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
                   <div className='flex justify-between text-sm font-semibold'>
                     <span>Grand Total</span>
                     <span className='text-primary'>
-                      ${purchase.items.reduce((sum, item) => sum + (item.totalPrice || 0), 0).toFixed(2)}
+                      {purchase.items.reduce((sum, item) => sum + (item.totalPrice || 0), 0).toFixed(2)}
                     </span>
                   </div>
                 </div>

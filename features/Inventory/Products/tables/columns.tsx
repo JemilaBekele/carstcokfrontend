@@ -3,9 +3,31 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTableColumnHeader } from '@/components/ui/table/data-table-column-header';
-import { CalendarDays, Package, Store, ShoppingCart } from 'lucide-react';
+import { CalendarDays, Package, Store, ShoppingCart, Box } from 'lucide-react';
 import { IProduct } from '@/models/Product';
 import { ProductCellAction } from './cell-action';
+
+// Helper function to format quantity in boxes and pieces
+const formatBoxPieceQuantity = (quantityInPieces: number, hasBox: boolean, boxSize: number | null | undefined): string => {
+  if (!hasBox || !boxSize || boxSize <= 0) {
+    return `${quantityInPieces} pcs`;
+  }
+  
+  if (quantityInPieces === 0) return '0';
+  
+  const boxes = Math.floor(quantityInPieces / boxSize);
+  const pieces = quantityInPieces % boxSize;
+  
+  const parts = [];
+  if (boxes > 0) {
+    parts.push(`${boxes} box${boxes !== 1 ? 'es' : ''}`);
+  }
+  if (pieces > 0) {
+    parts.push(`${pieces} piece${pieces !== 1 ? 's' : ''}`);
+  }
+  
+  return parts.join(' + ');
+};
 
 export const productColumns: ColumnDef<IProduct>[] = [
   {
@@ -21,10 +43,18 @@ export const productColumns: ColumnDef<IProduct>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Product Name' />
     ),
-    cell: ({ cell }) => (
-      <div className='flex items-center gap-2'>
-        <Package className='text-muted-foreground h-4 w-4' />
-        {cell.getValue<IProduct['name']>()}
+    cell: ({ cell, row }) => (
+      <div className='space-y-1'>
+        <div className='flex items-center gap-2'>
+          <Package className='text-muted-foreground h-4 w-4' />
+          {cell.getValue<IProduct['name']>()}
+        </div>
+        {row.original.hasBox && row.original.boxSize && (
+          <div className='text-muted-foreground flex items-center gap-1 text-xs'>
+            <Box className='h-3 w-3' />
+            <span>1 box = {row.original.boxSize} pieces</span>
+          </div>
+        )}
       </div>
     ),
     enableColumnFilter: true
@@ -36,18 +66,21 @@ export const productColumns: ColumnDef<IProduct>[] = [
     ),
     cell: ({ row }) => {
       const shopStocks = row.original.stockSummary.shopStocks;
+      const hasBox = row.original.hasBox;
+      const boxSize = row.original.boxSize;
+      
       return (
         <div className='space-y-1'>
-          {Object.entries(shopStocks).map(([shopName, stockInfo]) => (
+          {Object.entries(shopStocks).map(([shopName, stockInfo]: [string, any]) => (
             <div key={shopName} className='text-sm'>
               <div className='flex items-center gap-1'>
                 <ShoppingCart className='h-3 w-3 text-blue-500' />
                 <span className='font-medium'>{shopName}:</span>
                 <span className='text-muted-foreground ml-1'>
-                  {stockInfo.quantity || 0}
+                  {formatBoxPieceQuantity(stockInfo.quantity, hasBox, boxSize)}
                 </span>
-                <span className='text-muted-foreground ml-1'>
-                  {stockInfo.branchName || ''}
+                <span className='text-muted-foreground ml-1 text-xs'>
+                  {stockInfo.branchName ? `(${stockInfo.branchName})` : ''}
                 </span>
               </div>
             </div>
@@ -68,18 +101,21 @@ export const productColumns: ColumnDef<IProduct>[] = [
     ),
     cell: ({ row }) => {
       const storeStocks = row.original.stockSummary.storeStocks;
+      const hasBox = row.original.hasBox;
+      const boxSize = row.original.boxSize;
+      
       return (
         <div className='space-y-1'>
-          {Object.entries(storeStocks).map(([storeName, stockInfo]) => (
+          {Object.entries(storeStocks).map(([storeName, stockInfo]: [string, any]) => (
             <div key={storeName} className='text-sm'>
               <div className='flex items-center gap-1'>
                 <Store className='h-3 w-3 text-green-500' />
                 <span className='font-medium'>{storeName}:</span>
                 <span className='text-muted-foreground ml-1'>
-                  {stockInfo.quantity || 0}
+                  {formatBoxPieceQuantity(stockInfo.quantity, hasBox, boxSize)}
                 </span>
-                <span className='text-muted-foreground ml-1'>
-                  {stockInfo.branchName || ''}
+                <span className='text-muted-foreground ml-1 text-xs'>
+                  {stockInfo.branchName ? `(${stockInfo.branchName})` : ''}
                 </span>
               </div>
             </div>
@@ -100,6 +136,8 @@ export const productColumns: ColumnDef<IProduct>[] = [
     ),
     cell: ({ row }) => {
       const { shopStocks, storeStocks } = row.original.stockSummary;
+      const hasBox = row.original.hasBox;
+      const boxSize = row.original.boxSize;
 
       // Separate shop and store stocks by branch
       const shopBranchTotals: Record<string, number> = {};
@@ -107,25 +145,21 @@ export const productColumns: ColumnDef<IProduct>[] = [
       const combinedBranchTotals: Record<string, number> = {};
 
       // Process shop stocks by branch
-      Object.entries(shopStocks).forEach(([, stockInfo]) => {
+      Object.entries(shopStocks).forEach(([, stockInfo]: [string, any]) => {
         const branchName = stockInfo.branchName || 'Unknown Branch';
         const quantity = stockInfo.quantity || 0;
 
-        shopBranchTotals[branchName] =
-          (shopBranchTotals[branchName] || 0) + quantity;
-        combinedBranchTotals[branchName] =
-          (combinedBranchTotals[branchName] || 0) + quantity;
+        shopBranchTotals[branchName] = (shopBranchTotals[branchName] || 0) + quantity;
+        combinedBranchTotals[branchName] = (combinedBranchTotals[branchName] || 0) + quantity;
       });
 
       // Process store stocks by branch
-      Object.entries(storeStocks).forEach(([, stockInfo]) => {
+      Object.entries(storeStocks).forEach(([, stockInfo]: [string, any]) => {
         const branchName = stockInfo.branchName || 'Unknown Branch';
         const quantity = stockInfo.quantity || 0;
 
-        storeBranchTotals[branchName] =
-          (storeBranchTotals[branchName] || 0) + quantity;
-        combinedBranchTotals[branchName] =
-          (combinedBranchTotals[branchName] || 0) + quantity;
+        storeBranchTotals[branchName] = (storeBranchTotals[branchName] || 0) + quantity;
+        combinedBranchTotals[branchName] = (combinedBranchTotals[branchName] || 0) + quantity;
       });
 
       // Get all unique branches
@@ -136,7 +170,8 @@ export const productColumns: ColumnDef<IProduct>[] = [
         ])
       ).sort();
 
-      const totalCombined = Object.values(combinedBranchTotals).reduce(
+      // Calculate total combined quantity
+      const totalCombinedQuantity = Object.values(combinedBranchTotals).reduce(
         (sum, qty) => sum + qty,
         0
       );
@@ -161,7 +196,9 @@ export const productColumns: ColumnDef<IProduct>[] = [
                           {branchName}
                         </span>
                       </div>
-                      <span className='text-sm font-bold'>{combinedQty}</span>
+                      <span className='text-sm font-bold'>
+                        {formatBoxPieceQuantity(combinedQty, hasBox, boxSize)}
+                      </span>
                     </div>
 
                     {/* Shop and Store breakdown */}
@@ -172,7 +209,7 @@ export const productColumns: ColumnDef<IProduct>[] = [
                             <ShoppingCart className='h-2.5 w-2.5 text-blue-500' />
                             <span>Shops:</span>
                           </div>
-                          <span>{shopQty}</span>
+                          <span>{formatBoxPieceQuantity(shopQty, hasBox, boxSize)}</span>
                         </div>
                       )}
                       {storeQty > 0 && (
@@ -181,7 +218,7 @@ export const productColumns: ColumnDef<IProduct>[] = [
                             <Store className='h-2.5 w-2.5 text-green-500' />
                             <span>Stores:</span>
                           </div>
-                          <span>{storeQty}</span>
+                          <span>{formatBoxPieceQuantity(storeQty, hasBox, boxSize)}</span>
                         </div>
                       )}
                     </div>
@@ -197,12 +234,14 @@ export const productColumns: ColumnDef<IProduct>[] = [
 
           {/* Summary Totals */}
           <div className='space-y-2 border-t pt-2'>
-            <div className='flex items-center justify-between border-t pt-2 text-sm font-bold'>
+            <div className='flex items-center justify-between pt-2'>
               <div className='flex items-center gap-2'>
                 <Package className='h-3 w-3 text-amber-500' />
-                <span>Total :</span>
+                <span className='text-sm font-bold'>Total :</span>
               </div>
-              <span className='text-lg'>{totalCombined}</span>
+              <span className='text-lg font-bold'>
+                {formatBoxPieceQuantity(totalCombinedQuantity, hasBox, boxSize)}
+              </span>
             </div>
           </div>
         </div>

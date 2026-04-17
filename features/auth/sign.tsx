@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { usePermissionStore } from "@/stores/auth.store";
 
 export default function SignInViewPage() {
@@ -12,16 +12,46 @@ export default function SignInViewPage() {
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
-  const clearPermissions = usePermissionStore(
-    (state) => state.clearPermissions,
-  );
+  const clearPermissions = usePermissionStore((state) => state.clearPermissions);
 
-  const clearAuthClientState = () => {
+  // Clear all stored data before login
+  const clearAllStoredData = () => {
     try {
+      // Clear Zustand permission store
       clearPermissions();
-      localStorage.removeItem("permission-storage");
+      
+      // Clear localStorage items
+      localStorage.removeItem('permission-storage');
+      localStorage.removeItem('active_theme');
+      localStorage.removeItem('nuqs');
+      
+      // Clear sessionStorage
+      sessionStorage.clear();
+      
+      // Clear indexedDB (if used)
+      if ('indexedDB' in window) {
+        indexedDB.databases().then((databases) => {
+          databases.forEach((db) => {
+            if (db.name) {
+              indexedDB.deleteDatabase(db.name);
+            }
+          });
+        });
+      }
+      
+      // Clear cookies (only those we can access)
+      document.cookie.split(';').forEach((cookie) => {
+        const eqPos = cookie.indexOf('=');
+        const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+        // Clear common auth cookies
+        if (name.includes('auth') || name.includes('session') || name.includes('token')) {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        }
+      });
+      
+      console.log('All stored data cleared before login');
     } catch (error) {
-      console.warn("Error clearing auth client state:", error);
+      console.warn('Error clearing stored data:', error);
     }
   };
 
@@ -34,16 +64,23 @@ export default function SignInViewPage() {
       return;
     }
 
-    clearAuthClientState();
+    // Clear all previous data BEFORE login attempt
+    clearAllStoredData();
 
     setLoading(true);
 
     try {
-      const result = await signIn("credentials", {
+      // First, clear any existing session
+      await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {
+        // Ignore if endpoint doesn't exist
+      });
+
+      // Then sign in
+      const result = await signIn('credentials', {
         redirect: false,
         email,
         password,
-        callbackUrl: "/dashboard/profile",
+        callbackUrl: '/dashboard/inventory'
       });
 
       if (result?.error) {
@@ -53,161 +90,167 @@ export default function SignInViewPage() {
       }
 
       if (result?.ok) {
-        router.replace(result.url || "/dashboard/profile");
-        router.refresh();
-        return;
+        // Get fresh session data
+        const session = await getSession();
+        
+        if (session?.user) {
+          // Force a hard navigation to clear React state
+          window.location.href = '/dashboard/profile';
+        } else {
+          router.replace('/dashboard/profile');
+        }
       }
-      setError("Unable to establish session. Please try again.");
     } catch (error) {
       console.error("Login error:", error);
       setError("Something went wrong. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
 
+  // Clear data on component mount (when user visits login page)
+  useState(() => {
+    clearAllStoredData();
+  });
+
   return (
-    <div className="flex min-h-screen bg-gray-900">
-      {/* Left side with luxury image */}
-      <div
-        className="hidden bg-cover bg-center lg:flex lg:w-1/2"
-        style={{
-          backgroundImage:
-            "url('https://i.pinimg.com/736x/3a/2f/80/3a2f80c2b92f7b527e79658a5a15c9f2.jpg')",
-        }}
-      >
-        <div className="bg-opacity-40 flex h-full w-full flex-col justify-between bg-black p-12">
-          <div className="flex items-center space-x-3">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-10 w-10"
-              style={{ color: "#D4AF37" }}
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <path d="M3 9h18M9 3v18" />
-            </svg>
-            <span className="text-2xl font-semibold tracking-wide text-white">
-              Inventory
-            </span>
-          </div>
-        </div>
+    <div className="flex min-h-[calc(100vh-140px)] items-center justify-center p-4 lg:p-8">
+      <div className="flex w-full max-w-5xl overflow-hidden bg-white border border-gray-100 shadow-2xl rounded-3xl">
+        
+        {/* Left Side: Branding/Image Section */}
+      <div className="relative hidden w-1/2 lg:block">
+  <img 
+    src="https://plus.unsplash.com/premium_photo-1692117162332-2701afb100fb?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGNhciUyMG9pbHxlbnwwfHwwfHx8MA%3D%3D" 
+    alt="Car Oil Inventory" 
+    className="absolute inset-0 object-cover w-full h-full"
+  />
+
+  {/* Dark overlay only (no color gradient) */}
+  <div className="absolute inset-0 bg-black/60 p-12 flex flex-col justify-between text-white">
+    <div>
+      <div className="flex items-center gap-3 mb-8">
+        <svg 
+          className="w-12 h-12" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 7-3-2-3 2-1-7z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 15h16v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5z" />
+        </svg>
+        <span className="text-2xl font-bold tracking-tight">
+           Car Oil Inventory Management System
+        </span>
       </div>
 
-      {/* Right side with login form */}
-      <div className="flex w-full items-center justify-center bg-gray-900 p-8 lg:w-1/2">
-        <div className="bg-opacity-60 border-opacity-40 w-full max-w-md rounded-2xl border border-gray-700 bg-gray-800 p-10 shadow-2xl backdrop-blur-md">
-          <div className="mb-10 text-center">
-            <h1 className="mb-2 text-3xl font-light tracking-wider text-white">
-              Welcome Back
-            </h1>
-            <p className="text-sm text-gray-400">
-              Sign in to access your inventory dashboard
-            </p>
+      <h2 className="text-3xl font-bold mb-4">
+      </h2>
+
+      <p className="text-lg opacity-90">
+      </p>
+    </div>
+
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <div className="w-2 h-2 bg-white rounded-full"></div>
+        <span className="text-sm"></span>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <div className="w-2 h-2 bg-white rounded-full"></div>
+        <span className="text-sm"></span>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <div className="w-2 h-2 bg-white rounded-full"></div>
+        <span className="text-sm"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+        {/* Right Side: Login Form */}
+        <div className="w-full p-8 sm:p-12 lg:w-1/2">
+          <div className="mb-10">
+            <h1 className="mb-2 text-3xl font-bold text-gray-900">Welcome Back</h1>
+            <p className="text-gray-500">Sign in to manage your oil inventory</p>
           </div>
 
           <form onSubmit={handleSignIn} className="space-y-6">
             <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-300"
-              >
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="email@example.com"
-                autoCapitalize="none"
-                autoComplete="email"
-                autoCorrect="off"
-                disabled={loading}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-opacity-50 w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-white placeholder-gray-500 transition-all duration-300 outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500"
-              />
+              <label className="ml-1 text-sm font-semibold text-gray-700">Email Address</label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </span>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="manager@oilcompany.com"
+                  className="w-full py-3.5 pl-12 pr-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#e94560] focus:ring-4 focus:ring-[#e94560]/10 transition-all"
+                  disabled={loading}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-300"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                autoComplete="current-password"
-                disabled={loading}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-opacity-50 w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 text-white placeholder-gray-500 transition-all duration-300 outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500"
-              />
+              <div className="flex items-center justify-between ml-1">
+                <label className="text-sm font-semibold text-gray-700">Password</label>
+              </div>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </span>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full py-3.5 pl-12 pr-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-[#e94560] focus:ring-4 focus:ring-[#e94560]/10 transition-all"
+                  disabled={loading}
+                />
+              </div>
             </div>
 
             {error && (
-              <p className="bg-opacity-30 rounded-lg bg-red-900 px-4 py-2 text-sm font-medium text-red-400">
-                {error}
-              </p>
+              <div className="flex items-center gap-3 p-4 text-red-600 border border-red-100 bg-red-50 rounded-xl animate-shake">
+                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-medium">{error}</span>
+              </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center rounded-lg px-4 py-3 font-medium transition-all duration-300"
-              style={{
-                backgroundColor: loading ? "#6b7280" : "#D4AF37",
-                color: loading ? "#d1d5db" : "#1f2937",
-              }}
+              className={`
+                w-full py-4 rounded-xl font-bold text-lg transition-all transform active:scale-[0.98]
+                ${loading 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-[#1a1a2e] text-white hover:bg-[#2a2a3e] shadow-lg shadow-[#1a1a2e]/20 hover:shadow-xl'
+                }
+              `}
             >
               {loading ? (
-                <>
-                  <svg
-                    className="mr-3 -ml-1 h-5 w-5 animate-spin text-gray-900"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
+                <div className="flex items-center justify-center gap-3">
+                  <svg className="w-5 h-5 text-gray-400 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Signing In...
-                </>
+                  <span>Authenticating...</span>
+                </div>
               ) : (
-                "Sign In"
+                'Sign In to Inventory'
               )}
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-sm text-gray-500">
-              <a
-                href="#"
-                className="transition-colors duration-300 hover:text-yellow-400"
-                style={{ color: "#D4AF37" }}
-              >
-                Forgot your password?
-              </a>
-            </p>
-          </div>
+       
         </div>
       </div>
     </div>

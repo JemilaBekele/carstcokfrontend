@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,11 +19,13 @@ import {
   Truck,
   CreditCard,
   Printer,
-
-  Scale,
-
   Box,
-  PackageOpen
+  PackageOpen,
+  Image as ImageIcon,
+  FileText,
+  Eye,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import {
   Table,
@@ -33,11 +35,11 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-
 import { Checkbox } from '@/components/ui/checkbox';
 import { ISell, ISellItem, SaleStatus, ItemSaleStatus } from '@/models/Sell';
-import { cancelSale, getSellId, updateSaleStatus } from '@/service/Sell';
-
+import { getSellId } from '@/service/Sell';
+import Image from 'next/image';
+import { normalizeImagePath } from '@/lib/norm';
 
 type SaleViewProps = {
   id?: string;
@@ -48,86 +50,20 @@ interface PrintableSaleData {
   printedAt: string;
 }
 
-interface PriceAnalysis {
-  productId: string;
-  productName: string;
-  sellPrice: number;
-  additionalPrices: Array<{
-    label: string;
-    price: number;
-    shopId: string | null;
-    isMatch: boolean;
-    difference: number;
-  }>;
-  hasMatchingPrice: boolean;
-}
-
 const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
   const [sale, setSale] = useState<ISell | null>(null);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [open, setOpen] = useState(false);
-  const [statusUpdateDialog, setStatusUpdateDialog] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<SaleStatus | null>(null);
+  const [updating, ] = useState(false);
+  const [refreshTrigger,] = useState(0);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [, setImageError] = useState(false);
+  const [showAttachedFiles, setShowAttachedFiles] = useState(false);
 
-  const [priceAnalysisModalOpen, setPriceAnalysisModalOpen] = useState(false);
-  const [priceAnalysis, setPriceAnalysis] = useState<PriceAnalysis[]>([]);
-  const [loadingPriceAnalysis, setLoadingPriceAnalysis] = useState(false);
+  // Normalize image and document URLs
+  const normalizedImageUrl = normalizeImagePath(sale?.imageUrl);
+  const normalizedDocumentUrl = normalizeImagePath(sale?.documentUrl);
 
-  const analyzePrices = async () => {
-    if (!sale || !sale.items) return;
-
-    setLoadingPriceAnalysis(true);
-    try {
-      const analysis: PriceAnalysis[] = [];
-
-      for (const item of sale.items) {
-        if (!item.product?.id || !item.shop?.id) continue;
-
-        try {
-          const additionalPrices = item.product.AdditionalPrice || [];
-
-          const priceComparisons = additionalPrices.map((ap) => {
-            const isMatch = Math.abs(ap.price - item.unitPrice) < 0.01;
-            const difference = item.unitPrice - ap.price;
-
-            return {
-              label: ap.label ?? 'N/A',
-              price: ap.price,
-              shopId: ap.shopId ?? null,
-              isMatch,
-              difference
-            };
-          });
-
-          analysis.push({
-            productId: item.product.id,
-            productName: item.product.name,
-            sellPrice: item.unitPrice,
-            additionalPrices: priceComparisons,
-            hasMatchingPrice: priceComparisons.some((ap) => ap.isMatch)
-          });
-        } catch {
-          analysis.push({
-            productId: item.product.id,
-            productName: item.product.name,
-            sellPrice: item.unitPrice,
-            additionalPrices: [],
-            hasMatchingPrice: false
-          });
-        }
-      }
-
-      setPriceAnalysis(analysis);
-      setPriceAnalysisModalOpen(true);
-    } catch {
-      toast.error('Failed to analyze prices');
-    } finally {
-      setLoadingPriceAnalysis(false);
-    }
-  };
+  const hasAttachedFiles = !!(normalizedImageUrl || normalizedDocumentUrl);
 
   useEffect(() => {
     const fetchSale = async () => {
@@ -137,6 +73,11 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
       try {
         const saleData = await getSellId(id);
         setSale(saleData);
+        setImageError(false);
+        // Auto-expand if there are attached files
+        if (saleData?.imageUrl || saleData?.documentUrl) {
+          setShowAttachedFiles(false);
+        }
       } catch {
         toast.error('Failed to fetch sale details');
       } finally {
@@ -278,13 +219,6 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
     `;
   };
 
-
-
-
-
-
-
-
   const handleItemSelection = (itemId: string) => {
     setSelectedItems((prev) =>
       prev.includes(itemId)
@@ -324,7 +258,6 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
     );
   }
 
-
   const hasUndeliveredItems = sale.items?.some(
     (item) => item.itemSaleStatus !== ItemSaleStatus.DELIVERED
   );
@@ -355,19 +288,6 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
     <div className='container mx-auto space-y-6 p-4 md:p-8'>
       <div className='flex justify-end gap-2'>
         <Button
-          onClick={analyzePrices}
-          variant='outline'
-          className='flex items-center gap-2'
-          disabled={loadingPriceAnalysis}
-        >
-          {loadingPriceAnalysis ? (
-            <Loader2 className='h-4 w-4 animate-spin' />
-          ) : (
-            <Scale className='h-4 w-4' />
-          )}
-          Price Analysis
-        </Button>
-        <Button
           onClick={handlePrint}
           variant='outline'
           className='flex items-center gap-2'
@@ -376,14 +296,6 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
           Print Invoice
         </Button>
       </div>
-
-     
-
-    
-
-   
-
- 
 
       <Card className='shadow-lg'>
         <CardHeader>
@@ -540,6 +452,103 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
               </div>
             </div>
           </div>
+
+          {/* Attached Files Section - Collapsible */}
+          {hasAttachedFiles && (
+            <div className='space-y-4'>
+              <Button
+                variant='ghost'
+                onClick={() => setShowAttachedFiles(!showAttachedFiles)}
+                className='flex w-full items-center justify-between p-4 hover:bg-gray-50'
+              >
+                <div className='flex items-center gap-2'>
+                  <Eye className='text-primary h-5 w-5' />
+                  <h3 className='text-base font-semibold'>Attached Files</h3>
+                  <Badge variant='secondary' className='ml-2'>
+                    {normalizedImageUrl && normalizedDocumentUrl ? '2' : '1'} file(s)
+                  </Badge>
+                </div>
+                {showAttachedFiles ? (
+                  <ChevronUp className='h-5 w-5' />
+                ) : (
+                  <ChevronDown className='h-5 w-5' />
+                )}
+              </Button>
+
+              {showAttachedFiles && (
+                <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+                  {/* Image Display */}
+                  {normalizedImageUrl && (
+                    <Card className='overflow-hidden'>
+                      <CardHeader className='pb-2'>
+                        <CardTitle className='flex items-center gap-2 text-sm font-medium'>
+                          <ImageIcon className='h-4 w-4' />
+                          Invoice Image
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className='pt-0'>
+                        <div className='relative h-48 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50'>
+                          <Image
+                            src={normalizedImageUrl}
+                            alt={`Invoice ${sale.invoiceNo} image`}
+                            fill
+                            className='object-contain'
+                            onError={(e) => {
+                              console.error('Failed to load image:', normalizedImageUrl);
+                              setImageError(true);
+                            }}
+                          />
+                        </div>
+                        <a
+                          href={normalizedImageUrl}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='mt-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:underline'
+                        >
+                          <Eye className='h-3 w-3' />
+                          View full size
+                        </a>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Document Display */}
+                  {normalizedDocumentUrl && (
+                    <Card>
+                      <CardHeader className='pb-2'>
+                        <CardTitle className='flex items-center gap-2 text-sm font-medium'>
+                          <FileText className='h-4 w-4' />
+                          Invoice Document
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className='pt-0'>
+                        <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border'>
+                          <div className='flex items-center gap-2'>
+                            <FileText className='h-8 w-8 text-blue-500' />
+                            <div>
+                              <p className='text-sm font-medium'>Supporting Document</p>
+                              <p className='text-xs text-muted-foreground'>
+                                Click to view or download
+                              </p>
+                            </div>
+                          </div>
+                          <a
+                            href={normalizedDocumentUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90'
+                          >
+                            <Eye className='h-3 w-3' />
+                            View
+                          </a>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Sale Items Table */}
           {sale.items && sale.items.length > 0 ? (

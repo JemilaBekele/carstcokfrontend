@@ -55,6 +55,10 @@ interface ProductDetails {
     name: string;
     generic: string | null;
     description: string | null;
+    viscosity?: string;      // 0W-20, 5W-30
+  oilType?: string;        // Fully Synthetic, Semi Synthetic
+  additiveType?: string; 
+    warningQuantity?: number;
     sellPrice: number;
     imageUrl: string | null;
     hasBox: boolean;
@@ -539,125 +543,158 @@ const ProductDetailsPage: React.FC<ProductDetailsProps> = ({ productId }) => {
               Product Details
             </CardTitle>
           </CardHeader>
-          <CardContent className='space-y-4'>
-            <div className='grid grid-cols-2 gap-4'>
-              <div>
-                <p className='font-medium'>Product Name</p>
-                <p className='text-muted-foreground'>{product.name}</p>
-              </div>
-              <div>
-                <p className='font-medium'>Product Code</p>
-                <p className='text-muted-foreground'>{product.productCode}</p>
-              </div>
-              <div>
-                <p className='font-medium'>Generic Name</p>
-                <p className='text-muted-foreground'>
-                  {product.generic || 'N/A'}
-                </p>
-              </div>
-              <div>
-                <p className='font-medium'>Status</p>
-                <Badge variant={product.isActive ? 'default' : 'destructive'}>
-                  {product.isActive ? 'Active' : 'Inactive'}
-                </Badge>
-              </div>
-              <div>
-                <p className='font-medium'>Category</p>
-                <p className='text-muted-foreground'>
-                  {product.category?.name || 'N/A'}
-                </p>
-              </div>
-              <div>
-                <p className='font-medium'>Brand</p>
-                <p className='text-muted-foreground'>
-                  {product.brand?.name || 'N/A'}
-                </p>
-              </div>
-              <div>
-                <p className='font-medium'>Sell Price</p>
-                <p className='text-muted-foreground flex items-center gap-1'>
-                  <DollarSign className='h-4 w-4' />
-                  {formatCurrency(product.sellPrice)}
-                </p>
-              </div>
-              <div>
-                <p className='font-medium'>Unit of Measure</p>
-                <p className='text-muted-foreground'>
-                  {product.UnitOfMeasure || 'N/A'}
-                </p>
-              </div>
-              {product.hasBox && (
-                <>
-                  <div>
-                    <p className='font-medium'>Box Support</p>
-                    <Badge variant='default' className='flex items-center gap-1'>
-                      <Box className='h-3 w-3' />
-                      Enabled
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className='font-medium'>Box Size</p>
-                    <p className='text-muted-foreground'>
-                      {product.boxSize} pieces per box
-                    </p>
-                  </div>
-                </>
-              )}
-              {product.description && (
-                <div className='col-span-2'>
-                  <p className='font-medium'>Description</p>
-                  <p className='text-muted-foreground'>{product.description}</p>
-                </div>
-              )}
-            </div>
+         <CardContent className='space-y-4'>
+  <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+    
+    <div>
+      <p className='font-medium'>Product Name</p>
+      <p className='text-muted-foreground'>{product.name}</p>
+    </div>
 
-            {/* Additional Prices Section */}
-            {product.additionalPrices &&
-              product.additionalPrices.length > 0 && (
-                <div className='border-t pt-4'>
-                  <p className='mb-3 flex items-center gap-2 font-medium'>
-                    <Tag className='h-4 w-4' />
-                    Additional Prices
-                  </p>
-                  <div className='space-y-2'>
-                    {product.additionalPrices.map((price) => (
-                      <div
-                        key={price.id}
-                        className='bg-muted/50 flex items-center justify-between rounded-lg border p-3'
-                      >
-                        <div>
-                          <p className='font-medium'>{price.label}</p>
-                          <p className='text-muted-foreground text-sm'>
-                            {price.shopName || 'All Shops'} •{' '}
-                            {price.branchName || 'All Branches'}
-                          </p>
-                        </div>
-                        <p className='text-lg font-bold'>
-                          ${formatCurrency(price.price)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+    <div>
+      <p className='font-medium'>Product Code</p>
+      <p className='text-muted-foreground'>{product.productCode}</p>
+    </div>
 
-            <div className='border-t pt-4'>
-              <div className='grid grid-cols-2 gap-4'>
-                <div>
-                  <p className='font-medium'>Created At</p>
-                  <p className='text-muted-foreground'>
-                    {formatDateTime(product.createdAt)}
-                  </p>
-                </div>
-                <div>
-                  <p className='font-medium'>Updated At</p>
-                  <p className='text-muted-foreground'>
-                    {formatDateTime(product.updatedAt)}
-                  </p>
-                </div>
-              </div>
+    <div>
+      <p className='font-medium'>Generic Name</p>
+      <p className='text-muted-foreground'>
+        {product.generic || 'N/A'}
+      </p>
+    </div>
+
+    <div>
+      <p className='font-medium'>Status</p>
+      <Badge variant={product.isActive ? 'default' : 'destructive'}>
+        {product.isActive ? 'Active' : 'Inactive'}
+      </Badge>
+    </div>
+
+    <div>
+      <p className='font-medium'>Category</p>
+      <p className='text-muted-foreground'>
+        {product.category?.name || 'N/A'}
+      </p>
+    </div>
+
+    <div>
+      <p className='font-medium'>Brand</p>
+      <p className='text-muted-foreground'>
+        {product.brand?.name || 'N/A'}
+      </p>
+    </div>
+
+    <div>
+      <p className='font-medium'>Sell Price</p>
+      <p className='text-muted-foreground flex items-center gap-1'>
+        <DollarSign className='h-4 w-4' />
+        {formatCurrency(product.sellPrice)}
+      </p>
+    </div>
+
+    <div>
+      <p className='font-medium'>Unit of Measure</p>
+      <p className='text-muted-foreground'>
+        {product.UnitOfMeasure || 'N/A'}
+      </p>
+    </div>
+
+    {product.hasBox && (
+      <>
+        <div>
+          <p className='font-medium'>Box Support</p>
+          <Badge variant='default' className='flex items-center gap-1'>
+            <Box className='h-3 w-3' />
+            Enabled
+          </Badge>
+        </div>
+
+        <div>
+          <p className='font-medium'>Box Size</p>
+          <p className='text-muted-foreground'>
+            {product.boxSize} pieces per box
+          </p>
+        </div>
+      </>
+    )}
+<div>
+  <p className='font-medium'>Viscosity</p>
+  <p className='text-muted-foreground'>
+    {product.viscosity || 'N/A'}
+  </p>
+</div>
+
+<div>
+  <p className='font-medium'>Oil Type</p>
+  <p className='text-muted-foreground'>
+    {product.oilType || 'N/A'}
+  </p>
+</div>
+
+<div>
+  <p className='font-medium'>Additive Type</p>
+  <p className='text-muted-foreground'>
+    {product.additiveType || 'N/A'}
+  </p>
+</div>
+
+    {product.description && (
+      <div className='md:col-span-2 lg:col-span-3'>
+        <p className='font-medium'>Description</p>
+        <p className='text-muted-foreground'>{product.description}</p>
+      </div>
+    )}
+  </div>
+
+  {/* Additional Prices Section */}
+  {product.additionalPrices?.length > 0 && (
+    <div className='border-t pt-4'>
+      <p className='mb-3 flex items-center gap-2 font-medium'>
+        <Tag className='h-4 w-4' />
+        Additional Prices
+      </p>
+
+      <div className='space-y-2'>
+        {product.additionalPrices.map((price) => (
+          <div
+            key={price.id}
+            className='bg-muted/50 flex items-center justify-between rounded-lg border p-3'
+          >
+            <div>
+              <p className='font-medium'>{price.label}</p>
+              <p className='text-muted-foreground text-sm'>
+                {price.shopName || 'All Shops'} •{' '}
+                {price.branchName || 'All Branches'}
+              </p>
             </div>
-          </CardContent>
+            <p className='text-lg font-bold'>
+              ${formatCurrency(price.price)}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  {/* Dates */}
+  <div className='border-t pt-4'>
+    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+      <div>
+        <p className='font-medium'>Created At</p>
+        <p className='text-muted-foreground'>
+          {formatDateTime(product.createdAt)}
+        </p>
+      </div>
+
+      <div>
+        <p className='font-medium'>Updated At</p>
+        <p className='text-muted-foreground'>
+          {formatDateTime(product.updatedAt)}
+        </p>
+      </div>
+    </div>
+  </div>
+</CardContent>
         </Card>
 
         {/* Location Stock Summary - Updated to show boxes if toggled */}

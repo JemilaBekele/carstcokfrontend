@@ -135,7 +135,7 @@ export function TableDashboard() {
         return `${boxes} box(es)`;
       }
     }
-    return `${quantity} ${item.UnitOfMeasure || 'units'}`;
+    return `${quantity} `;
   };
 
   // Helper function to get stock alert colors
@@ -367,6 +367,9 @@ export function TableDashboard() {
                             {item.brandName && (
                               <div className="text-xs opacity-70 mt-1">{item.brandName}</div>
                             )}
+                             {item.UnitOfMeasure && (
+                              <div className="text-xs opacity-70 mt-1">{item.UnitOfMeasure}</div>
+                            )}
                           </TableCell>
                           <TableCell className={`py-3 text-base ${colors.text}`}>
                             <div className="flex items-center gap-2">
@@ -441,12 +444,16 @@ export function TableDashboard() {
                           <TableCell className='py-3 text-base font-medium'>
                             <div className="flex items-center gap-2">
                               {item.productName}
+                                {item.UnitOfMeasure && (
+                              <div className="text-xs opacity-70 mt-1">{item.UnitOfMeasure}</div>
+                            )}
                               {isTopItem && (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                                   <TrendingUp className="h-3 w-3" />
                                   TOP {index + 1}
                                 </span>
                               )}
+
                             </div>
                             {item.brand && (
                               <div className="text-xs text-muted-foreground mt-1">{item.brand}</div>
@@ -516,6 +523,9 @@ export function TableDashboard() {
                           <TableCell className='py-3 text-base font-medium'>
                             <div className="flex items-center gap-2">
                               {item.productName}
+                                {item.UnitOfMeasure && (
+                              <div className="text-xs opacity-70 mt-1">{item.UnitOfMeasure}</div>
+                            )}
                               {isTopItem && (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
                                   <TrendingUp className="h-3 w-3" />
@@ -584,6 +594,9 @@ export function TableDashboard() {
                           <TableCell className='py-3 text-base font-medium'>
                             <div className="flex items-center gap-2">
                               {item.productName}
+                                {item.UnitOfMeasure && (
+                              <div className="text-xs opacity-70 mt-1">{item.UnitOfMeasure}</div>
+                            )}
                               {isTopItem && (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
                                   <Package className="h-3 w-3" />
@@ -658,6 +671,9 @@ export function TableDashboard() {
                         <TableCell className={`py-3 text-base font-medium ${colors.text}`}>
                           <div>
                             {item.productName}
+                              {item.UnitOfMeasure && (
+                              <div className="text-xs opacity-70 mt-1">{item.UnitOfMeasure}</div>
+                            )}
                             {item.hasBox && item.boxSize && (
                               <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                                 <Box className="h-3 w-3" />

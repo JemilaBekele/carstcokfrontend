@@ -21,6 +21,8 @@ export enum ItemSaleStatus {
 export interface ISell {
   id: string; // UUID
   invoiceNo: string;
+  imageUrl      ? : string;
+  documentUrl?  : string;
   locked: boolean;
   saleStatus: SaleStatus; // Matches enum
 
