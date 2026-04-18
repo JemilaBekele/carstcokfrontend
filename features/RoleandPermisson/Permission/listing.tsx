@@ -1,46 +1,89 @@
-import { searchParamsCache } from '@/lib/searchparams';
-import { DataTable } from '@/components/ui/table/data-table';
-import { getAllRolePermissions } from '@/service/roleService';
-import { rolePermissionColumns } from './tables/columns';
+"use client";
+
+import { useEffect, useState } from "react";
+import { DataTable } from "@/components/ui/table/data-table";
+import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
+import { useTableQueryParams } from "@/hooks/use-table-query-params";
+import {
+  getAllRolePermissions,
+  type IRolePermission,
+} from "@/service/roleService";
+import { rolePermissionColumns } from "./tables/columns";
 
 type PermissionListingPageProps = object;
 
-export default async function RolePermissionListingPage({}: PermissionListingPageProps) {
-  const page = Number(searchParamsCache.get('page')) || 1;
-  const search = (searchParamsCache.get('q') || '').toLowerCase();
-  const limit = Number(searchParamsCache.get('limit')) || 10;
-  const startDate = searchParamsCache.get('startDate') || undefined;
-  const endDate = searchParamsCache.get('endDate') || undefined;
+export default function RolePermissionListingPage(
+  {}: PermissionListingPageProps,
+) {
+  const { page, search, limit, startDate, endDate } = useTableQueryParams();
+  const [rolePermissions, setRolePermissions] = useState<IRolePermission[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  try {
-    const { rolePermissions, totalCount } = await getAllRolePermissions({
-      page,
-      limit,
-      startDate,
-      endDate
-    });
+  useEffect(() => {
+    let cancelled = false;
 
-    // Client-side search filter on name or description
-    const filteredData = rolePermissions.filter(
-      (perm) =>
-        perm.role?.name.toLowerCase().includes(search) ||
-        (perm.permission?.name?.toLowerCase() ?? '').includes(search)
-    );
+    const loadRolePermissions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    // Client-side pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
+        const response = await getAllRolePermissions({
+          page,
+          limit,
+          startDate,
+          endDate,
+        });
 
-    return (
-      // eslint-disable-next-line react-hooks/error-boundaries
-      <DataTable
-        data={paginatedData}
-        totalItems={totalCount}
-        columns={rolePermissionColumns}
-      />
-    );
-  } catch  {
-    return <div className='text-red-500'>Error loading permissions list.</div>;
+        if (cancelled) {
+          return;
+        }
+
+        setRolePermissions(response.rolePermissions || []);
+        setTotalCount(response.totalCount || 0);
+      } catch {
+        if (!cancelled) {
+          setError("Error loading permissions list.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadRolePermissions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [endDate, limit, page, startDate]);
+
+  if (loading) {
+    return <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />;
   }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
+  const loweredSearch = search.toLowerCase();
+  const filteredData = rolePermissions.filter(
+    (perm) =>
+      perm.role?.name?.toLowerCase().includes(loweredSearch) ||
+      (perm.permission?.name?.toLowerCase() ?? "").includes(loweredSearch),
+  );
+
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  return (
+    <DataTable
+      data={paginatedData}
+      totalItems={totalCount}
+      columns={rolePermissionColumns}
+    />
+  );
 }

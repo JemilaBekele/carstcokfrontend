@@ -1,37 +1,65 @@
-// features/Inventory/Products/listing.tsx
-import { searchParamsCache } from '@/lib/searchparams';
-import { getAllProducts } from '@/service/Product';
-import { productColumns } from './tables/columns';
-import { DataTable } from '@/components/ui/table/data-table';
-import { IProduct } from '@/models/Product';
-import ExportButtons from '@/components/export-button';
+"use client";
+
+import { useEffect, useState } from "react";
+import ExportButtons from "@/components/export-button";
+import { DataTable } from "@/components/ui/table/data-table";
+import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
+import { useTableQueryParams } from "@/hooks/use-table-query-params";
+import type { IProduct } from "@/models/Product";
+import { getAllProducts } from "@/service/Product";
+import { productColumns } from "./tables/columns";
 
 type ProductsListingPageProps = object;
 
-export default async function ProductsListingPage({}: ProductsListingPageProps) {
-  const page = searchParamsCache.get('page') || 1;
-  const search = searchParamsCache.get('q') || '';
-  const limit = searchParamsCache.get('limit') || 10;
+export default function ProductsListingPage({}: ProductsListingPageProps) {
+  const { page, search, limit } = useTableQueryParams();
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  let products: IProduct[] = [];
-  let totalCount = 0;
-  let error: unknown = null;
+  useEffect(() => {
+    let cancelled = false;
 
-  try {
-    const result = await getAllProducts({ page, limit });
-    products = result.products;
-    totalCount = result.totalCount;
-  } catch (err) {
-    console.error('Error loading products:', err);
-    error = err;
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await getAllProducts({ page, limit });
+
+        if (cancelled) {
+          return;
+        }
+
+        setProducts(response.products || []);
+        setTotalCount(response.totalCount || 0);
+      } catch (loadError) {
+        console.error("Error loading products:", loadError);
+
+        if (!cancelled) {
+          setError("Error loading products. Please try again later.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [limit, page]);
+
+  if (loading) {
+    return <DataTableSkeleton columnCount={6} rowCount={8} filterCount={2} />;
   }
 
   if (error) {
-    return (
-      <div className='p-4 text-red-500'>
-        Error loading products. Please try again later.
-      </div>
-    );
+    return <div className="p-4 text-red-500">{error}</div>;
   }
 
   const filteredData = products.filter((item) => {
@@ -39,7 +67,7 @@ export default async function ProductsListingPage({}: ProductsListingPageProps) 
     return (
       item.name.toLowerCase().includes(searchLower) ||
       item.generic?.toLowerCase().includes(searchLower) ||
-      item.productCode?.toLowerCase().includes(searchLower) 
+      item.productCode?.toLowerCase().includes(searchLower)
     );
   });
 

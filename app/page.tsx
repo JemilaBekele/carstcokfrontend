@@ -1,12 +1,20 @@
-import SignInViewPage from '@/features/auth/sign';
-import { Metadata } from 'next';
+"use client";
 
-export const metadata: Metadata = {
-  title: 'Authentication | Sign In',
-  description: 'Sign In page for authentication.'
-};
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { tokenService } from "@/service/tokenService";
 
 export default function Page() {
-  // Directly render the sign-in page without fetching GitHub stars
-  return <SignInViewPage />;
+  const router = useRouter();
+
+  useEffect(() => {
+    const tokens = tokenService.get();
+    router.replace(tokens?.accessToken ? "/dashboard" : "/login");
+  }, [router]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <p className="text-sm text-muted-foreground">Preparing your workspace...</p>
+    </div>
+  );
 }

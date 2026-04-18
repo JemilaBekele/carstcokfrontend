@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession, signOut } from 'next-auth/react';
 import { getUserById, changePassword, updateUserById } from '@/service/user';
 import {
   Dialog,
@@ -17,6 +16,8 @@ import { toast } from 'sonner';
 import { Eye, EyeOff, Edit, Store, LogOut } from 'lucide-react';
 import { usePermissionStore } from '@/stores/auth.store';
 import {Imployee} from '@/models/employee';
+import { useAuthStore } from '@/stores/authStore';
+import { logout } from '@/service/authApi';
 
 interface Shop {
   id: string;
@@ -36,7 +37,10 @@ interface Store {
 }
 
 export default function ProfileViewPage() {
-  const { data: session, status: sessionStatus, update } = useSession();
+  const authUser = useAuthStore((state) => state.user);
+  const hydrated = useAuthStore((state) => state.hydrated);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const setAuthUser = useAuthStore((state) => state.setUser);
   const [profile, setProfile] = useState<Imployee | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -57,15 +61,11 @@ export default function ProfileViewPage() {
   const [updating, setUpdating] = useState(false);
   
   // Get store methods
-  const initializeFromSession = usePermissionStore((state) => 
-    state.initializeFromSession
-  );
-  const clearPermissions = usePermissionStore((state) => state.clearPermissions);
   const isInitialized = usePermissionStore((state) => state._isInitialized);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!session || sessionStatus !== 'authenticated') {
+      if (!hydrated || !isAuthenticated || !authUser) {
         setLoading(false);
         return;
       }
@@ -73,11 +73,6 @@ export default function ProfileViewPage() {
       try {
         setLoading(true);
         const data = await getUserById();
-
-        // Initialize permissions from session
-        if (session.user?.permissions) {
-          initializeFromSession(session.user.permissions);
-        }
         
         // Initialize form fields with current data
         setProfile(data);
@@ -90,40 +85,24 @@ export default function ProfileViewPage() {
         console.error('Failed to load profile:', error);
         toast.error('Failed to load profile data');
         
-        // If failed to load profile, clear stale data
         setProfile(null);
-        clearPermissions();
       } finally {
         setLoading(false);
       }
     };
 
-    // Fetch profile only when session is authenticated
-    if (sessionStatus === 'authenticated') {
+    if (hydrated && isAuthenticated) {
       fetchProfile();
-    } else if (sessionStatus === 'unauthenticated') {
+    } else if (hydrated && !isAuthenticated) {
       setLoading(false);
       setProfile(null);
-      clearPermissions();
     }
-  }, [session, sessionStatus, initializeFromSession, clearPermissions]);
+  }, [authUser, hydrated, isAuthenticated]);
 
   const handleLogout = async () => {
     try {
-      // Clear permissions before logout
-      clearPermissions();
-      
-      // Clear any cached data
-      localStorage.removeItem('permission-storage');
-      sessionStorage.clear();
-      
-      // Sign out
-      await signOut({ 
-        redirect: true, 
-        callbackUrl: '/' 
-      });
-      
       toast.success('Logged out successfully');
+      logout();
     } catch (error) {
       console.error('Logout error:', error);
       toast.error('Failed to logout');
@@ -203,15 +182,14 @@ export default function ProfileViewPage() {
         ...updatedData
       });
 
-      // Update session data
-      await update({
-        ...session,
-        user: {
-          ...session?.user,
+      if (authUser) {
+        setAuthUser({
+          ...authUser,
           name: updatedData.name,
-          email: updatedData.email
-        }
-      });
+          email: updatedData.email,
+          phone: updatedData.phone,
+        });
+      }
 
       toast.success('Profile updated successfully');
       setIsProfileModalOpen(false);
@@ -258,8 +236,8 @@ export default function ProfileViewPage() {
     setIsProfileModalOpen(true);
   };
 
-  // Handle session loading state
-  if (sessionStatus === 'loading') {
+  // Handle auth loading state
+  if (!hydrated) {
     return (
       <div className='flex h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900'>
         <div className='text-center'>
@@ -276,7 +254,7 @@ export default function ProfileViewPage() {
   }
 
   // Handle unauthenticated state
-  if (sessionStatus === 'unauthenticated' || !session) {
+  if (!isAuthenticated || !authUser) {
     return (
       <div className='flex h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900'>
         <div className='max-w-md rounded-lg bg-white p-8 text-center shadow-md dark:bg-gray-800'>
@@ -287,7 +265,7 @@ export default function ProfileViewPage() {
             Please sign in to access your profile.
           </p>
           <Button
-            onClick={() => (window.location.href = '/')}
+            onClick={() => (window.location.href = '/login')}
             className='w-full'
           >
             Sign In
@@ -325,7 +303,6 @@ export default function ProfileViewPage() {
             <Button
               onClick={async () => {
                 setLoading(true);
-                // Clear localStorage and reload
                 window.location.reload();
               }}
               className='w-full'

@@ -1,39 +1,77 @@
-import { searchParamsCache } from '@/lib/searchparams';
-import { DataTable } from '@/components/ui/table/data-table';
-import { shopColumns } from './tables/columns'; // Make sure you have columns defined for Shop
-import { getAllshop } from '@/service/shop';
+"use client";
+
+import { useEffect, useState } from "react";
+import { DataTable } from "@/components/ui/table/data-table";
+import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
+import { useTableQueryParams } from "@/hooks/use-table-query-params";
+import type { IShop } from "@/models/shop";
+import { getAllshop } from "@/service/shop";
+import { shopColumns } from "./tables/columns";
 
 type ShopListingPageProps = object;
 
-export default async function ShopListingPage({}: ShopListingPageProps) {
-  const page = searchParamsCache.get('page') || 1;
-  const search = searchParamsCache.get('q') || '';
-  const limit = searchParamsCache.get('limit') || 10;
+export default function ShopListingPage({}: ShopListingPageProps) {
+  const { page, search, limit } = useTableQueryParams();
+  const [shops, setShops] = useState<IShop[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    let cancelled = false;
 
-    // Fetch shops from API
-    const { shops, totalCount } = await getAllshop({ page });
+    const loadShops = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    // ─────────────────────────────────────────────
-    // Client‑side search filtering by name or branch/location
-    // ─────────────────────────────────────────────
-    const filteredData = shops.filter((shop) =>
-      `${shop.name} `.toLowerCase().includes(search.toLowerCase())
-    );
+        const response = await getAllshop({ page, limit });
 
-    // ─────────────────────────────────────────────
-    // Pagination
-    // ─────────────────────────────────────────────
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
+        if (cancelled) {
+          return;
+        }
 
-    return (
-      <DataTable
-        data={paginatedData}
-        totalItems={totalCount}
-        columns={shopColumns}
-      />
-    );
-  
+        setShops(response.shops || []);
+        setTotalCount(response.totalCount || 0);
+      } catch {
+        if (!cancelled) {
+          setError("Error loading shops. Please try again later.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadShops();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [limit, page]);
+
+  if (loading) {
+    return <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />;
+  }
+
+  if (error) {
+    return <div className="p-4 text-red-500">{error}</div>;
+  }
+
+  const filteredData = shops.filter((shop) =>
+    `${shop.name} `.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  return (
+    <DataTable
+      data={paginatedData}
+      totalItems={totalCount}
+      columns={shopColumns}
+    />
+  );
 }

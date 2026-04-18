@@ -36,16 +36,17 @@ import {
 import { AlertModal } from '@/components/modal/alert-modal';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
-import { useSession } from 'next-auth/react';
 import { getUserById } from '@/service/user';
 import { Imployee } from '@/models/employee';
+import { useAuthStore } from '@/stores/authStore';
 
 type TransferViewProps = {
   id?: string;
 };
 
 const TransferDetailPage: React.FC<TransferViewProps> = ({ id }) => {
-  const { data: session } = useSession();
+  const user = useAuthStore((state) => state.user);
+  const hydrated = useAuthStore((state) => state.hydrated);
   const [transfer, setTransfer] = useState<ITransfer | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -59,7 +60,7 @@ const TransferDetailPage: React.FC<TransferViewProps> = ({ id }) => {
   // Fetch user profile to get shops and stores
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (!session?.user) return;
+      if (!user) return;
       
       try {
         const profile = await getUserById();
@@ -69,13 +70,13 @@ const TransferDetailPage: React.FC<TransferViewProps> = ({ id }) => {
       }
     };
 
-    if (session?.user) {
+    if (user) {
       fetchUserProfile();
     }
-  }, [session]);
+  }, [user]);
 
   const checkDestinationAccess = useCallback((transferData: ITransfer) => {
-    if (!session?.user || !userProfile) {
+    if (!user || !userProfile) {
       setHasDestinationAccess(false);
       return;
     }
@@ -102,7 +103,7 @@ const TransferDetailPage: React.FC<TransferViewProps> = ({ id }) => {
     } else {
       setHasDestinationAccess(false);
     }
-  }, [session, userProfile]);
+  }, [user, userProfile]);
 
   useEffect(() => {
     const fetchTransfer = async () => {
@@ -121,10 +122,10 @@ const TransferDetailPage: React.FC<TransferViewProps> = ({ id }) => {
       }
     };
 
-    if (id && session?.user) {
+    if (id && user) {
       fetchTransfer();
     }
-  }, [id, refreshTrigger, checkDestinationAccess, session]);
+  }, [id, refreshTrigger, checkDestinationAccess, user]);
 
   const handleStatusUpdate = async (action: 'complete' | 'cancel') => {
     if (!id) return;
@@ -174,7 +175,7 @@ const TransferDetailPage: React.FC<TransferViewProps> = ({ id }) => {
     setIsCancelModalOpen(true);
   };
 
-  if (loading || !userProfile) {
+  if (!hydrated || loading || !userProfile) {
     return (
       <div className='flex h-screen items-center justify-center'>
         <Loader2 className='mr-2 h-8 w-8 animate-spin' />

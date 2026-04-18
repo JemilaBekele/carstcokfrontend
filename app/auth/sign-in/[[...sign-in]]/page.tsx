@@ -1,12 +1,5 @@
-import { Metadata } from 'next';
-import SignInViewPage from '@/features/auth/sign';
-
-export const metadata: Metadata = {
-  title: 'Stock Management',
-  description: 'Stock Management dashboard and inventory system.'
-};
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  // Directly render the sign-in page without fetching GitHub stars
-  return <SignInViewPage />;
+  redirect("/login");
 }

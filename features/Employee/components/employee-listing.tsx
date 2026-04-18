@@ -1,54 +1,87 @@
-// File: employee-listing-page.tsx
-import { employeeColumns } from './employee-tables/columns';
-import { getAllEmployees } from '@/service/employee';
-import { searchParamsCache } from '@/lib/searchparams';
-import { DataTable } from '@/components/ui/table/data-table';
+"use client";
+
+import { useEffect, useState } from "react";
+import { DataTable } from "@/components/ui/table/data-table";
+import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
+import { useTableQueryParams } from "@/hooks/use-table-query-params";
+import { getAllEmployees } from "@/service/employee";
+import type { IEmployee } from "@/models/employee";
+import { employeeColumns } from "./employee-tables/columns";
 
 type EmployeeListingPageProps = object;
 
-export default async function EmployeeListingPage({}: EmployeeListingPageProps) {
-  const page = searchParamsCache.get('page') || 1;
-  const search = searchParamsCache.get('q') || '';
-  const limit = searchParamsCache.get('limit') || 10;
-  const startDate = searchParamsCache.get('startDate'); // Remove the null fallback
-  const endDate = searchParamsCache.get('endDate'); // Remove the null fallback
+export default function EmployeeListingPage({}: EmployeeListingPageProps) {
+  const { page, search, limit, startDate, endDate } = useTableQueryParams();
+  const [employees, setEmployees] = useState<IEmployee[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  try {
-    const {
-      success,
-      totalCount,
-      employees = []
-    } = await getAllEmployees({
-      page,
-      startDate, // Will be undefined if not in params
-      endDate // Will be undefined if not in params
-    });
+  useEffect(() => {
+    let cancelled = false;
 
-    if (!success) throw new Error('Failed to fetch employees');
+    const loadEmployees = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    // Apply client-side search filter
-    const filteredData = employees.filter((item) => {
-      const searchLower = search.toLowerCase();
-      return (
-        item.name.toLowerCase().includes(searchLower) ||
-        item.email?.toLowerCase().includes(searchLower) ||
-        item.phone?.toLowerCase().includes(searchLower)
-      );
-    });
+        const response = await getAllEmployees({
+          page,
+          limit,
+          startDate,
+          endDate,
+        });
 
-    // Implement client-side pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
+        if (cancelled) {
+          return;
+        }
 
-    return (
-      <DataTable
-        data={paginatedData}
-        totalItems={totalCount}
-        columns={employeeColumns}
-      />
-    );
-  } catch  {
-    return <div>Error loading employees</div>;
+        setEmployees(response.employees || []);
+        setTotalCount(response.totalCount || 0);
+      } catch {
+        if (!cancelled) {
+          setError("Error loading employees");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadEmployees();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [endDate, limit, page, startDate]);
+
+  if (loading) {
+    return <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />;
   }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  const filteredData = employees.filter((item) => {
+    const searchLower = search.toLowerCase();
+    return (
+      item.name.toLowerCase().includes(searchLower) ||
+      item.email?.toLowerCase().includes(searchLower) ||
+      item.phone?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  return (
+    <DataTable
+      data={paginatedData}
+      totalItems={totalCount}
+      columns={employeeColumns}
+    />
+  );
 }

@@ -1,69 +1,98 @@
-/* eslint-disable react-hooks/error-boundaries */
-import { searchParamsCache } from '@/lib/searchparams';
-import { getAllTransfers } from '@/service/transfer'; // your service
-import { DataTable } from '@/components/ui/table/data-table';
-import { ITransfer } from '@/models/transfer';
-import { transferColumns } from './tables/columns';
+"use client";
+
+import { useEffect, useState } from "react";
+import { DataTable } from "@/components/ui/table/data-table";
+import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
+import { useTableQueryParams } from "@/hooks/use-table-query-params";
+import type { ITransfer } from "@/models/transfer";
+import { getAllTransfers } from "@/service/transfer";
+import { transferColumns } from "./tables/columns";
 
 type TransferListingPageProps = object;
 
-export default async function TransferListingPage({}: TransferListingPageProps) {
-  const page = Number(searchParamsCache.get('page')) || 1;
-  const search = searchParamsCache.get('q') || '';
-  const limit = Number(searchParamsCache.get('limit')) || 10;
-  const startDate = searchParamsCache.get('startDate');
-  const endDate = searchParamsCache.get('endDate');
+export default function TransferListingPage({}: TransferListingPageProps) {
+  const { page, search, limit, startDate, endDate } = useTableQueryParams();
+  const [transfers, setTransfers] = useState<ITransfer[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  try {
-    // ────────────────────────────────────────────────
-    // Fetch data from API with optional date filters
-    // ────────────────────────────────────────────────
-    const { data, totalCount } = await getAllTransfers({
-      page,
-      limit,
-      startDate,
-      endDate
-    });
+  useEffect(() => {
+    let cancelled = false;
 
-    // ────────────────────────────────────────────────
-    // Client-side search filter
-    // (matches reference, status, source/destination IDs)
-    // ────────────────────────────────────────────────
-    const filteredData = data.filter((item: ITransfer) => {
-      const searchTerm = search.toLowerCase();
+    const loadTransfers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const reference = item?.reference?.toLowerCase() || '';
-      const status = item?.status?.toLowerCase() || '';
-      const sourceStore = item?.sourceStoreId?.toLowerCase() || '';
-      const sourceShop = item?.sourceShopId?.toLowerCase() || '';
-      const destStore = item?.destStoreId?.toLowerCase() || '';
-      const destShop = item?.destShopId?.toLowerCase() || '';
+        const response = await getAllTransfers({
+          page,
+          limit,
+          startDate,
+          endDate,
+        });
 
-      return (
-        reference.includes(searchTerm) ||
-        status.includes(searchTerm) ||
-        sourceStore.includes(searchTerm) ||
-        sourceShop.includes(searchTerm) ||
-        destStore.includes(searchTerm) ||
-        destShop.includes(searchTerm)
-      );
-    });
+        if (cancelled) {
+          return;
+        }
 
-    // ────────────────────────────────────────────────
-    // Client-side pagination
-    // ────────────────────────────────────────────────
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
+        setTransfers(response.data || []);
+        setTotalCount(response.totalCount || 0);
+      } catch {
+        if (!cancelled) {
+          setError("Error loading transfer records.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadTransfers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [endDate, limit, page, startDate]);
+
+  if (loading) {
+    return <DataTableSkeleton columnCount={6} rowCount={8} filterCount={2} />;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  const filteredData = transfers.filter((item) => {
+    const searchTerm = search.toLowerCase();
+
+    const reference = item?.reference?.toLowerCase() || "";
+    const status = item?.status?.toLowerCase() || "";
+    const sourceStore = item?.sourceStoreId?.toLowerCase() || "";
+    const sourceShop = item?.sourceShopId?.toLowerCase() || "";
+    const destStore = item?.destStoreId?.toLowerCase() || "";
+    const destShop = item?.destShopId?.toLowerCase() || "";
 
     return (
-      <DataTable
-        data={paginatedData}
-        totalItems={totalCount}
-        columns={transferColumns}
-      />
+      reference.includes(searchTerm) ||
+      status.includes(searchTerm) ||
+      sourceStore.includes(searchTerm) ||
+      sourceShop.includes(searchTerm) ||
+      destStore.includes(searchTerm) ||
+      destShop.includes(searchTerm)
     );
-  } catch  {
-    return <div>Error loading transfer records.</div>;
-  }
+  });
+
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  return (
+    <DataTable
+      data={paginatedData}
+      totalItems={totalCount}
+      columns={transferColumns}
+    />
+  );
 }

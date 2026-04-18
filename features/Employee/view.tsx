@@ -1,25 +1,51 @@
-import { getEmployeeById } from '@/service/employee';
-import { IEmployee } from '@/models/employee';
-import EmployeeForm from './formwithoutpass';
+"use client";
+
+import { useEffect, useState } from "react";
+import FormCardSkeleton from "@/components/form-card-skeleton";
+import type { IEmployee } from "@/models/employee";
+import { getEmployeeById } from "@/service/employee";
+import EmployeeForm from "./formwithoutpass";
 
 type TEmployeeViewPageProps = {
   id: string;
 };
 
-export default async function EmployeeViewPage({ id }: TEmployeeViewPageProps) {
-  let employee: IEmployee | null = null;
-  let pageTitle = 'Create New Employee';
+export default function EmployeeViewPage({ id }: TEmployeeViewPageProps) {
+  const [employee, setEmployee] = useState<IEmployee | null>(null);
+  const [loading, setLoading] = useState(id !== "new");
+  const pageTitle = id === "new" ? "Create New Employee" : "Edit Employee";
 
-  if (id !== 'new') {
-    try {
-      const response = await getEmployeeById(id);
-      employee = response || null;
+  useEffect(() => {
+    let cancelled = false;
 
-      if (!employee) {
+    const loadEmployee = async () => {
+      if (id === "new") {
+        setLoading(false);
+        return;
       }
 
-      pageTitle = `Edit Employee`;
-    } catch  {}
+      try {
+        const response = await getEmployeeById(id);
+
+        if (!cancelled) {
+          setEmployee(response || null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadEmployee();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (loading) {
+    return <FormCardSkeleton />;
   }
 
   return <EmployeeForm initialData={employee} pageTitle={pageTitle} />;

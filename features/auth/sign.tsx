@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
-import { usePermissionStore } from "@/stores/auth.store";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { AxiosError } from "axios";
+import { login } from "@/service/authApi";
+import { clearClientAuth, setAuthenticatedUser } from "@/service/authSession";
+import { useAuthStore } from "@/stores/authStore";
 
 export default function SignInViewPage() {
   const [loading, setLoading] = useState(false);
@@ -12,18 +14,23 @@ export default function SignInViewPage() {
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
-  const clearPermissions = usePermissionStore(
-    (state) => state.clearPermissions,
-  );
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard/profile";
+  const { hydrated, isAuthenticated } = useAuthStore();
 
   const clearAuthClientState = () => {
     try {
-      clearPermissions();
-      localStorage.removeItem("permission-storage");
+      clearClientAuth();
     } catch (error) {
       console.warn("Error clearing auth client state:", error);
     }
   };
+
+  useEffect(() => {
+    if (hydrated && isAuthenticated) {
+      router.replace(callbackUrl);
+    }
+  }, [callbackUrl, hydrated, isAuthenticated, router]);
 
   const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -39,32 +46,36 @@ export default function SignInViewPage() {
     setLoading(true);
 
     try {
-      const result = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
-        callbackUrl: "/dashboard/profile",
-      });
-
-      if (result?.error) {
-        setError("Invalid email or password.");
-        setLoading(false);
-        return;
-      }
-
-      if (result?.ok) {
-        router.replace(result.url || "/dashboard/profile");
-        router.refresh();
-        return;
-      }
-      setError("Unable to establish session. Please try again.");
+      const user = await login(email, password);
+      setAuthenticatedUser(user);
+      router.replace(callbackUrl);
+      router.refresh();
     } catch (error) {
       console.error("Login error:", error);
-      setError("Something went wrong. Please try again.");
+
+      if (error instanceof AxiosError) {
+        setError(
+          error.response?.data?.message || "Invalid email or password.",
+        );
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  if (!hydrated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-900">
+        <p className="text-sm text-gray-400">Checking your session...</p>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-900">

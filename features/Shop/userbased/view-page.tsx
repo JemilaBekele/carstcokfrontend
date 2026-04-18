@@ -1,30 +1,61 @@
-import { getSellById } from '@/service/Sell';
-import { getProductsnew } from '@/service/Product'; // make sure this exists
-import SalesForm from './form';
-import { ISell } from '@/models/Sell';
-import { IProduct } from '@/models/Product'; // adjust if needed
+"use client";
+
+import { useEffect, useState } from "react";
+import FormCardSkeleton from "@/components/form-card-skeleton";
+import type { IProduct } from "@/models/Product";
+import type { ISell } from "@/models/Sell";
+import { getProductsnew } from "@/service/Product";
+import { getSellById } from "@/service/Sell";
+import SalesForm from "./form";
 
 type SalesViewPageProps = {
-  sellId: string; // renamed from supplierId
+  sellId: string;
 };
 
-export default async function UserSalesViewPage({
-  sellId
-}: SalesViewPageProps) {
-  let sell: ISell | null = null;
-  let pageTitle = 'Create New Sell';
+export default function UserSalesViewPage({ sellId }: SalesViewPageProps) {
+  const [sell, setSell] = useState<ISell | null>(null);
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch sell data if editing
-  if (sellId !== 'new') {
-    const data = await getSellById(sellId);
-    sell = data as ISell;
-    pageTitle = 'Edit Sell';
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSellPage = async () => {
+      try {
+        const [productsData, sellData] = await Promise.all([
+          getProductsnew(),
+          sellId !== "new" ? getSellById(sellId) : Promise.resolve(null),
+        ]);
+
+        if (cancelled) {
+          return;
+        }
+
+        setProducts(productsData || []);
+        setSell((sellData as ISell) || null);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadSellPage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sellId]);
+
+  if (loading) {
+    return <FormCardSkeleton />;
   }
 
-  // Fetch products for the form
-  const products: IProduct[] = await getProductsnew();
-
   return (
-    <SalesForm initialData={sell} pageTitle={pageTitle} products={products} />
+    <SalesForm
+      initialData={sell}
+      pageTitle={sellId === "new" ? "Create New Sell" : "Edit Sell"}
+      products={products}
+    />
   );
 }

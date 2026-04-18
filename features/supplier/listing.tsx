@@ -1,49 +1,77 @@
-import { searchParamsCache } from '@/lib/searchparams';
-import { getAllSuppliers } from '@/service/supplier';
-import { supplierColumns } from './tables/columns';
-import { DataTable } from '@/components/ui/table/data-table';
+"use client";
+
+import { useEffect, useState } from "react";
+import { DataTable } from "@/components/ui/table/data-table";
+import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
+import { useTableQueryParams } from "@/hooks/use-table-query-params";
+import type { ISupplier } from "@/models/supplier";
+import { getAllSuppliers } from "@/service/supplier";
+import { supplierColumns } from "./tables/columns";
 
 type SuppliersListingPageProps = object;
 
-export default async function SuppliersListingPage({}: SuppliersListingPageProps) {
-  // ────────────────────────────────────────────────────────────────
-  // Query‑string inputs
-  // ────────────────────────────────────────────────────────────────
-  const page = searchParamsCache.get('page') || 1;
-  const search = searchParamsCache.get('q') || '';
-  const limit = searchParamsCache.get('limit') || 10;
+export default function SuppliersListingPage({}: SuppliersListingPageProps) {
+  const { page, search, limit } = useTableQueryParams();
+  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  try {
-    // Fetch data from API
-    const { suppliers, totalCount } = await getAllSuppliers({ page, limit });
+  useEffect(() => {
+    let cancelled = false;
 
-    // ────────────────────────────────────────────────────────────────
-    // Client‑side search filter
-    // ────────────────────────────────────────────────────────────────
-    const filteredData = suppliers.filter((item) =>
-      item.name?.toLowerCase().includes(search.toLowerCase())
-    );
+    const loadSuppliers = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    // ────────────────────────────────────────────────────────────────
-    // Client‑side pagination
-    // ────────────────────────────────────────────────────────────────
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
+        const response = await getAllSuppliers({ page, limit });
 
-    return (
-      // eslint-disable-next-line react-hooks/error-boundaries
-      <DataTable
-        data={paginatedData}
-        totalItems={totalCount}
-        columns={supplierColumns}
-      />
-    );
-  } catch  {
-    return (
-      <div className='p-4 text-red-500'>
-        Error loading suppliers. Please try again later.
-      </div>
-    );
+        if (cancelled) {
+          return;
+        }
+
+        setSuppliers(response.suppliers || []);
+        setTotalCount(response.totalCount || 0);
+      } catch {
+        if (!cancelled) {
+          setError("Error loading suppliers. Please try again later.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadSuppliers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [limit, page]);
+
+  if (loading) {
+    return <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />;
   }
+
+  if (error) {
+    return <div className="p-4 text-red-500">{error}</div>;
+  }
+
+  const filteredData = suppliers.filter((item) =>
+    item.name?.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  return (
+    <DataTable
+      data={paginatedData}
+      totalItems={totalCount}
+      columns={supplierColumns}
+    />
+  );
 }

@@ -1,22 +1,14 @@
-import { toast } from 'sonner';
 import RolePermissionForm from './form'; // Adjust path as needed
 
 type RolePermissionViewPageProps = {
   id: string;
 };
 
-export default async function RolePermissionViewPage({
+export default function RolePermissionViewPage({
   id
 }: RolePermissionViewPageProps) {
-  let pageTitle = 'Create New Role Permission';
-
-  if (id !== 'new') {
-    try {
-      pageTitle = 'Edit Role Permission';
-    } catch  {
-      toast.error('Error loading role permission');
-    }
-  }
+  const pageTitle =
+    id === 'new' ? 'Create New Role Permission' : 'Edit Role Permission';
 
   return <RolePermissionForm pageTitle={pageTitle} />;
 }

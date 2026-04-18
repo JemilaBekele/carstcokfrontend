@@ -1,40 +1,76 @@
-import { searchParamsCache } from '@/lib/searchparams';
-import { DataTable } from '@/components/ui/table/data-table';
-import { getAllPermissions } from '@/service/roleService';
-import { permissionColumns } from './permcolumn';
+"use client";
 
-export default async function PermissionListingPage() {
-  const page = Number(searchParamsCache.get('page')) || 1;
-  const search = searchParamsCache.get('q') || '';
-  const limit = Number(searchParamsCache.get('limit')) || 10;
+import { useEffect, useState } from "react";
+import { DataTable } from "@/components/ui/table/data-table";
+import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
+import { useTableQueryParams } from "@/hooks/use-table-query-params";
+import { getAllPermissions, type IPermission } from "@/service/roleService";
+import { permissionColumns } from "./permcolumn";
 
-  try {
-    const { permissions, totalCount } = await getAllPermissions({
-      page,
-      limit
-    });
+export default function PermissionListingPage() {
+  const { page, search, limit } = useTableQueryParams();
+  const [permissions, setPermissions] = useState<IPermission[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    // Optional client-side search filtering by name or description
-    const filteredData = permissions.filter((perm) =>
-      `${perm.name} ${perm.description ?? ''}`
-        .toLowerCase()
-        .includes(search.toLowerCase())
-    );
+  useEffect(() => {
+    let cancelled = false;
 
-    // Pagination (slice filtered results)
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
+    const loadPermissions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    return (
-      // eslint-disable-next-line react-hooks/error-boundaries
-      <DataTable
-        data={paginatedData}
-        totalItems={totalCount}
-        columns={permissionColumns}
-      />
-    );
-  } catch  {
-    return <div className='text-red-500'>Error loading permission list.</div>;
+        const response = await getAllPermissions({ page, limit });
+
+        if (cancelled) {
+          return;
+        }
+
+        setPermissions(response.permissions || []);
+        setTotalCount(response.totalCount || 0);
+      } catch {
+        if (!cancelled) {
+          setError("Error loading permission list.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadPermissions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [limit, page]);
+
+  if (loading) {
+    return <DataTableSkeleton columnCount={4} rowCount={8} filterCount={2} />;
   }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
+  const filteredData = permissions.filter((perm) =>
+    `${perm.name} ${perm.description ?? ""}`
+      .toLowerCase()
+      .includes(search.toLowerCase()),
+  );
+
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  return (
+    <DataTable
+      data={paginatedData}
+      totalItems={totalCount}
+      columns={permissionColumns}
+    />
+  );
 }

@@ -9,11 +9,10 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { UserAvatarProfile } from '@/components/user-avatar-profile';
-import { useSession } from 'next-auth/react';
+import { useAuthStore } from '@/stores/authStore';
 
 export function UserNav() {
-  const { data: session } = useSession();
-  const user = session?.user;
+  const user = useAuthStore((state) => state.user);
 
   if (user) {
     return (

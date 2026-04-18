@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { ActiveThemeProvider } from '../active-theme';
-
-import { SessionProvider } from 'next-auth/react';
+import AuthInitializer from '@/components/AuthInitializer';
 
 export default function Providers({
   activeThemeValue,
@@ -13,10 +12,9 @@ export default function Providers({
   children: React.ReactNode;
 }) {
   return (
-    <SessionProvider>
-      <ActiveThemeProvider initialTheme={activeThemeValue}>
-        {children}
-      </ActiveThemeProvider>
-    </SessionProvider>
+    <ActiveThemeProvider initialTheme={activeThemeValue}>
+      <AuthInitializer />
+      {children}
+    </ActiveThemeProvider>
   );
 }

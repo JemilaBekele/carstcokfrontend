@@ -1,52 +1,87 @@
-import { getProductById } from '@/service/Product';
-import ProductForm from './form';
-import { IProduct } from '@/models/Product';
-import { getCategories } from '@/service/Category';
-import { normalizeImagePath } from '@/lib/norm'; // 👈 import helper
-import { toast } from 'sonner';
-import { getShopallapi } from '@/service/shop';
+"use client";
+
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import FormCardSkeleton from "@/components/form-card-skeleton";
+import { normalizeImagePath } from "@/lib/norm";
+import type { ICategory } from "@/models/Category";
+import type { IProduct } from "@/models/Product";
+import type { IShop } from "@/models/shop";
+import { getCategories } from "@/service/Category";
+import { getProductById } from "@/service/Product";
+import { getShopallapi } from "@/service/shop";
+import ProductForm from "./form";
 
 type TProductViewPageProps = {
   productId: string;
 };
 
-export default async function ProductViewPage({
-  productId
+export default function ProductViewPage({
+  productId,
 }: TProductViewPageProps) {
-  let product: IProduct | null = null;
-  let combinedProductData: IProduct | null = null;
-  let pageTitle = 'Create New Product';
+  const [product, setProduct] = useState<IProduct | null>(null);
+  const [categories, setCategories] = useState<ICategory[]>([]);
+  const [shops, setShops] = useState<IShop[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  if (productId !== 'new') {
-    try {
-      const data = await getProductById(productId);
-      product = data as IProduct | null;
+  useEffect(() => {
+    let cancelled = false;
 
-      if (product) {
-        combinedProductData = {
-          ...product,
-          imageUrl:
-            typeof product?.imageUrl === 'string'
-              ? normalizeImagePath(product.imageUrl)
-              : undefined
-        };
+    const loadProductPage = async () => {
+      try {
+        const [categoriesData, shopsData, productData] = await Promise.all([
+          getCategories(),
+          getShopallapi(),
+          productId !== "new" ? getProductById(productId) : Promise.resolve(null),
+        ]);
 
-        pageTitle = `Edit Product: ${product?.name || product.id}`;
+        if (cancelled) {
+          return;
+        }
+
+        setCategories(categoriesData || []);
+        setShops(shopsData || []);
+
+        if (productData) {
+          const typedProduct = productData as IProduct;
+          setProduct({
+            ...typedProduct,
+            imageUrl:
+              typeof typedProduct.imageUrl === "string"
+                ? normalizeImagePath(typedProduct.imageUrl)
+                : undefined,
+          });
+        } else {
+          setProduct(null);
+        }
+      } catch {
+        toast.error("Error loading product");
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-    } catch  {
-      toast.error('Error loading product');
-    }
+    };
+
+    loadProductPage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [productId]);
+
+  if (loading) {
+    return <FormCardSkeleton />;
   }
 
-  // Fetch dropdown data
-  const [categories, shops] = await Promise.all([
-    getCategories(),
-    getShopallapi()
-  ]);
+  const pageTitle =
+    productId === "new"
+      ? "Create New Product"
+      : `Edit Product: ${product?.name || product?.id || ""}`;
 
   return (
     <ProductForm
-      initialData={combinedProductData}
+      initialData={product}
       pageTitle={pageTitle}
       categories={categories}
       shops={shops}

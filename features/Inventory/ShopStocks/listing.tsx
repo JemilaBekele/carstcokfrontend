@@ -1,62 +1,91 @@
-import { searchParamsCache } from '@/lib/searchparams';
-import { getAllShopStocks } from '@/service/store'; // your service
-import { DataTable } from '@/components/ui/table/data-table';
-import { shopStockColumns } from './cloumn';
+"use client";
+
+import { useEffect, useState } from "react";
+import { DataTable } from "@/components/ui/table/data-table";
+import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
+import { useTableQueryParams } from "@/hooks/use-table-query-params";
+import type { IShopStock } from "@/models/store";
+import { getAllShopStocks } from "@/service/store";
+import { shopStockColumns } from "./cloumn";
 
 type ShopStockListingPageProps = object;
 
-export default async function ShopStockListingPage({}: ShopStockListingPageProps) {
-  const page = Number(searchParamsCache.get('page')) || 1;
-  const search = searchParamsCache.get('q') || '';
-  const limit = Number(searchParamsCache.get('limit')) || 10;
-  const startDate = searchParamsCache.get('startDate');
-  const endDate = searchParamsCache.get('endDate');
+export default function ShopStockListingPage({}: ShopStockListingPageProps) {
+  const { page, search, limit, startDate, endDate } = useTableQueryParams();
+  const [shopStocks, setShopStocks] = useState<IShopStock[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  try {
-    // ────────────────────────────────────────────────
-    // Fetch data from API with optional date filters
-    // ────────────────────────────────────────────────
-    const { data, totalCount } = await getAllShopStocks({
-      page,
-      limit,
-      startDate,
-      endDate
-    });
+  useEffect(() => {
+    let cancelled = false;
 
-    // ────────────────────────────────────────────────
-    // Client-side search filter
-    // (matches shop, batch, status)
-    // ────────────────────────────────────────────────
-    const filteredData = data.filter((item) => {
-      const searchTerm = search.toLowerCase();
+    const loadShopStocks = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const shopName = item?.shop?.name?.toLowerCase() || '';
-      const batchName = item?.batch?.batchNumber?.toLowerCase() || '';
-      const status = item?.status?.toLowerCase() || '';
+        const response = await getAllShopStocks({
+          page,
+          limit,
+          startDate,
+          endDate,
+        });
 
-      return (
-        shopName.includes(searchTerm) ||
-        batchName.includes(searchTerm) ||
-        status.includes(searchTerm)
-      );
-    });
+        if (cancelled) {
+          return;
+        }
 
-    // ────────────────────────────────────────────────
-    // Client-side pagination
-    // ────────────────────────────────────────────────
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
+        setShopStocks(response.data || []);
+        setTotalCount(response.totalCount || 0);
+      } catch {
+        if (!cancelled) {
+          setError("Error loading shop stock records.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadShopStocks();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [endDate, limit, page, startDate]);
+
+  if (loading) {
+    return <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  const filteredData = shopStocks.filter((item) => {
+    const searchTerm = search.toLowerCase();
+    const shopName = item?.shop?.name?.toLowerCase() || "";
+    const batchName = item?.batch?.batchNumber?.toLowerCase() || "";
+    const status = item?.status?.toLowerCase() || "";
 
     return (
-      // eslint-disable-next-line react-hooks/error-boundaries
-      <DataTable
-        data={paginatedData}
-        totalItems={totalCount}
-        columns={shopStockColumns}
-      />
+      shopName.includes(searchTerm) ||
+      batchName.includes(searchTerm) ||
+      status.includes(searchTerm)
     );
-  } catch  {
-    return <div>Error loading shop stock records.</div>;
-  }
+  });
+
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  return (
+    <DataTable
+      data={paginatedData}
+      totalItems={totalCount}
+      columns={shopStockColumns}
+    />
+  );
 }

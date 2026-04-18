@@ -1,49 +1,77 @@
-/* eslint-disable react-hooks/error-boundaries */
-import { searchParamsCache } from '@/lib/searchparams';
-import { getAllBrands } from '@/service/brand';
-import { brandColumns } from './tables/columns';
-import { DataTable } from '@/components/ui/table/data-table';
+"use client";
+
+import { useEffect, useState } from "react";
+import { DataTable } from "@/components/ui/table/data-table";
+import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
+import { useTableQueryParams } from "@/hooks/use-table-query-params";
+import type { IBrand } from "@/models/brand";
+import { getAllBrands } from "@/service/brand";
+import { brandColumns } from "./tables/columns";
 
 type BrandsListingPageProps = object;
 
-export default async function BrandsListingPage({}: BrandsListingPageProps) {
-  // ────────────────────────────────────────────────────────────────
-  // Query-string inputs
-  // ────────────────────────────────────────────────────────────────
-  const page = searchParamsCache.get('page') || 1;
-  const search = searchParamsCache.get('q') || '';
-  const limit = searchParamsCache.get('limit') || 10;
+export default function BrandsListingPage({}: BrandsListingPageProps) {
+  const { page, search, limit } = useTableQueryParams();
+  const [brands, setBrands] = useState<IBrand[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  try {
-    // Fetch data from API
-    const { brands, totalCount } = await getAllBrands({ page, limit });
+  useEffect(() => {
+    let cancelled = false;
 
-    // ────────────────────────────────────────────────────────────────
-    // Client-side search filter
-    // ────────────────────────────────────────────────────────────────
-    const filteredData = brands.filter((item) =>
-      item.name?.toLowerCase().includes(search.toLowerCase())
-    );
+    const loadBrands = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    // ────────────────────────────────────────────────────────────────
-    // Client-side pagination
-    // ────────────────────────────────────────────────────────────────
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
+        const response = await getAllBrands({ page, limit });
 
-    return (
-      <DataTable
-        data={paginatedData}
-        totalItems={totalCount}
-        columns={brandColumns}
-      />
-    );
-  } catch {
-    return (
-      <div className='p-4 text-red-500'>
-        Error loading brands. Please try again later.
-      </div>
-    );
+        if (cancelled) {
+          return;
+        }
+
+        setBrands(response.brands || []);
+        setTotalCount(response.totalCount || 0);
+      } catch {
+        if (!cancelled) {
+          setError("Error loading brands. Please try again later.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadBrands();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [limit, page]);
+
+  if (loading) {
+    return <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />;
   }
+
+  if (error) {
+    return <div className="p-4 text-red-500">{error}</div>;
+  }
+
+  const filteredData = brands.filter((item) =>
+    item.name?.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  return (
+    <DataTable
+      data={paginatedData}
+      totalItems={totalCount}
+      columns={brandColumns}
+    />
+  );
 }

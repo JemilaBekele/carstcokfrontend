@@ -44,10 +44,10 @@ import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { Icons } from "../icons";
 import { OrgSwitcher } from "../org-switcher";
-import { signOut } from "next-auth/react";
-import { Session } from "next-auth";
 import { toast } from "sonner";
 import { usePermissionStore } from "@/stores/auth.store";
+import { useAuthStore } from "@/stores/authStore";
+import { logout } from "@/service/authApi";
 
 export const company = {
   name: "Acme Inc",
@@ -61,15 +61,12 @@ const tenants = [
   { id: "3", name: "Gamma Ltd" },
 ];
 
-interface AppSidebarProps {
-  session: Session | null;
-}
-
-export default function AppSidebar({ session }: AppSidebarProps) {
+export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [filteredNavItems, setFilteredNavItems] = React.useState(navItems);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const authUser = useAuthStore((state) => state.user);
+  const authHydrated = useAuthStore((state) => state.hydrated);
 
   // Get permission store state and methods
   const hasPermission = usePermissionStore((state) => state.hasPermission);
@@ -81,22 +78,11 @@ export default function AppSidebar({ session }: AppSidebarProps) {
   );
   const isInitialized = usePermissionStore((state) => state._isInitialized);
   const hasHydrated = usePermissionStore((state) => state._hasHydrated);
-  const clearPermissions = usePermissionStore(
-    (state) => state.clearPermissions,
-  );
-  const setHasHydrated = usePermissionStore((state) => state.setHasHydrated);
-  const setIsInitialized = usePermissionStore(
-    (state) => state.setIsInitialized,
-  );
-
-  // Ensure store is hydrated on mount
-  React.useEffect(() => {
-    setHasHydrated(true);
-  }, [setHasHydrated]);
+  const isLoading = !authHydrated || !hasHydrated || (authUser && !isInitialized);
 
   // Filter navigation items based on user permissions
   const filterNavItemsByPermissions = React.useCallback(() => {
-    if (!hasHydrated || !session?.user) {
+    if (!hasHydrated || !authUser || !isInitialized) {
       return []; // Return empty while loading or no session
     }
 
@@ -147,31 +133,19 @@ export default function AppSidebar({ session }: AppSidebarProps) {
     hasAnyPermission,
     hasAllPermissions,
     hasHydrated,
-    session,
+    authUser,
+    isInitialized,
   ]);
 
   // Update filtered items when permissions or session change
   React.useEffect(() => {
-    if (session?.user) {
-      // Mark as initialized when we have a session
-      setIsInitialized(true);
-
+    if (authUser && isInitialized) {
       const filtered = filterNavItemsByPermissions();
       setFilteredNavItems(filtered);
-      setIsLoading(false);
     } else {
-      // Clear everything if no session
       setFilteredNavItems([]);
-      clearPermissions();
-      setIsInitialized(false);
-      setIsLoading(false);
     }
-  }, [
-    session,
-    filterNavItemsByPermissions,
-    clearPermissions,
-    setIsInitialized,
-  ]);
+  }, [authUser, filterNavItemsByPermissions, isInitialized]);
 
   const handleSwitchTenant = () => {
     // Your tenant switching logic
@@ -179,18 +153,8 @@ export default function AppSidebar({ session }: AppSidebarProps) {
 
   const handleSignOut = async () => {
     try {
-      // Clear permissions before logout
-      clearPermissions();
-
-      // Clear local storage
-      localStorage.removeItem("permission-storage");
-
-      await signOut({
-        callbackUrl: "/",
-        redirect: true,
-      });
-
       toast.success("Signed out successfully");
+      logout();
     } catch (error) {
       console.error("Sign out error:", error);
       toast.error("Failed to sign out");
@@ -198,10 +162,10 @@ export default function AppSidebar({ session }: AppSidebarProps) {
   };
 
   const activeTenant = tenants[0];
-  const user = session?.user;
+  const user = authUser;
 
   // Show loading state
-  if (!session || isLoading) {
+  if (!authUser || isLoading) {
     return (
       <Sidebar collapsible="icon">
         <SidebarContent className="flex items-center justify-center">
@@ -217,7 +181,7 @@ export default function AppSidebar({ session }: AppSidebarProps) {
   }
 
   // If no filtered items (user has no permissions)
-  if (filteredNavItems.length === 0 && session) {
+  if (filteredNavItems.length === 0 && authUser) {
     return (
       <Sidebar collapsible="icon">
         <SidebarContent className="flex items-center justify-center">
