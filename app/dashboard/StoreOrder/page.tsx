@@ -3,7 +3,8 @@ import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import { searchParamsCache } from '@/lib/searchparams';
-
+import { PagePermissionGuard } from '@/components/PagePermissionGuard';
+import { PERMISSIONS } from '@/stores/permissions';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import StoreSellListingPage from '@/features/Store/listing';
@@ -22,25 +23,27 @@ export default async function SupplierPage({ searchParams }: PageProps) {
   searchParamsCache.parse(parsedParams);
 
   return (
-    <PageContainer scrollable={true}>
-      <div className='flex flex-1 flex-col space-y-4'>
-        <div className='flex items-start justify-between'>
-          <Heading
-            title='Sales '
-            description='Manage all product Sales. delivered items are marked as completed.'
-          />
+    <PagePermissionGuard requiredPermission={PERMISSIONS.MANAGE_STORE_AND_SHOPS.VIEW_AND_MANAGE_STORE_AND_SHOPS.name}>
+      <PageContainer scrollable={true}>
+        <div className='flex flex-1 flex-col space-y-4'>
+          <div className='flex items-start justify-between'>
+            <Heading
+              title='Sales '
+              description='Manage all product Sales. delivered items are marked as completed.'
+            />
+          </div>
+          <Separator />
+          <Suspense
+            fallback={
+              <DataTableSkeleton columnCount={6} rowCount={8} filterCount={2} />
+            }
+          >
+            {' '}
+            <UserTableAction />
+            <StoreSellListingPage />
+          </Suspense>
         </div>
-        <Separator />
-        <Suspense
-          fallback={
-            <DataTableSkeleton columnCount={6} rowCount={8} filterCount={2} />
-          }
-        >
-          {' '}
-          <UserTableAction />
-          <StoreSellListingPage />
-        </Suspense>
-      </div>
-    </PageContainer>
+      </PageContainer>
+    </PagePermissionGuard>
   );
 }

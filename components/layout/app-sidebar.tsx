@@ -44,10 +44,10 @@ import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { Icons } from "../icons";
 import { OrgSwitcher } from "../org-switcher";
-import { toast } from "sonner";
 import { usePermissionStore } from "@/stores/auth.store";
 import { useAuthStore } from "@/stores/authStore";
 import { logout } from "@/service/authApi";
+import { toast } from "sonner";
 
 export const company = {
   name: "Acme Inc",
@@ -55,11 +55,6 @@ export const company = {
   plan: "Enterprise",
 };
 
-const tenants = [
-  { id: "1", name: "Acme Inc" },
-  { id: "2", name: "Beta Corp" },
-  { id: "3", name: "Gamma Ltd" },
-];
 
 export default function AppSidebar() {
   const pathname = usePathname();
@@ -147,10 +142,6 @@ export default function AppSidebar() {
     }
   }, [authUser, filterNavItemsByPermissions, isInitialized]);
 
-  const handleSwitchTenant = () => {
-    // Your tenant switching logic
-  };
-
   const handleSignOut = async () => {
     try {
       toast.success("Signed out successfully");
@@ -161,7 +152,6 @@ export default function AppSidebar() {
     }
   };
 
-  const activeTenant = tenants[0];
   const user = authUser;
 
   // Show loading state
@@ -204,11 +194,7 @@ export default function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <OrgSwitcher
-          tenants={tenants}
-          defaultTenant={activeTenant}
-          onTenantSwitch={handleSwitchTenant}
-        />
+        <OrgSwitcher />
       </SidebarHeader>
       <SidebarContent className="overflow-x-hidden">
         <SidebarGroup>

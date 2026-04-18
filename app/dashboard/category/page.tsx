@@ -8,6 +8,7 @@ import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import CategoryModal from '@/features/Inventory/catagory/view-page';
 import { PermissionGuard } from '@/components/PermissionGuard';
+import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import ItemTableAction from '@/features/genralinfo/Branch/tableaction';
 
@@ -24,31 +25,30 @@ export default async function SupplierPage({ searchParams }: PageProps) {
   searchParamsCache.parse(parsedParams);
 
   return (
-    <PageContainer scrollable={false}>
-      <div className='flex flex-1 flex-col space-y-4'>
-        <div className='flex items-start justify-between'>
-          <Heading
-            title='Categories'
-            description='Manage Categories information and records.'
-          />
-
-          <PermissionGuard
-            requiredPermission={PERMISSIONS.CATEGORY.CREATE.name}
+    <PagePermissionGuard requiredPermission={PERMISSIONS.CATEGORY.VIEW_ALL.name}>
+      <PageContainer scrollable={false}>
+        <div className='flex flex-1 flex-col space-y-4'>
+          <div className='flex items-start justify-between'>
+            <Heading
+              title='Categories'
+              description='Manage Categories information and records.'
+            />
+            <PermissionGuard requiredPermission={PERMISSIONS.CATEGORY.CREATE.name}>
+              <CategoryModal />
+            </PermissionGuard>
+          </div>
+          <Separator />
+          <Suspense
+            fallback={
+              <DataTableSkeleton columnCount={6} rowCount={8} filterCount={2} />
+            }
           >
-            <CategoryModal />
-          </PermissionGuard>
+            {' '}
+            <ItemTableAction />
+            <CategoriesListingPage />
+          </Suspense>
         </div>
-        <Separator />
-        <Suspense
-          fallback={
-            <DataTableSkeleton columnCount={6} rowCount={8} filterCount={2} />
-          }
-        >
-          {' '}
-          <ItemTableAction />
-          <CategoriesListingPage />
-        </Suspense>
-      </div>
-    </PageContainer>
+      </PageContainer>
+    </PagePermissionGuard>
   );
 }

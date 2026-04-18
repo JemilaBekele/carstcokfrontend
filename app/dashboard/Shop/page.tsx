@@ -7,6 +7,7 @@ import { searchParamsCache } from '@/lib/searchparams';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
+import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 
 import ItemTableAction from '@/features/genralinfo/Branch/tableaction';
@@ -31,29 +32,29 @@ export default async function BraPage(props: pageProps) {
   // const key = serialize({ ...searchParams });
 
   return (
-    <PageContainer scrollable={false}>
-      <div className='flex flex-1 flex-col space-y-4'>
-        <div className='flex items-start justify-between'>
-          <Heading
-            title='Shops'
-            description='Manage all shops including their branch and location details'
-          />
-          <PermissionGuard requiredPermission={PERMISSIONS.SHOP.CREATE.name}>
-            <ShopModal />
-          </PermissionGuard>
+    <PagePermissionGuard requiredPermission={PERMISSIONS.SHOP.VIEW_ALL.name}>
+      <PageContainer scrollable={false}>
+        <div className='flex flex-1 flex-col space-y-4'>
+          <div className='flex items-start justify-between'>
+            <Heading
+              title='Shops'
+              description='Manage all shops including their branch and location details'
+            />
+            <PermissionGuard requiredPermission={PERMISSIONS.SHOP.CREATE.name}>
+              <ShopModal />
+            </PermissionGuard>
+          </div>
+          <Separator />
+          <ItemTableAction />
+          <Suspense
+            fallback={
+              <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />
+            }
+          >
+            <ShopListingPage />
+          </Suspense>
         </div>
-        <Separator />
-        <ItemTableAction />
-
-        <Suspense
-          // key={key}
-          fallback={
-            <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />
-          }
-        >
-          <ShopListingPage />
-        </Suspense>
-      </div>
-    </PageContainer>
+      </PageContainer>
+    </PagePermissionGuard>
   );
 }

@@ -6,6 +6,7 @@ import { searchParamsCache } from '@/lib/searchparams';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
+import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import UserTableAction from '@/features/Employee/components/employee-table-action';
 import BrandsListingPage from '@/features/Inventory/brand/listing';
@@ -24,31 +25,30 @@ export default async function SupplierPage({ searchParams }: PageProps) {
   searchParamsCache.parse(parsedParams);
 
   return (
-    <PageContainer scrollable={false}>
-      <div className='flex flex-col flex-1 space-y-4'>
-        <div className='flex items-start justify-between'>
-          <Heading
-            title='Brands'
-            description='Manage brand information and records.'
-          />
-
-          <PermissionGuard
-            requiredPermission={PERMISSIONS.CATEGORY.CREATE.name}
+    <PagePermissionGuard requiredPermission={PERMISSIONS.CATEGORY.VIEW_ALL.name}>
+      <PageContainer scrollable={false}>
+        <div className='flex flex-col flex-1 space-y-4'>
+          <div className='flex items-start justify-between'>
+            <Heading
+              title='Brands'
+              description='Manage brand information and records.'
+            />
+            <PermissionGuard requiredPermission={PERMISSIONS.CATEGORY.CREATE.name}>
+              <BrandModal />
+            </PermissionGuard>
+          </div>
+          <Separator />
+          <Suspense
+            fallback={
+              <DataTableSkeleton columnCount={6} rowCount={8} filterCount={2} />
+            }
           >
-            <BrandModal />
-          </PermissionGuard>
+            {' '}
+            <UserTableAction />
+            <BrandsListingPage />
+          </Suspense>
         </div>
-        <Separator />
-        <Suspense
-          fallback={
-            <DataTableSkeleton columnCount={6} rowCount={8} filterCount={2} />
-          }
-        >
-          {' '}
-          <UserTableAction />
-          <BrandsListingPage />
-        </Suspense>
-      </div>
-    </PageContainer>
+      </PageContainer>
+    </PagePermissionGuard>
   );
 }

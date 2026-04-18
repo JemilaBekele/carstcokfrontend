@@ -13,6 +13,7 @@ import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 
 import { PermissionGuard } from '@/components/PermissionGuard';
+import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 
 export const metadata = {
@@ -32,33 +33,31 @@ export default async function PurchasePage(props: pageProps) {
   // const key = serialize({ ...searchParams });
 
   return (
-    <PageContainer scrollable={false}>
-      <div className='flex flex-1 flex-col space-y-4'>
-        <div className='flex items-start justify-between'>
-          <Heading title='Purchase' description='Manage Purchase ' />
-          <PermissionGuard
-            requiredPermission={PERMISSIONS.PURCHASE.CREATE.name}
+    <PagePermissionGuard requiredPermission={PERMISSIONS.PURCHASE.VIEW_ALL.name}>
+      <PageContainer scrollable={false}>
+        <div className='flex flex-1 flex-col space-y-4'>
+          <div className='flex items-start justify-between'>
+            <Heading title='Purchase' description='Manage Purchase ' />
+            <PermissionGuard requiredPermission={PERMISSIONS.PURCHASE.CREATE.name}>
+              <Link
+                href='/dashboard/purchase/new'
+                className={cn(buttonVariants(), 'text-xs md:text-sm')}
+              >
+                <IconPlus className='mr-2 h-4 w-4' /> Add New Purchase
+              </Link>
+            </PermissionGuard>
+          </div>
+          <Separator />
+          <UserTableAction />
+          <Suspense
+            fallback={
+              <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />
+            }
           >
-            <Link
-              href='/dashboard/purchase/new'
-              className={cn(buttonVariants(), 'text-xs md:text-sm')}
-            >
-              <IconPlus className='mr-2 h-4 w-4' /> Add New Purchase
-            </Link>
-          </PermissionGuard>
+            <PurchaseListingPage />
+          </Suspense>
         </div>
-        <Separator />
-        <UserTableAction />
-
-        <Suspense
-          // key={key}
-          fallback={
-            <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />
-          }
-        >
-          <PurchaseListingPage />
-        </Suspense>
-      </div>
-    </PageContainer>
+      </PageContainer>
+    </PagePermissionGuard>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 import { navItems } from '@/constants/data';
+import { usePermissionStore } from '@/stores/auth.store';
 import {
   KBarAnimator,
   KBarPortal,
@@ -14,16 +15,26 @@ import useThemeSwitching from './use-theme-switching';
 
 export default function KBar({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const hasPermission = usePermissionStore((s) => s.hasPermission);
+  const hasAnyPermission = usePermissionStore((s) => s.hasAnyPermission);
 
-  // These action are for the navigation
+  // Filter navigation actions by user permissions
   const actions = useMemo(() => {
-    // Define navigateTo inside the useMemo callback to avoid dependency array issues
     const navigateTo = (url: string) => {
       router.push(url);
     };
 
+    const checkAccess = (item: { permission?: string; permissions?: string[] }) => {
+      if (!item.permission && !item.permissions) return true;
+      if (item.permission) return hasPermission(item.permission);
+      if (item.permissions) return hasAnyPermission(item.permissions);
+      return true;
+    };
+
     return navItems.flatMap((navItem) => {
-      // Only include base action if the navItem has a real URL and is not just a container
+      // Skip items the user doesn't have permission for
+      if (!checkAccess(navItem)) return [];
+
       const baseAction =
         navItem.url !== '#'
           ? {
@@ -37,22 +48,23 @@ export default function KBar({ children }: { children: React.ReactNode }) {
             }
           : null;
 
-      // Map child items into actions
+      // Map child items into actions, filtering by permission
       const childActions =
-        navItem.items?.map((childItem) => ({
-          id: `${childItem.title.toLowerCase()}Action`,
-          name: childItem.title,
-          shortcut: childItem.shortcut,
-          keywords: childItem.title.toLowerCase(),
-          section: navItem.title,
-          subtitle: `Go to ${childItem.title}`,
-          perform: () => navigateTo(childItem.url)
-        })) ?? [];
+        navItem.items
+          ?.filter((childItem) => checkAccess(childItem))
+          .map((childItem) => ({
+            id: `${childItem.title.toLowerCase()}Action`,
+            name: childItem.title,
+            shortcut: childItem.shortcut,
+            keywords: childItem.title.toLowerCase(),
+            section: navItem.title,
+            subtitle: `Go to ${childItem.title}`,
+            perform: () => navigateTo(childItem.url)
+          })) ?? [];
 
-      // Return only valid actions (ignoring null base actions for containers)
       return baseAction ? [baseAction, ...childActions] : childActions;
     });
-  }, [router]);
+  }, [router, hasPermission, hasAnyPermission]);
 
   return (
     <KBarProvider actions={actions}>
@@ -81,3 +93,4 @@ const KBarComponent = ({ children }: { children: React.ReactNode }) => {
     </>
   );
 };
+

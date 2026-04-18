@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
+import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import ItemTableAction from '@/features/genralinfo/Branch/tableaction';
 
@@ -27,36 +28,36 @@ export default async function SupplierPage({ searchParams }: PageProps) {
   searchParamsCache.parse(parsedParams);
 
   return (
-    <PageContainer scrollable={false}>
-      <div className='flex flex-1 flex-col space-y-4'>
-        <div className='flex items-start justify-between'>
-          <Heading
-            title='Suppliers'
-            description='Manage supplier information and records.'
-          />
-          <PermissionGuard
-            requiredPermission={PERMISSIONS.SUPPLIER.CREATE.name}
+    <PagePermissionGuard requiredPermission={PERMISSIONS.SUPPLIER.VIEW_ALL.name}>
+      <PageContainer scrollable={false}>
+        <div className='flex flex-1 flex-col space-y-4'>
+          <div className='flex items-start justify-between'>
+            <Heading
+              title='Suppliers'
+              description='Manage supplier information and records.'
+            />
+            <PermissionGuard requiredPermission={PERMISSIONS.SUPPLIER.CREATE.name}>
+              <Link
+                href='/dashboard/supplier/new'
+                className={cn(buttonVariants(), 'text-xs md:text-sm')}
+              >
+                <IconPlus className='mr-2 h-4 w-4' />
+                Add New Supplier
+              </Link>
+            </PermissionGuard>
+          </div>
+          <Separator />
+          <Suspense
+            fallback={
+              <DataTableSkeleton columnCount={6} rowCount={8} filterCount={2} />
+            }
           >
-            <Link
-              href='/dashboard/supplier/new'
-              className={cn(buttonVariants(), 'text-xs md:text-sm')}
-            >
-              <IconPlus className='mr-2 h-4 w-4' />
-              Add New Supplier
-            </Link>
-          </PermissionGuard>
+            {' '}
+            <ItemTableAction />
+            <SuppliersListingPage />
+          </Suspense>
         </div>
-        <Separator />
-        <Suspense
-          fallback={
-            <DataTableSkeleton columnCount={6} rowCount={8} filterCount={2} />
-          }
-        >
-          {' '}
-          <ItemTableAction />
-          <SuppliersListingPage />
-        </Suspense>
-      </div>
-    </PageContainer>
+      </PageContainer>
+    </PagePermissionGuard>
   );
 }

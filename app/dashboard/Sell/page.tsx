@@ -3,7 +3,8 @@ import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import { searchParamsCache } from '@/lib/searchparams';
-
+import { PagePermissionGuard } from '@/components/PagePermissionGuard';
+import { PERMISSIONS } from '@/stores/permissions';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import SellListingPage from '@/features/Shop/table/listing';
@@ -22,22 +23,24 @@ export default async function SupplierPage({ searchParams }: PageProps) {
   searchParamsCache.parse(parsedParams);
 
   return (
-    <PageContainer scrollable={true}>
-      <div className='flex flex-1 flex-col space-y-4'>
-        <div className='flex items-start justify-between'>
-          <Heading title='Sales' description='Manage all product Sales.' />
+    <PagePermissionGuard requiredPermission={PERMISSIONS.SELL.VIEW_ALL.name}>
+      <PageContainer scrollable={true}>
+        <div className='flex flex-1 flex-col space-y-4'>
+          <div className='flex items-start justify-between'>
+            <Heading title='Sales' description='Manage all product Sales.' />
+          </div>
+          <Separator />
+          <Suspense
+            fallback={
+              <DataTableSkeleton columnCount={6} rowCount={8} filterCount={2} />
+            }
+          >
+            {' '}
+            <UserTableAction />
+            <SellListingPage />
+          </Suspense>
         </div>
-        <Separator />
-        <Suspense
-          fallback={
-            <DataTableSkeleton columnCount={6} rowCount={8} filterCount={2} />
-          }
-        >
-          {' '}
-          <UserTableAction />
-          <SellListingPage />
-        </Suspense>
-      </div>
-    </PageContainer>
+      </PageContainer>
+    </PagePermissionGuard>
   );
 }

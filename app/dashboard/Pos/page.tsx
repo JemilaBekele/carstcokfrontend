@@ -4,6 +4,8 @@
 import { useState, useEffect } from 'react';
 import FormCardSkeleton from '@/components/form-card-skeleton';
 import PageContainer from '@/components/layout/page-container';
+import { PagePermissionGuard } from '@/components/PagePermissionGuard';
+import { PERMISSIONS } from '@/stores/permissions';
 import { ProductSearch } from '@/features/Shop/list';
 import { getCategories } from '@/service/Category';
 import { getBrands } from '@/service/brand';
@@ -58,17 +60,19 @@ export default function Page() {
   }
 
   return (
-    <PageContainer scrollable>
-      <div className='flex-1 space-y-4'>
-        <ProductSearch
-          products={products}
-          categories={categories}
-          brands={brands} // Pass brands to ProductSearch
-          initialSearchTerm={searchTerm}
-          initialCategoryName={categoryName}
-          initialBrandName={brandName} // Changed from initialSubCategoryName
-        />
-      </div>
-    </PageContainer>
+    <PagePermissionGuard requiredPermission={PERMISSIONS.SELL.CREATE.name}>
+      <PageContainer scrollable>
+        <div className='flex-1 space-y-4'>
+          <ProductSearch
+            products={products}
+            categories={categories}
+            brands={brands}
+            initialSearchTerm={searchTerm}
+            initialCategoryName={categoryName}
+            initialBrandName={brandName}
+          />
+        </div>
+      </PageContainer>
+    </PagePermissionGuard>
   );
 }

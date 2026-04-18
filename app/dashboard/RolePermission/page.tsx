@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
+import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import ItemTableAction from '@/features/genralinfo/Branch/tableaction';
 export const metadata = {
@@ -30,38 +31,39 @@ export default async function RolePermissionPage(props: pageProps) {
   // const key = serialize({ ...searchParams });
 
   return (
-    <PageContainer scrollable={false}>
-      <div className='flex flex-1 flex-col space-y-4'>
-        <div className='flex items-start justify-between gap-2'>
-          <Heading
-            title='Role Permission'
-            description='Manage Role Permissions'
-          />
+    <PagePermissionGuard requiredPermission={PERMISSIONS.ROLE_PERMISSION.VIEW_ALL.name}>
+      <PageContainer scrollable={false}>
+        <div className='flex flex-1 flex-col space-y-4'>
+          <div className='flex items-start justify-between gap-2'>
+            <Heading
+              title='Role Permission'
+              description='Manage Role Permissions'
+            />
 
-          <div className='flex gap-2'>
-            <PermissionGuard
-              requiredPermission={PERMISSIONS.ROLE_PERMISSION.CREATE.name}
-            >
-              <Link
-                href='/dashboard/RolePermission/add'
-                className={cn(buttonVariants(), 'text-xs md:text-sm')}
+            <div className='flex gap-2'>
+              <PermissionGuard
+                requiredPermission={PERMISSIONS.ROLE_PERMISSION.CREATE.name}
               >
-                <IconPlus className='mr-2 h-4 w-4' /> Add New Permissions
-              </Link>
-            </PermissionGuard>
+                <Link
+                  href='/dashboard/RolePermission/add'
+                  className={cn(buttonVariants(), 'text-xs md:text-sm')}
+                >
+                  <IconPlus className='mr-2 h-4 w-4' /> Add New Permissions
+                </Link>
+              </PermissionGuard>
+            </div>
           </div>
+          <Separator />
+          <ItemTableAction />
+          <Suspense
+            fallback={
+              <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />
+            }
+          >
+            <RolePermissionListingPage />
+          </Suspense>
         </div>
-        <Separator />
-        <ItemTableAction />
-        <Suspense
-          // key={key}
-          fallback={
-            <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />
-          }
-        >
-          <RolePermissionListingPage />
-        </Suspense>
-      </div>
-    </PageContainer>
+      </PageContainer>
+    </PagePermissionGuard>
   );
 }
