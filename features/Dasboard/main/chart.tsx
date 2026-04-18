@@ -105,14 +105,30 @@ export function SellStatusChart() {
 
   if (loading) {
     return (
-      <Card className='flex flex-col'>
-        <CardHeader className='items-center pb-0'>
-          <CardTitle>Sales Status Distribution</CardTitle>
-          <CardDescription>Loading chart data...</CardDescription>
+      <Card className='flex flex-col h-full border-border/40 shadow-sm'>
+        <CardHeader className='items-center pb-2 border-b border-border/40'>
+          <CardTitle className="text-lg">Sales Status</CardTitle>
+          <CardDescription className="text-xs">Loading chart data...</CardDescription>
         </CardHeader>
-        <CardContent className='flex-1 pb-0'>
-          <div className='flex aspect-square max-h-62.5 items-center justify-center'>
-            <div className='text-muted-foreground'>Loading...</div>
+        <CardContent className='flex-1 pb-0 mt-4'>
+          <div className='flex aspect-square max-h-56 items-center justify-center'>
+            <div className='mb-4 inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent'></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (chartData.length === 0 || totalAmount === 0) {
+    return (
+      <Card className='flex flex-col h-full border-border/40 shadow-sm'>
+        <CardHeader className='flex flex-col items-center justify-center gap-1 border-b border-border/40 px-5 py-4'>
+          <CardTitle className="text-lg text-center">Sales Distribution</CardTitle>
+          <CardDescription className="text-xs text-center">Breakdown by order status</CardDescription>
+        </CardHeader>
+        <CardContent className='flex-1 px-2 pt-4 sm:px-6 sm:pt-6'>
+          <div className='text-muted-foreground flex h-62.5 items-center justify-center'>
+            No sales data available
           </div>
         </CardContent>
       </Card>
@@ -120,21 +136,23 @@ export function SellStatusChart() {
   }
 
   return (
-    <Card className='flex flex-col'>
-      <CardHeader className='items-center pb-0'>
-        <CardTitle>Sales Status Distribution</CardTitle>
-        <CardDescription>Breakdown by order status</CardDescription>
+    <Card className='flex flex-col h-full border-border/40 shadow-sm flex flex-col transition-all duration-300'>
+      <CardHeader className='items-center pb-3 pt-4 border-b border-border/40'>
+        <CardTitle className='text-lg'>Sales Distribution</CardTitle>
+        <CardDescription className="text-xs">Breakdown by order status</CardDescription>
       </CardHeader>
-      <CardContent className='flex-1 pb-0'>
+      <CardContent className='flex-1 pb-0 mt-4 relative'>
         <ChartContainer
           config={chartConfig}
-          className='mx-auto aspect-square max-h-62.5 pb-0'
+          className='mx-auto aspect-square max-h-56 pb-0'
         >
           <PieChart>
             <ChartTooltip
+              cursor={{ fill: 'transparent' }}
               content={
                 <ChartTooltipContent
                   hideLabel
+                  className="shadow-md border-border/50 text-xs"
                   formatter={(value, name) => [
                     `$${Number(value).toLocaleString()}`,
                     chartConfig[name as keyof ChartConfig]?.label || name
@@ -146,48 +164,61 @@ export function SellStatusChart() {
               data={chartData}
               dataKey='amount'
               nameKey='status'
-              label={false} // Remove labels from the pie slices
+              innerRadius={65}
+              outerRadius={90}
+              paddingAngle={2}
+              label={false}
               labelLine={false}
-              strokeWidth={2}
-              stroke="#FFF" // 保持白色描边
+              strokeWidth={0}
+              className="transition-all duration-300"
             >
               {chartData.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  fill={entry.fill} // 
-                  stroke="#FFF" // 
-                  strokeWidth={2}
+                  fill={entry.fill}
+                  className="hover:opacity-80 stroke-background stroke-2 transition-all duration-300 hover:scale-[1.02] cursor-pointer"
                 />
               ))}
             </Pie>
           </PieChart>
         </ChartContainer>
-      </CardContent>
-      <CardFooter className='flex-col gap-2 text-sm'>
-        <div className='flex items-center gap-2 leading-none font-medium'>
-          Total Sales: ${totalAmount.toLocaleString()}
-          <TrendingUp className='h-4 w-4' />
+        {/* Center label for the donut chart */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none -mt-4">
+          <span className="text-2xl font-bold tracking-tighter">
+            ${(totalAmount >= 1000 ? (totalAmount / 1000).toFixed(1) + 'k' : totalAmount)}
+          </span>
+          <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Total</span>
         </div>
-        <div className='text-muted-foreground leading-none'>
+      </CardContent>
+      <CardFooter className='flex-col gap-3 text-sm mt-4 bg-muted/10 py-4 px-5 border-t border-border/20'>
+        <div className='flex items-center gap-1.5 font-medium text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full'>
+          <TrendingUp className='h-3.5 w-3.5' />
+          <span>${totalAmount.toLocaleString()} Total Sales</span>
+        </div>
+        <div className='text-muted-foreground text-center text-[10px]'>
           {totalTransactions} transactions across{' '}
-          {chartData.filter((item) => item.count > 0).length} status categories
+          {chartData.filter((item) => item.count > 0).length} categories
         </div>
 
-        {/* Status Legend - */}
-        <div className='mt-4 grid w-full grid-cols-2 gap-2'>
+        {/* Status Legend */}
+        <div className='mt-2 grid w-full grid-cols-2 gap-2'>
           {chartData
             .filter((item) => item.count > 0)
             .map((item) => (
               <div
                 key={item.status}
-                className='flex items-center gap-2 text-xs'
+                className='flex items-center justify-between gap-2 text-xs p-1.5 rounded-md hover:bg-muted/50 transition-colors'
               >
-                <div
-                  className='h-3 w-3 rounded-full'
-                  style={{ backgroundColor: item.fill }} // legend
-                />
-                <span className='font-medium'>{item.label}:</span>
-                <span className='text-muted-foreground'>({item.count})</span>
+                <div className="flex items-center gap-2">
+                  <div
+                    className='h-2.5 w-2.5 rounded-full shadow-sm'
+                    style={{ backgroundColor: item.fill }}
+                  />
+                  <span className='font-medium text-foreground truncate max-w-[70px] text-[11px]'>{item.label}</span>
+                </div>
+                <span className='text-muted-foreground font-mono bg-muted px-1 py-0.5 rounded text-[10px]'>
+                  {item.count}
+                </span>
               </div>
             ))}
         </div>

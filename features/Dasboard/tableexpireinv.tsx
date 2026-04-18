@@ -253,94 +253,88 @@ export function TableDashboard() {
   };
 
   return (
-    <div className='@container/dashboard space-y-6 p-4'>
+    <div className='@container/dashboard space-y-5 pb-4'>
+      <div className="flex items-center gap-2 border-b pb-3 mt-1">
+        <Package className="w-5 h-5 text-primary" />
+        <div>
+          <h3 className="text-lg font-semibold tracking-tight">Inventory Metrics</h3>
+        </div>
+      </div>
+
       {/* Stats Cards Row */}
-      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5'>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Low Stock</CardTitle>
+      <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5'>
+        <Card className="border-border/40 shadow-sm hover:shadow transition-shadow">
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-1 pt-4'>
+            <CardTitle className='text-xs font-medium text-muted-foreground uppercase tracking-wider'>Low Stock</CardTitle>
             <AlertCircle className='h-4 w-4 text-amber-500' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{alerts.lowStockItems.length}</div>
-            <p className='text-xs text-muted-foreground'>
-              Items below warning level
-            </p>
+            <div className='text-2xl font-bold tracking-tight'>{alerts.lowStockItems.length}</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Top Items by Value</CardTitle>
+        <Card className="border-border/40 shadow-sm hover:shadow transition-shadow">
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-1 pt-4'>
+            <CardTitle className='text-xs font-medium text-muted-foreground uppercase tracking-wider'>Top Value Items</CardTitle>
             <TrendingUp className='h-4 w-4 text-green-500' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{tables.topItems.length}</div>
-            <p className='text-xs text-muted-foreground'>
-              High-value inventory items
-            </p>
+            <div className='text-2xl font-bold tracking-tight'>{tables.topItems.length}</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Top Sold</CardTitle>
+        <Card className="border-border/40 shadow-sm hover:shadow transition-shadow">
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-1 pt-4'>
+            <CardTitle className='text-xs font-medium text-muted-foreground uppercase tracking-wider'>Top Selling</CardTitle>
             <ShoppingCart className='h-4 w-4 text-blue-500' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{tables.topSoldItems?.length || 0}</div>
-            <p className='text-xs text-muted-foreground'>
-              Best selling products
-            </p>
+            <div className='text-2xl font-bold tracking-tight'>{tables.topSoldItems?.length || 0}</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Top Purchased</CardTitle>
+        <Card className="border-border/40 shadow-sm hover:shadow transition-shadow">
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-1 pt-4'>
+            <CardTitle className='text-xs font-medium text-muted-foreground uppercase tracking-wider'>Top Purchased</CardTitle>
             <Package className='h-4 w-4 text-purple-500' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{tables.topPurchasedItems?.length || 0}</div>
-            <p className='text-xs text-muted-foreground'>
-              Most purchased products
-            </p>
+            <div className='text-2xl font-bold tracking-tight'>{tables.topPurchasedItems?.length || 0}</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Aging Items</CardTitle>
+        <Card className="border-border/40 shadow-sm hover:shadow transition-shadow">
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-1 pt-4'>
+            <CardTitle className='text-xs font-medium text-muted-foreground uppercase tracking-wider'>Aging Items</CardTitle>
             <Clock className='h-4 w-4 text-orange-500' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{tables.agingReport.length}</div>
-            <p className='text-xs text-muted-foreground'>
-              Items in inventory
-            </p>
+            <div className='text-2xl font-bold tracking-tight'>{tables.agingReport.length}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Two Column Layout for Alerts and Top Items */}
-      <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+      <div className='grid grid-cols-1 gap-4 lg:grid-cols-2'>
         {/* Left Column: Low Stock Items */}
-        <Card className='@container/card h-full'>
-          <CardHeader className='pb-3'>
-            <CardTitle className='text-xl'>Low Stock Alert</CardTitle>
-            <CardDescription className='text-base'>
-              Items below warning quantity
-            </CardDescription>
+        <Card className='@container/card h-full border-border/40 shadow-sm overflow-hidden flex flex-col'>
+          <CardHeader className='pb-3 pt-4 border-b bg-muted/10'>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <CardTitle className='text-base font-semibold'>Low Stock Alerts</CardTitle>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className='p-0'>
             <div className='overflow-x-auto'>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className='text-lg font-semibold'>Item Name</TableHead>
-                    <TableHead className='text-lg font-semibold'>Current Stock</TableHead>
-                    <TableHead className='text-lg font-semibold'>Warning Level</TableHead>
-                    <TableHead className='text-lg font-semibold'>Status</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Item</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Stock</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Warning</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -357,38 +351,30 @@ export function TableDashboard() {
                           key={`${item.id}-${index}`}
                           className={`hover:bg-muted/50 ${colors.bg} ${colors.border}`}
                         >
-                          <TableCell className={`py-3 text-base font-medium ${colors.text}`}>
-                            <div className="flex items-center gap-2">
+                          <TableCell className={`py-2 px-4 text-sm font-medium ${colors.text}`}>
+                            <div className="flex items-center gap-2 line-clamp-1">
                               {item.productName}
-                              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${colors.badgeBg} ${colors.badgeText}`}>
-                                {colors.status}
-                              </span>
                             </div>
                             {item.brandName && (
-                              <div className="text-xs opacity-70 mt-1">{item.brandName}</div>
+                              <div className="text-[10px] opacity-70 mt-0.5">{item.brandName}</div>
                             )}
                           </TableCell>
-                          <TableCell className={`py-3 text-base ${colors.text}`}>
-                            <div className="flex items-center gap-2">
+                          <TableCell className={`py-2 px-4 text-sm ${colors.text}`}>
+                            <div className="flex items-center gap-1.5">
                               {formatQuantity(item, currentStock)}
                               {currentStock === 0 && (
-                                <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                <AlertTriangle className="h-3 w-3 text-red-600 dark:text-red-400" />
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className={`py-3 text-base ${colors.text}`}>
-                            {warningQuantity} {item.UnitOfMeasure || 'units'}
+                          <TableCell className={`py-2 px-4 text-sm ${colors.text}`}>
+                            {warningQuantity} {item.UnitOfMeasure || 'u'}
                           </TableCell>
-                          <TableCell className={`py-3 text-base ${colors.text}`}>
-                            <div className="flex flex-col gap-1">
-                              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${colors.badgeBg} ${colors.badgeText}`}>
+                          <TableCell className={`py-2 px-4 text-sm ${colors.text}`}>
+                            <div className="flex items-center gap-1.5">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium leading-none rounded-sm ${colors.badgeBg} ${colors.badgeText}`}>
                                 {colors.status}
                               </span>
-                              {currentStock > 0 && (
-                                <div className="text-xs opacity-70">
-                                  {Math.round(stockPercentage)}% of warning level
-                                </div>
-                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -408,21 +394,23 @@ export function TableDashboard() {
         </Card>
 
         {/* Right Column: Top Items by Value */}
-        <Card className='@container/card'>
-          <CardHeader className='pb-3'>
-            <CardTitle className='text-xl'>Top Items by Inventory Value</CardTitle>
-            <CardDescription className='text-base'>
-              Items with highest stock value
-            </CardDescription>
+        <Card className='@container/card border-border/40 shadow-sm overflow-hidden flex flex-col'>
+          <CardHeader className='pb-3 pt-4 border-b bg-muted/10'>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-green-500" />
+                <CardTitle className='text-base font-semibold'>Top Items by Value</CardTitle>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className='p-0'>
             <div className='overflow-x-auto'>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className='text-lg font-semibold'>Item Name</TableHead>
-                    <TableHead className='text-lg font-semibold'>Quantity</TableHead>
-                    <TableHead className='text-lg font-semibold'>Total Value</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Item</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Quantity</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Total Value</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -438,31 +426,23 @@ export function TableDashboard() {
                           key={`${item.productCode}-${index}`}
                           className={`hover:bg-muted/50`}
                         >
-                          <TableCell className='py-3 text-base font-medium'>
-                            <div className="flex items-center gap-2">
+                          <TableCell className='py-2 px-4 text-sm font-medium'>
+                            <div className="flex items-center gap-1.5 line-clamp-1">
                               {item.productName}
                               {isTopItem && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                                  <TrendingUp className="h-3 w-3" />
-                                  TOP {index + 1}
+                                <span className="inline-flex items-center text-[9px] font-bold text-blue-600 bg-blue-100 px-1 rounded-sm uppercase">
+                                  #{index + 1}
                                 </span>
                               )}
                             </div>
                             {item.brand && (
-                              <div className="text-xs text-muted-foreground mt-1">{item.brand}</div>
-                            )}
-                            {item.hasBox && item.boxSize && (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                <Box className="h-3 w-3" />
-                                Box: {item.boxSize} pcs/box
-                              </div>
+                              <div className="text-[10px] text-muted-foreground mt-0.5">{item.brand}</div>
                             )}
                           </TableCell>
-                          <TableCell className='py-3 text-base'>
+                          <TableCell className='py-2 px-4 text-sm'>
                             {formatQuantity(item, totalQuantity)}
                           </TableCell>
-                        
-                          <TableCell className='py-3 text-base font-semibold'>
+                          <TableCell className='py-2 px-4 text-sm font-semibold'>
                             {totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </TableCell>
                         </TableRow>
@@ -483,24 +463,26 @@ export function TableDashboard() {
       </div>
 
       {/* Top Sold Items and Top Purchased Items - Side by Side */}
-      <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+      <div className='grid grid-cols-1 gap-8 lg:grid-cols-2'>
         {/* Top Sold Items */}
-        <Card className='@container/card'>
-          <CardHeader className='pb-3'>
-            <CardTitle className='text-xl'>Top Sold Items</CardTitle>
-            <CardDescription className='text-base'>
-              Best selling products by quantity
-            </CardDescription>
+        <Card className='@container/card border-border/40 shadow-sm overflow-hidden flex flex-col'>
+          <CardHeader className='pb-3 pt-4 border-b bg-muted/10'>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-blue-500" />
+                <CardTitle className='text-base font-semibold'>Top Sold Items</CardTitle>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className='p-0'>
             <div className='overflow-x-auto'>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className='text-lg font-semibold'>Product</TableHead>
-                    <TableHead className='text-lg font-semibold'>Quantity Sold</TableHead>
-                    <TableHead className='text-lg font-semibold'>Revenue</TableHead>
-                    <TableHead className='text-lg font-semibold'>Avg Price</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Product</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Quantity Sold</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Revenue</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Avg Price</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -513,27 +495,26 @@ export function TableDashboard() {
 
                       return (
                         <TableRow key={`${item.productId}-${index}`} className='hover:bg-muted/50'>
-                          <TableCell className='py-3 text-base font-medium'>
-                            <div className="flex items-center gap-2">
+                          <TableCell className='py-2 px-4 text-sm font-medium'>
+                            <div className="flex items-center gap-1.5 line-clamp-1">
                               {item.productName}
                               {isTopItem && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                                  <TrendingUp className="h-3 w-3" />
-                                  TOP {index + 1}
+                                <span className="inline-flex items-center text-[9px] font-bold text-green-600 bg-green-100 px-1 rounded-sm uppercase">
+                                  #{index + 1}
                                 </span>
                               )}
                             </div>
                             {item.brand && (
-                              <div className="text-xs text-muted-foreground mt-1">{item.brand}</div>
+                              <div className="text-[10px] text-muted-foreground mt-0.5">{item.brand}</div>
                             )}
                           </TableCell>
-                          <TableCell className='py-3 text-base'>
+                          <TableCell className='py-2 px-4 text-sm'>
                             {formatQuantity(item, totalQuantitySold)}
                           </TableCell>
-                          <TableCell className='py-3 text-base font-semibold text-green-600'>
+                          <TableCell className='py-2 px-4 text-sm font-semibold text-green-600'>
                             {totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </TableCell>
-                          <TableCell className='py-3 text-base'>
+                          <TableCell className='py-2 px-4 text-sm'>
                             {avgPrice.toFixed(2)}
                           </TableCell>
                         </TableRow>
@@ -553,22 +534,24 @@ export function TableDashboard() {
         </Card>
 
         {/* Top Purchased Items */}
-        <Card className='@container/card'>
-          <CardHeader className='pb-3'>
-            <CardTitle className='text-xl'>Top Purchased Items</CardTitle>
-            <CardDescription className='text-base'>
-              Most purchased products by quantity
-            </CardDescription>
+        <Card className='@container/card border-border/40 shadow-sm overflow-hidden flex flex-col'>
+          <CardHeader className='pb-3 pt-4 border-b bg-muted/10'>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4 text-purple-500" />
+                <CardTitle className='text-base font-semibold'>Top Purchased Items</CardTitle>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className='p-0'>
             <div className='overflow-x-auto'>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className='text-lg font-semibold'>Product</TableHead>
-                    <TableHead className='text-lg font-semibold'>Quantity Purchased</TableHead>
-                    <TableHead className='text-lg font-semibold'>Total Cost</TableHead>
-                    <TableHead className='text-lg font-semibold'>Avg Cost</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Product</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Quantity Purchased</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Total Cost</TableHead>
+                    <TableHead className='text-xs font-semibold uppercase tracking-wider'>Avg Cost</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -581,27 +564,26 @@ export function TableDashboard() {
 
                       return (
                         <TableRow key={`${item.productId}-${index}`} className='hover:bg-muted/50'>
-                          <TableCell className='py-3 text-base font-medium'>
-                            <div className="flex items-center gap-2">
+                          <TableCell className='py-2 px-4 text-sm font-medium'>
+                            <div className="flex items-center gap-1.5 line-clamp-1">
                               {item.productName}
                               {isTopItem && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
-                                  <Package className="h-3 w-3" />
-                                  TOP {index + 1}
+                                <span className="inline-flex items-center text-[9px] font-bold text-purple-600 bg-purple-100 px-1 rounded-sm uppercase">
+                                  #{index + 1}
                                 </span>
                               )}
                             </div>
                             {item.brand && (
-                              <div className="text-xs text-muted-foreground mt-1">{item.brand}</div>
+                              <div className="text-[10px] text-muted-foreground mt-0.5">{item.brand}</div>
                             )}
                           </TableCell>
-                          <TableCell className='py-3 text-base'>
+                          <TableCell className='py-2 px-4 text-sm'>
                             {formatQuantity(item, totalQuantityPurchased)}
                           </TableCell>
-                          <TableCell className='py-3 text-base font-semibold text-purple-600'>
+                          <TableCell className='py-2 px-4 text-sm font-semibold text-purple-600'>
                             {totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </TableCell>
-                          <TableCell className='py-3 text-base'>
+                          <TableCell className='py-2 px-4 text-sm'>
                             {avgCost.toFixed(2)}
                           </TableCell>
                         </TableRow>
@@ -622,24 +604,26 @@ export function TableDashboard() {
       </div>
 
       {/* Aging Report - Full Width */}
-      <Card className='@container/card'>
-        <CardHeader className='pb-3'>
-          <CardTitle className='text-xl'>Aging Report</CardTitle>
-          <CardDescription className='text-base'>
-            Items by days in inventory
-          </CardDescription>
+      <Card className='@container/card border-border/40 shadow-sm overflow-hidden flex flex-col'>
+        <CardHeader className='pb-3 pt-4 border-b bg-muted/10'>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-orange-500" />
+              <CardTitle className='text-base font-semibold'>Aging Report</CardTitle>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className='p-0'>
           <div className='overflow-x-auto'>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className='text-lg font-semibold'>Item Name</TableHead>
-                  <TableHead className='text-lg font-semibold'>Brand</TableHead>
-                  <TableHead className='text-lg font-semibold'>Quantity</TableHead>
-                  <TableHead className='text-lg font-semibold'>Days in Inventory</TableHead>
-                  <TableHead className='text-lg font-semibold'>Inventory Value</TableHead>
-                  <TableHead className='text-lg font-semibold'>Status</TableHead>
+                  <TableHead className='text-xs font-semibold uppercase tracking-wider'>Item Name</TableHead>
+                  <TableHead className='text-xs font-semibold uppercase tracking-wider'>Brand</TableHead>
+                  <TableHead className='text-xs font-semibold uppercase tracking-wider'>Quantity</TableHead>
+                  <TableHead className='text-xs font-semibold uppercase tracking-wider'>Days in Inventory</TableHead>
+                  <TableHead className='text-xs font-semibold uppercase tracking-wider'>Value</TableHead>
+                  <TableHead className='text-xs font-semibold uppercase tracking-wider'>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -655,44 +639,39 @@ export function TableDashboard() {
                         key={`${item.productCode}-${index}`}
                         className={`hover:bg-muted/50 ${colors.bg} ${colors.border}`}
                       >
-                        <TableCell className={`py-3 text-base font-medium ${colors.text}`}>
-                          <div>
+                        <TableCell className={`py-2 px-4 text-sm font-medium ${colors.text}`}>
+                          <div className="line-clamp-1">
                             {item.productName}
-                            {item.hasBox && item.boxSize && (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                                <Box className="h-3 w-3" />
-                                Box: {item.boxSize} pcs/box
-                              </div>
-                            )}
                           </div>
                         </TableCell>
-                        <TableCell className={`py-3 text-base ${colors.text}`}>
-                          {item.brandName || 'N/A'}
+                        <TableCell className={`py-2 px-4 text-sm ${colors.text}`}>
+                          {item.brandName || '-'}
                         </TableCell>
-                        <TableCell className={`py-3 text-base ${colors.text}`}>
+                        <TableCell className={`py-2 px-4 text-sm ${colors.text}`}>
                           {formatQuantity(item, quantity)}
                         </TableCell>
-                        <TableCell className={`py-3 text-base font-medium ${colors.text}`}>
-                          <div className="flex items-center gap-2">
-                            {daysInInventory} days
+                        <TableCell className={`py-2 px-4 text-sm font-medium ${colors.text}`}>
+                          <div className="flex items-center gap-1.5">
+                            {daysInInventory} d
                             {daysInInventory >= 365 && (
-                              <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                              <AlertTriangle className="h-3 w-3 text-red-600 dark:text-red-400" />
                             )}
                             {daysInInventory >= 180 && daysInInventory < 365 && (
-                              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                              <AlertCircle className="h-3 w-3 text-amber-600 dark:text-amber-400" />
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className={`py-3 text-base ${colors.text}`}>
+                        <TableCell className={`py-2 px-4 text-sm ${colors.text}`}>
                           {inventoryValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </TableCell>
-                        <TableCell className={`py-3 text-base ${colors.text}`}>
-                          <div className="flex items-center gap-2">
-                            <div className={`h-2 w-2 rounded-full ${colors.badgeBg.replace('100', '500').replace('900/30', '400')}`} />
-                            {daysInInventory >= 365 ? 'Very Old (>1 year)' :
-                             daysInInventory >= 180 ? 'Old (6-12 months)' :
-                             daysInInventory >= 90 ? 'Aging (3-6 months)' :
-                             daysInInventory >= 30 ? 'Recent (1-3 months)' : 'New (<1 month)'}
+                        <TableCell className={`py-2 px-4 text-sm ${colors.text}`}>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium leading-none rounded-sm ${colors.badgeBg} ${colors.badgeText}`}>
+                              {daysInInventory >= 365 ? '>1 year' :
+                               daysInInventory >= 180 ? '6-12 months' :
+                               daysInInventory >= 90 ? '3-6 months' :
+                               daysInInventory >= 30 ? '1-3 months' : '<1 month'}
+                            </span>
                           </div>
                         </TableCell>
                       </TableRow>
