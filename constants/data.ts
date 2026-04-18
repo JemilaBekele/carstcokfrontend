@@ -11,7 +11,6 @@ export type Product = {
   updated_at: string;
 };
 
-//Info: The following data is used for the sidebar navigation and Cmd K bar.
 export const navItems: NavItem[] = [
   {
     title: 'Dashboard',
@@ -20,166 +19,126 @@ export const navItems: NavItem[] = [
     isActive: false,
     shortcut: ['d', 'd'],
     permission: 'VIEW_MAIN_DASHBOARD',
-    items: [] // Empty array as there are no child items for Dashboard Own_dashboard
+    items: [] 
   },
-  // {
-  //   title: 'Company',
-  //   url: '/dashboard/Company',
-  //   icon: 'billing',
-  //   permission: 'VIEW_COMPANY'
-  // },
   {
     title: 'Report',
     url: '/dashboard/',
-    icon: 'dashboard',
+    icon: 'chart',
     isActive: false,
     shortcut: ['d', 'd'],
     permission: 'VIEW_SALES_REPORT_VIEW_DASHBOARD',
-
     items: [
       {
         title: 'All Sells Trend',
         url: '/dashboard/Selllist',
-        // icon: 'userPen',
+        icon: 'trendingUp',
         shortcut: ['ps', 'ps'],
         permission: 'VIEW_ALL_SELLS_TREND'
       },
       {
         title: 'Sales Rank',
         url: '/dashboard/Reportsellstatic',
-        // icon: 'userPen',
+        icon: 'list',
         shortcut: ['ps', 'ps'],
         permission: 'VIEW_SALES_RANK'
       }
-    ] // Empty  array as there are no child items for Dashboard Own_dashboard
+    ]
   },
   {
     title: 'POS',
     url: '/dashboard/',
-    icon: 'dashboard',
+    icon: 'receipt',
     isActive: false,
     shortcut: ['d', 'd'],
     permission: 'VIEW_SELL_DASHBOARD',
-
     items: [
-      // {
-      //   title: 'My Sales Report',
-      //   url: '/dashboard/SalesCreatorDashboard',
-      //   icon: 'userPen',
-      //   shortcut: ['ro', 'ro'],
-      //   permission: 'CREATE_SELL'
-      // },
       {
         title: 'Order',
         url: '/dashboard/Pos',
-        // icon: 'userPen',
+        icon: 'add',
         shortcut: ['ro', 'ro'],
         permission: 'CREATE_SELL'
       },
       {
         title: 'View All Orders',
         url: '/dashboard/Sell',
-        // icon: 'userPen',
+        icon: 'clipboard',
         shortcut: ['rs', 'rs'],
         permission: 'VIEW_ALL_SELLS'
       },
       {
-        title: 'My Orders ',
+        title: 'My Orders',
         url: '/dashboard/UserBasedSell',
-        // icon: 'userPen',
+        icon: 'shoppingCart',
         shortcut: ['rs', 'rs'],
         permission: 'CREATE_SELL'
       }
-    ] // Empty array as there are no child items for Dashboard Own_dashboard
+    ]
   },
   {
     title: 'Manage Store and shops',
     url: '/dashboard/',
-    icon: 'dashboard',
+    icon: 'store',
     isActive: false,
     shortcut: ['d', 'd'],
     permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS',
-
     items: [
-      // {
-      //   title: 'Report',
-      //   url: '/dashboard/StoreUserDashboard',
-      //   icon: 'userPen',
-      //   shortcut: ['ps', 'ps'],
-      //   permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS'
-      // },
       {
         title: 'Orders',
         url: '/dashboard/StoreOrder',
-        // icon: 'userPen',
+        icon: 'clipboard',
         shortcut: ['so', 'so'],
         permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS'
       }
-
-      // {
-      //   title: 'Shop Stock',
-      //   url: '/dashboard/ShopStock', // Update to your actual subcategory page route UnitOfMeasure
-      //   icon: 'userPen',
-      //   shortcut: ['l', 'l'],
-      //   permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS'
-      // },
-
-      // {
-      //   title: 'Store Stock',
-      //   url: '/dashboard/StoreStock', // Update to your actual subcategory page route UnitOfMeasure purchase
-      //   icon: 'userPen',
-      //   shortcut: ['s', 's'],
-      //   permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS'
-      // }
-    ] // Empty  array as there are no child items for Dashboard Own_dashboard
+    ]
   },
   {
     title: 'Product Management',
-    url: '#', // Placeholder as there is no direct link for the parent
-    icon: 'billing',
+    url: '#',
+    icon: 'box',
     isActive: true,
     permission: 'VIEW_PRODUCT_DASHBOARD',
-
     items: [
       {
         title: 'Category',
-        url: '/dashboard/category', // Update to your actual category page route
-        // icon: 'userPen',
+        url: '/dashboard/category',
+        icon: 'category',
         shortcut: ['c', 'c'],
         permission: 'VIEW_ALL_CATEGORIES'
       },
       {
         title: 'Brand',
-        url: '/dashboard/brand', // Update to your actual category page route
-        // icon: 'userPen',
+        url: '/dashboard/brand',
+        icon: 'tags',
         shortcut: ['b', 'b'],
         permission: 'VIEW_ALL_CATEGORIES'
       },
       {
         title: 'Products',
-        url: '/dashboard/Products', // Update to your actual subcategory page route UnitOfMeasure ProductBatch
-        // icon: 'userPen',
+        url: '/dashboard/Products',
+        icon: 'box',
         shortcut: ['u', 'u'],
         permission: 'VIEW_PRODUCT_ALL'
       },
       {
         title: 'Purchase',
-        url: '/dashboard/purchase', // Update to your actual subcategory page route UnitOfMeasure  Transfer
-        // icon: 'userPen',
+        url: '/dashboard/purchase',
+        icon: 'shoppingCart',
         shortcut: ['P', 'P'],
         permission: 'VIEW_ALL_PURCHASES'
       },
       {
         title: 'Transfer',
-        url: '/dashboard/Transfer', // Update to your actual subcategory page route UnitOfMeasure
-        // icon: 'userPen',
+        url: '/dashboard/Transfer',
+        icon: 'transfer',
         shortcut: ['y', 'y'],
         permission: 'VIEW_ALL_TRANSFERS'
       },
       {
         title: 'Stock Correction',
-        url: '/dashboard/StockCorrection', // Update to your actual subcategory page route UnitOfMeasure
-        // icon: 'userPen',
+        url: '/dashboard/StockCorrection',
+        icon: 'adjustments',
         shortcut: ['s', 's'],
         permission: 'VIEW_ALL_STOCK_CORRECTIONS'
       }
@@ -187,30 +146,29 @@ export const navItems: NavItem[] = [
   },
   {
     title: 'User',
-    url: '#', // Placeholder as there is no direct link for the parent
-    icon: 'billing',
+    url: '#',
+    icon: 'users',
     isActive: true,
     permission: 'VIEW_Users_DASHBOARD',
-
     items: [
       {
         title: 'Employee',
         url: '/dashboard/employee',
-        icon: 'userPen',
+        icon: 'employee',
         shortcut: ['eb', 'eb'],
         permission: 'VIEW_ALL_EMPLOYEES'
       },
       {
         title: 'Customer',
         url: '/dashboard/customer',
-        icon: 'userPen',
+        icon: 'users',
         shortcut: ['b', 'b'],
         permission: 'VIEW_ALL_CUSTOMERS'
       },
       {
         title: 'Supplier',
         url: '/dashboard/supplier',
-        icon: 'userPen',
+        icon: 'truck',
         shortcut: ['l', 'l'],
         permission: 'VIEW_ALL_SUPPLIERS'
       }
@@ -218,29 +176,29 @@ export const navItems: NavItem[] = [
   },
   {
     title: 'System',
-    url: '#', // Placeholder as there is no direct link for the parent
-    icon: 'billing',
+    url: '#',
+    icon: 'settings',
     isActive: true,
     permission: 'VIEW_SYSTEM_DASHBOARD',
     items: [
       {
         title: 'Branch',
         url: '/dashboard/Branch',
-        // icon: 'userPen',
+        icon: 'building',
         shortcut: ['b', 'b'],
         permission: 'VIEW_ALL_BRANCHES'
       },
       {
         title: 'Shop',
         url: '/dashboard/Shop',
-        // icon: 'userPen',
+        icon: 'store',
         shortcut: ['h', 'h'],
         permission: 'VIEW_ALL_SHOPS'
       },
       {
         title: 'Store',
         url: '/dashboard/store',
-        // icon: 'userPen',
+        icon: 'estate',
         shortcut: ['sm', 'sm'],
         permission: 'VIEW_ALL_STORES'
       }
@@ -248,62 +206,46 @@ export const navItems: NavItem[] = [
   },
   {
     title: 'Account',
-    url: '#', // Placeholder as there is no direct link for the parent
-    icon: 'billing',
+    url: '#',
+    icon: 'user2',
     isActive: true,
-
     items: [
       {
         title: 'Profile',
         url: '/dashboard/profile',
-        // icon: 'userPen',
+        icon: 'user',
         shortcut: ['m', 'm']
       }
     ]
   },
   {
     title: 'Role and Permission',
-    url: '#', // Placeholder as there is no direct link for the parent
-    icon: 'billing',
+    url: '#',
+    icon: 'shield',
     isActive: true,
     permission: 'VIEW_ROLE_PERMISSION_DASHBOARD',
-
     items: [
       {
         title: 'Role',
         url: '/dashboard/Role',
-        // icon: 'userPen',
+        icon: 'shield',
         shortcut: ['ro', 'ro'],
         permission: 'VIEW_ALL_ROLES'
       },
       {
         title: 'Role Permission',
         url: '/dashboard/RolePermission',
-        // icon: 'userPen',
+        icon: 'key',
         shortcut: ['po', 'po'],
         permission: 'VIEW_ALL_ROLE_PERMISSIONS'
       }, 
       {
         title: 'Permission',
         url: '/dashboard/Permission',
-        // icon: 'userPen',
+        icon: 'key',
         shortcut: ['pr', 'pr'],
         permission: 'VIEW_ALL_PERMISSIONS'
-      },
-      //   {
-      //   title: 'SellProduct',
-      //   url: '/dashboard/SellProduct',
-      //   // icon: 'userPen',
-      //   shortcut: ['pr', 'pr'],
-      //   permission: 'VIEW_ALL_PERMISSIONS'
-      // },
-      //     {
-      //   title: 'Permis',
-      //   url: '/dashboard/missstlege',
-      //   // icon: 'userPen',
-      //   shortcut: ['pr', 'pr'],
-      //   permission: 'VIEW_ALL_PERMISSIONS'
-      // }
+      }
     ]
   }
 ];

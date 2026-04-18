@@ -35,7 +35,25 @@ import {
   IconBed,
   IconHome,
   IconBath,
-  IconAlertCircle
+  IconAlertCircle,
+  IconChartBar,
+  IconTrendingUp,
+  IconReceipt,
+  IconCash,
+  IconShoppingCart,
+  IconBox,
+  IconTruckDelivery,
+  IconClipboardList,
+  IconBuildingStore,
+  IconUsers,
+  IconShieldLock,
+  IconKey,
+  IconListDetails,
+  IconTags,
+  IconCategory,
+  IconAdjustmentsAlt,
+  IconArrowsRightLeft,
+  IconBuildingEstate,
 } from '@tabler/icons-react';
 
 export type Icon = React.ComponentType<IconProps>;
@@ -76,5 +94,25 @@ export const Icons = {
   bed: IconBed,
   home: IconHome,
   bath: IconBath,
-  alertCircle: IconAlertCircle
+  alertCircle: IconAlertCircle,
+  
+  // New icons for sidebar
+  chart: IconChartBar,
+  trendingUp: IconTrendingUp,
+  receipt: IconReceipt,
+  cash: IconCash,
+  shoppingCart: IconShoppingCart,
+  box: IconBox,
+  truck: IconTruckDelivery,
+  clipboard: IconClipboardList,
+  store: IconBuildingStore,
+  users: IconUsers,
+  shield: IconShieldLock,
+  key: IconKey,
+  list: IconListDetails,
+  tags: IconTags,
+  category: IconCategory,
+  adjustments: IconAdjustmentsAlt,
+  transfer: IconArrowsRightLeft,
+  estate: IconBuildingEstate,
 };
