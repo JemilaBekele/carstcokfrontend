@@ -133,168 +133,217 @@
 }
 
 /* ═══════════════════════════════════════════════════
-   Protected Route Splash Screen
+   Branded Splash Screen (shared by ProtectedRoute + Login)
    ═══════════════════════════════════════════════════ */
 
 :root {
-  --psplash-bg: #f5f6fa;
-  --psplash-glow: rgba(180, 145, 30, 0.08);
-  --psplash-glow-mid: rgba(180, 145, 30, 0.03);
-  --psplash-orbit-a: rgba(180, 145, 30, 0.18);
-  --psplash-orbit-b: rgba(180, 145, 30, 0.06);
-  --psplash-orbit-c: rgba(180, 145, 30, 0.10);
-  --psplash-logo: #B8962E;
-  --psplash-logo-shadow: rgba(180, 145, 30, 0.2);
-  --psplash-brand: #1a1a2e;
-  --psplash-message: rgba(0, 0, 0, 0.4);
-  --psplash-dot: rgba(180, 145, 30, 0.5);
-  --psplash-bar-bg: rgba(0, 0, 0, 0.04);
-  --psplash-bar: #C4A030;
+  --bsplash-bg: #f5f6fa;
+  --bsplash-glow: rgba(180, 145, 30, 0.10);
+  --bsplash-glow-mid: rgba(180, 145, 30, 0.04);
+  --bsplash-orbit-a: rgba(180, 145, 30, 0.22);
+  --bsplash-orbit-b: rgba(180, 145, 30, 0.08);
+  --bsplash-orbit-c: rgba(180, 145, 30, 0.12);
+  --bsplash-orbit-d: rgba(180, 145, 30, 0.04);
+  --bsplash-orbit-e: rgba(180, 145, 30, 0.06);
+  --bsplash-logo: #B8962E;
+  --bsplash-logo-shadow: rgba(180, 145, 30, 0.25);
+  --bsplash-brand: #1a1a2e;
+  --bsplash-message: rgba(0, 0, 0, 0.45);
+  --bsplash-dot: rgba(180, 145, 30, 0.55);
+  --bsplash-bar-bg: rgba(0, 0, 0, 0.05);
+  --bsplash-bar: #C4A030;
+  --bsplash-success: #16a34a;
+  --bsplash-success-shadow: rgba(22, 163, 74, 0.2);
+  --bsplash-success-dot: rgba(22, 163, 74, 0.5);
+  --bsplash-success-glow: rgba(22, 163, 74, 0.08);
+  --bsplash-success-glow-mid: rgba(22, 163, 74, 0.03);
+  --bsplash-success-orbit-a: rgba(22, 163, 74, 0.18);
+  --bsplash-success-orbit-b: rgba(22, 163, 74, 0.06);
+  --bsplash-success-orbit-c: rgba(22, 163, 74, 0.10);
+  --bsplash-success-orbit-d: rgba(22, 163, 74, 0.04);
+  --bsplash-success-orbit-e: rgba(22, 163, 74, 0.05);
+  --bsplash-success-bar: #16a34a;
 }
 
 .dark {
-  --psplash-bg: #0a0a0f;
-  --psplash-glow: rgba(212, 175, 55, 0.06);
-  --psplash-glow-mid: rgba(212, 175, 55, 0.02);
-  --psplash-orbit-a: rgba(212, 175, 55, 0.2);
-  --psplash-orbit-b: rgba(212, 175, 55, 0.06);
-  --psplash-orbit-c: rgba(212, 175, 55, 0.12);
-  --psplash-logo: #D4AF37;
-  --psplash-logo-shadow: rgba(212, 175, 55, 0.25);
-  --psplash-brand: #ffffff;
-  --psplash-message: rgba(255, 255, 255, 0.35);
-  --psplash-dot: rgba(212, 175, 55, 0.45);
-  --psplash-bar-bg: rgba(255, 255, 255, 0.03);
-  --psplash-bar: #D4AF37;
+  --bsplash-bg: #0a0a0f;
+  --bsplash-glow: rgba(212, 175, 55, 0.08);
+  --bsplash-glow-mid: rgba(212, 175, 55, 0.03);
+  --bsplash-orbit-a: rgba(212, 175, 55, 0.25);
+  --bsplash-orbit-b: rgba(212, 175, 55, 0.08);
+  --bsplash-orbit-c: rgba(212, 175, 55, 0.15);
+  --bsplash-orbit-d: rgba(212, 175, 55, 0.05);
+  --bsplash-orbit-e: rgba(212, 175, 55, 0.08);
+  --bsplash-logo: #D4AF37;
+  --bsplash-logo-shadow: rgba(212, 175, 55, 0.3);
+  --bsplash-brand: #ffffff;
+  --bsplash-message: rgba(255, 255, 255, 0.4);
+  --bsplash-dot: rgba(212, 175, 55, 0.5);
+  --bsplash-bar-bg: rgba(255, 255, 255, 0.04);
+  --bsplash-bar: #D4AF37;
+  --bsplash-success: #4ade80;
+  --bsplash-success-shadow: rgba(74, 222, 128, 0.3);
+  --bsplash-success-dot: rgba(74, 222, 128, 0.5);
+  --bsplash-success-glow: rgba(74, 222, 128, 0.06);
+  --bsplash-success-glow-mid: rgba(74, 222, 128, 0.02);
+  --bsplash-success-orbit-a: rgba(74, 222, 128, 0.2);
+  --bsplash-success-orbit-b: rgba(74, 222, 128, 0.06);
+  --bsplash-success-orbit-c: rgba(74, 222, 128, 0.12);
+  --bsplash-success-orbit-d: rgba(74, 222, 128, 0.04);
+  --bsplash-success-orbit-e: rgba(74, 222, 128, 0.06);
+  --bsplash-success-bar: #4ade80;
 }
 
-.protected-splash {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: var(--psplash-bg);
+.branded-splash {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: var(--bsplash-bg);
   z-index: 9999;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow: hidden;
-  animation: protectedFadeIn 0.4s ease-out;
+  animation: bsFadeIn 0.4s ease-out;
 }
+@keyframes bsFadeIn { from { opacity: 0 } to { opacity: 1 } }
 
-@keyframes protectedFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.protected-splash__glow {
-  position: absolute; top: 42%; left: 50%;
-  width: 500px; height: 500px;
+.branded-splash__glow {
+  position: absolute; top: 40%; left: 50%;
+  width: 550px; height: 550px;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, var(--psplash-glow) 0%, var(--psplash-glow-mid) 35%, transparent 60%);
+  background: radial-gradient(circle, var(--bsplash-glow) 0%, var(--bsplash-glow-mid) 30%, transparent 60%);
   pointer-events: none;
-  animation: protectedGlow 3s ease-in-out infinite;
+  animation: bsGlow 3s ease-in-out infinite;
+}
+@keyframes bsGlow {
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.12); }
 }
 
-@keyframes protectedGlow {
-  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
-  50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.1); }
-}
-
-.protected-splash__orbits {
+.branded-splash__orbits {
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -55%);
   pointer-events: none;
 }
-
-.protected-splash__orbit {
+.branded-splash__orbit {
   position: absolute; border-radius: 50%;
   border: 1px solid transparent;
   top: 50%; left: 50%;
+  animation: bsOrbit linear infinite;
 }
-
-.protected-splash__orbit--1 {
-  width: 140px; height: 140px; margin: -70px 0 0 -70px;
-  border-top-color: var(--psplash-orbit-a);
-  border-right-color: var(--psplash-orbit-b);
-  animation: protectedOrbit 3s linear infinite;
+.branded-splash__orbit--1 {
+  width: 160px; height: 160px; margin: -80px 0 0 -80px;
+  border-top-color: var(--bsplash-orbit-a);
+  border-right-color: var(--bsplash-orbit-b);
+  animation-duration: 3s;
 }
-
-.protected-splash__orbit--2 {
-  width: 200px; height: 200px; margin: -100px 0 0 -100px;
-  border-bottom-color: var(--psplash-orbit-c);
-  animation: protectedOrbit 5s linear infinite reverse;
+.branded-splash__orbit--2 {
+  width: 220px; height: 220px; margin: -110px 0 0 -110px;
+  border-bottom-color: var(--bsplash-orbit-c);
+  border-left-color: var(--bsplash-orbit-d);
+  animation-duration: 5s; animation-direction: reverse;
 }
+.branded-splash__orbit--3 {
+  width: 280px; height: 280px; margin: -140px 0 0 -140px;
+  border-top-color: var(--bsplash-orbit-e);
+  animation-duration: 8s;
+}
+@keyframes bsOrbit { to { transform: rotate(360deg); } }
 
-@keyframes protectedOrbit { to { transform: rotate(360deg); } }
-
-.protected-splash__logo {
+.branded-splash__logo {
   position: relative; z-index: 2;
-  width: 56px; height: 56px;
-  color: var(--psplash-logo);
-  animation: protectedPulse 2s ease-in-out infinite;
-  filter: drop-shadow(0 0 16px var(--psplash-logo-shadow));
+  width: 64px; height: 64px;
+  color: var(--bsplash-logo);
+  animation: bsLogoPulse 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 18px var(--bsplash-logo-shadow));
 }
-.protected-splash__logo svg { width: 100%; height: 100%; }
-
-@keyframes protectedPulse {
+.branded-splash__logo svg { width: 100%; height: 100%; }
+.branded-splash__logo--success {
+  animation: bsLogoSuccess 0.6s cubic-bezier(0.22,1,0.36,1) forwards;
+  color: var(--bsplash-success);
+  filter: drop-shadow(0 0 18px var(--bsplash-success-shadow));
+}
+.branded-splash__check {
+  stroke-dasharray: 32; stroke-dashoffset: 32;
+  animation: bsCheckDraw 0.5s ease-out 0.3s forwards;
+}
+@keyframes bsLogoPulse {
   0%, 100% { transform: scale(1); opacity: 0.85; }
   50%      { transform: scale(1.06); opacity: 1; }
 }
-
-.protected-splash__content {
-  position: relative; z-index: 2;
-  text-align: center; margin-top: 24px;
-  animation: protectedContentIn 0.5s ease-out 0.15s both;
+@keyframes bsLogoSuccess {
+  0%   { transform: scale(0.8); opacity: 0; }
+  60%  { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
 }
+@keyframes bsCheckDraw { to { stroke-dashoffset: 0; } }
 
-@keyframes protectedContentIn {
+.branded-splash__content {
+  position: relative; z-index: 2;
+  text-align: center; margin-top: 26px;
+  animation: bsContentIn 0.5s ease-out 0.15s both;
+}
+@keyframes bsContentIn {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-.protected-splash__brand {
-  font-size: 18px; font-weight: 600;
-  color: var(--psplash-brand);
+.branded-splash__brand {
+  font-size: 20px; font-weight: 600;
+  color: var(--bsplash-brand);
   margin: 0 0 6px; letter-spacing: 0.4px;
 }
-
-.protected-splash__message {
-  font-size: 13px;
-  color: var(--psplash-message);
-  margin: 0 0 14px;
+.branded-splash__message {
+  font-size: 13px; color: var(--bsplash-message);
+  margin: 0 0 14px; letter-spacing: 0.2px;
 }
 
-.protected-splash__dots {
-  display: flex; align-items: center; justify-content: center; gap: 5px;
+.branded-splash__dots {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
 }
-
-.protected-splash__dot {
+.branded-splash__dot {
   width: 5px; height: 5px; border-radius: 50%;
-  background: var(--psplash-dot);
-  animation: protectedDot 1.4s ease-in-out infinite;
+  background: var(--bsplash-dot);
+  animation: bsDot 1.4s ease-in-out infinite;
 }
-.protected-splash__dot:nth-child(2) { animation-delay: 0.16s; }
-.protected-splash__dot:nth-child(3) { animation-delay: 0.32s; }
-
-@keyframes protectedDot {
-  0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; }
+.branded-splash__dot:nth-child(2) { animation-delay: 0.16s; }
+.branded-splash__dot:nth-child(3) { animation-delay: 0.32s; }
+.branded-splash--success .branded-splash__dot {
+  background: var(--bsplash-success-dot);
+}
+@keyframes bsDot {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
   40%           { transform: scale(1.2); opacity: 1; }
 }
 
-.protected-splash__progress {
+.branded-splash__progress {
   position: absolute; bottom: 0; left: 0; right: 0;
-  height: 2px; background: var(--psplash-bar-bg); overflow: hidden;
+  height: 2px; background: var(--bsplash-bar-bg); overflow: hidden;
 }
-
-.protected-splash__bar {
+.branded-splash__bar {
   height: 100%; width: 35%;
-  background: linear-gradient(90deg, transparent, var(--psplash-bar), transparent);
-  animation: protectedBar 2s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, var(--bsplash-bar), transparent);
+  animation: bsBar 2s ease-in-out infinite;
   border-radius: 2px;
 }
-
-@keyframes protectedBar {
+.branded-splash__bar--fast {
+  background: linear-gradient(90deg, transparent, var(--bsplash-success-bar), transparent);
+  animation-duration: 1s;
+}
+@keyframes bsBar {
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(400%); }
+}
+
+.branded-splash--success .branded-splash__glow {
+  background: radial-gradient(circle, var(--bsplash-success-glow) 0%, var(--bsplash-success-glow-mid) 30%, transparent 60%);
+}
+.branded-splash--success .branded-splash__orbit--1 {
+  border-top-color: var(--bsplash-success-orbit-a);
+  border-right-color: var(--bsplash-success-orbit-b);
+}
+.branded-splash--success .branded-splash__orbit--2 {
+  border-bottom-color: var(--bsplash-success-orbit-c);
+  border-left-color: var(--bsplash-success-orbit-d);
+}
+.branded-splash--success .branded-splash__orbit--3 {
+  border-top-color: var(--bsplash-success-orbit-e);
 }
