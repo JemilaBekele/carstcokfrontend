@@ -9,10 +9,10 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { UserAvatarProfile } from '@/components/user-avatar-profile';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/auth.store';
 
 export function UserNav() {
-  const user = useAuthStore((state) => state.user);
+  const user = useAuthStore((s) => s.user);
 
   if (user) {
     return (

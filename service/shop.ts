@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 import { api } from './api';
 import { IShop } from '@/models/shop';
 import { GetParams } from './roleService';
@@ -33,18 +31,18 @@ export const getAllshop = async ({ page = 1, limit = 10 }: GetParams = {}) => {
   }
 };
 // Get all shops
-export const getShops = async (req?: IncomingMessage) => {
+export const getShops = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/shops`);
     return response.data.shops as IShop[];
   } catch (error) {
     throw error;
   }
 };
-export const getShopsall = async (req?: IncomingMessage) => {
+export const getShopsall = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/shops/get/all`);
 
     return response.data.shops as IShop[];
@@ -69,9 +67,9 @@ export const getShopsapi = async () => {
     throw error;
   }
 };
-export const getShopsBasedOnUser = async (req?: IncomingMessage) => {
+export const getShopsBasedOnUser = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/shops/based/user`);
     return response.data.shops as IShop[];
   } catch (error) {
@@ -80,9 +78,9 @@ export const getShopsBasedOnUser = async (req?: IncomingMessage) => {
 };
 
 // Get a shop by ID
-export const getShopById = async (id: string, req?: IncomingMessage) => {
+export const getShopById = async (id: string) => {
   try {
-    const axiosInstance = req ? axiosWithAuth(req) : api;
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/shops/${id}`);
     return response.data.shop as IShop;
   } catch (error) {
@@ -92,11 +90,10 @@ export const getShopById = async (id: string, req?: IncomingMessage) => {
 
 // Create a shop
 export const createShop = async (
-  data: any | FormData,
-  req?: IncomingMessage
+  data: any | FormData
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -113,11 +110,10 @@ export const createShop = async (
 // Update a shop
 export const updateShop = async (
   id: string,
-  data: Partial<IShop> | FormData,
-  req?: IncomingMessage
+  data: Partial<IShop> | FormData
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -132,9 +128,9 @@ export const updateShop = async (
 };
 
 // Delete a shop
-export const deleteShop = async (id: string, req?: IncomingMessage) => {
+export const deleteShop = async (id: string) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.delete(`/shops/${id}`);
     return response.data;
   } catch (error) {
@@ -148,11 +144,10 @@ export interface IBatchesResponse {
 
 export const getAvailableBatchesByProductAndShop = async (
   shopId: string,
-  productId: string,
-  req?: IncomingMessage
+  productId: string
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(
       `/shops/${shopId}/products/${productId}/batches`
     );
@@ -163,11 +158,10 @@ export const getAvailableBatchesByProductAndShop = async (
 };
 export const UsergetAvailableBatchesByProductAndShop = async (
   shopId: string,
-  productId: string,
-  req?: IncomingMessage
+  productId: string
 ): Promise<IBatchesResponse> => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(
       `/shops/${shopId}/products/${productId}/batches/user/based`
     );

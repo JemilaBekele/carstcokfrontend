@@ -6,7 +6,6 @@ import { searchParamsCache } from '@/lib/searchparams';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import BranchModal from '@/features/genralinfo/Branch/modal';
 import BranchListingPage from '@/features/genralinfo/Branch/listing';
@@ -29,7 +28,7 @@ export default async function BraPage(props: pageProps) {
   // const key = serialize({ ...searchParams });
 
   return (
-    <PagePermissionGuard requiredPermission={PERMISSIONS.BRANCH.VIEW_ALL.name}>
+    <PermissionGuard requiredPermission={PERMISSIONS.BRANCH.VIEW_ALL.name}>
       <PageContainer scrollable={false}>
         <div className='flex flex-1 flex-col space-y-4'>
           <div className='flex items-start justify-between'>
@@ -49,6 +48,6 @@ export default async function BraPage(props: pageProps) {
           </Suspense>
         </div>
       </PageContainer>
-    </PagePermissionGuard>
+    </PermissionGuard>
   );
 }

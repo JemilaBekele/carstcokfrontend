@@ -10,7 +10,6 @@ import Link from 'next/link';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import ItemTableAction from '@/features/genralinfo/Branch/tableaction';
 import ProductsListingPage from '@/features/Inventory/Products/listing';
@@ -28,7 +27,7 @@ export default async function SupplierPage({ searchParams }: PageProps) {
   searchParamsCache.parse(parsedParams);
 
   return (
-    <PagePermissionGuard requiredPermission={PERMISSIONS.PRODUCT.VIEW_ALL.name}>
+    <PermissionGuard requiredPermission={PERMISSIONS.PRODUCT.VIEW_ALL.name}>
       <PageContainer scrollable={true}>
         <div className='flex flex-1 flex-col space-y-4'>
           <div className='flex items-start justify-between'>
@@ -59,6 +58,6 @@ export default async function SupplierPage({ searchParams }: PageProps) {
           </Suspense>
         </div>
       </PageContainer>
-    </PagePermissionGuard>
+    </PermissionGuard>
   );
 }

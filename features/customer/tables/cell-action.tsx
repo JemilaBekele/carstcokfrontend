@@ -67,7 +67,7 @@ export const CustomerCellAction: React.FC<CustomerCellActionProps> = ({
         <DropdownMenuContent align='end'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-          <PermissionGuard
+          <PermissionGuard fallback="hide"
             requiredPermission={PERMISSIONS.CUSTOMER.UPDATE.name}
           >
             <DropdownMenuItem
@@ -77,7 +77,7 @@ export const CustomerCellAction: React.FC<CustomerCellActionProps> = ({
             </DropdownMenuItem>
           </PermissionGuard>
 
-          <PermissionGuard
+          <PermissionGuard fallback="hide"
             requiredPermission={PERMISSIONS.CUSTOMER.DELETE.name}
           >
             <DropdownMenuItem onClick={() => setOpen(true)}>

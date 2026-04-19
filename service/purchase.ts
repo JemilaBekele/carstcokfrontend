@@ -1,5 +1,3 @@
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 import { api } from './api';
 import { GetParams } from './roleService';
 import { IPurchase } from '@/models/purchase';
@@ -49,9 +47,9 @@ export const getAllPurchases = async (
 };
 
 // Get all purchases (simple version)
-export const getPurchases = async (req?: IncomingMessage) => {
+export const getPurchases = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/purchases`);
     return response.data.purchases as IPurchase[];
   } catch (error) {
@@ -60,18 +58,18 @@ export const getPurchases = async (req?: IncomingMessage) => {
 };
 
 // Get a purchase by ID
-export const getPurchaseById = async (id: string, req?: IncomingMessage) => {
+export const getPurchaseById = async (id: string) => {
   try {
-    const axiosInstance = req ? axiosWithAuth(req) : api;
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/purchases/${id}`);
     return response.data.purchase as IPurchase;
   } catch (error) {
     throw error;
   }
 };
-export const getPurchaseId = async (id: string, req?: IncomingMessage) => {
+export const getPurchaseId = async (id: string) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/purchases/${id}`);
     return response.data.purchase as IPurchase;
   } catch (error) {
@@ -79,11 +77,10 @@ export const getPurchaseId = async (id: string, req?: IncomingMessage) => {
   }
 };
 export const getStockCorrectionsByPurchaseId = async (
-  id: string,
-  req?: IncomingMessage
+  id: string
 ): Promise<IStockCorrection[]> => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(
       `/stock-corrections/purchase/${id}`
     );
@@ -94,11 +91,10 @@ export const getStockCorrectionsByPurchaseId = async (
 };
 // Get a purchase by invoice number
 export const getPurchaseByInvoiceNo = async (
-  invoiceNo: string,
-  req?: IncomingMessage
+  invoiceNo: string
 ) => {
   try {
-    const axiosInstance = req ? axiosWithAuth(req) : api;
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/purchases/invoice/${invoiceNo}`);
     return response.data.purchase as IPurchase;
   } catch (error) {
@@ -107,9 +103,9 @@ export const getPurchaseByInvoiceNo = async (
 };
 
 // Create a purchase
-export const createPurchase = async (data: any, req?: IncomingMessage) => {
+export const createPurchase = async (data: any) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.post(`/purchases`, data);
     return response.data;
   } catch (error) {
@@ -120,11 +116,10 @@ export const createPurchase = async (data: any, req?: IncomingMessage) => {
 // Update a purchase
 export const updatePurchase = async (
   id: string,
-  data: any,
-  req?: IncomingMessage
+  data: any
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.put(`/purchases/${id}`, data);
     return response.data;
   } catch (error) {
@@ -133,11 +128,10 @@ export const updatePurchase = async (
 };
 export const acceptPurchase = async (
   id: string,
-  paymentStatus: string,
-  req?: IncomingMessage
+  paymentStatus: string
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     // ✅ Send paymentStatus inside request body
     const response = await axiosInstance.put(`/purchases/accept/${id}`, {
@@ -151,9 +145,9 @@ export const acceptPurchase = async (
 };
 
 // Delete a purchase
-export const deletePurchase = async (id: string, req?: IncomingMessage) => {
+export const deletePurchase = async (id: string) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.delete(`/purchases/${id}`);
     return response.data;
   } catch (error) {

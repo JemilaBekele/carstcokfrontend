@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 import { api } from './api';
 import { TransferEntityType } from '@/models/transfer';
 
@@ -55,20 +53,19 @@ export const getAllProductBatches = async ({
 
 // ✅ Get product batch by ID
 export const getProductBatchById = async (
-  id: string,
-  req?: IncomingMessage
+  id: string
 ) => {
   try {
-    const axiosInstance = req ? axiosWithAuth(req) : api;
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/product-batches/${id}`);
     return response.data.batch as any;
   } catch (error) {
     throw error;
   }
 };
-export const getProductBatchId = async (id: string, req?: IncomingMessage) => {
+export const getProductBatchId = async (id: string) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/product-batches/${id}`);
     return response.data.batch as any;
   } catch (error) {
@@ -76,11 +73,10 @@ export const getProductBatchId = async (id: string, req?: IncomingMessage) => {
   }
 };
 export const getProductInfoByBatchId = async (
-  id: string,
-  req?: IncomingMessage
+  id: string
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(
       `/product-batches/product/${id}/info`
     );
@@ -93,11 +89,10 @@ export const getProductInfoByBatchId = async (
 // Add this function to your service layer
 export const getAvailableProductsBySource = async (
   sourceType: TransferEntityType,
-  sourceId: string,
-  req?: IncomingMessage
+  sourceId: string
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     let response;
     if (sourceType === TransferEntityType.STORE) {
@@ -125,11 +120,10 @@ export const getAvailableProductsBySource = async (
 
 // ✅ Create product batch
 export const createProductBatch = async (
-  data: Partial<any> | FormData,
-  req?: IncomingMessage
+  data: Partial<any> | FormData
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -146,11 +140,10 @@ export const createProductBatch = async (
 // ✅ Update product batch
 export const updateProductBatch = async (
   id: string,
-  data: Partial<any> | FormData,
-  req?: IncomingMessage
+  data: Partial<any> | FormData
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -172,11 +165,10 @@ export const updateShopStock = async (
   shopId: string,
   batchId: string,
   quantity: number,
-  unitOfMeasureId?: string | null,
-  req?: IncomingMessage
+  unitOfMeasureId?: string | null
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const response = await axiosInstance.put(
       `/update/shops/${shopId}/batches/${batchId}/stock`,
@@ -191,9 +183,9 @@ export const updateShopStock = async (
   }
 };
 // ✅ Delete product batch
-export const deleteProductBatch = async (id: string, req?: IncomingMessage) => {
+export const deleteProductBatch = async (id: string) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.delete(`/product-batches/${id}`);
     return response.data;
   } catch (error) {

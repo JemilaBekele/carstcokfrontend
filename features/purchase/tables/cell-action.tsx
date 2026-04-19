@@ -66,7 +66,7 @@ export const PurchaseCellAction: React.FC<CellActionProps> = ({ data }) => {
         <DropdownMenuContent align='end'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           {data.paymentStatus !== 'APPROVED' && (
-            <PermissionGuard
+            <PermissionGuard fallback="hide"
               requiredPermission={PERMISSIONS.PURCHASE.UPDATE.name}
             >
               <DropdownMenuItem
@@ -85,7 +85,7 @@ export const PurchaseCellAction: React.FC<CellActionProps> = ({ data }) => {
             <Edit className='mr-2 h-4 w-4' /> View
           </DropdownMenuItem>
           {data.paymentStatus === 'APPROVED' && (
-            <PermissionGuard
+            <PermissionGuard fallback="hide"
               requiredPermission={PERMISSIONS.STOCK_CORRECTION.CREATE.name}
             >
               <DropdownMenuItem
@@ -100,7 +100,7 @@ export const PurchaseCellAction: React.FC<CellActionProps> = ({ data }) => {
             </PermissionGuard>
           )}
           {data.paymentStatus !== 'APPROVED' && (
-            <PermissionGuard
+            <PermissionGuard fallback="hide"
               requiredPermission={PERMISSIONS.PURCHASE.DELETE.name}
             >
               <DropdownMenuItem onClick={() => setOpen(true)}>

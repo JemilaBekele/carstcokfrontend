@@ -14,9 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Edit, Store, LogOut } from 'lucide-react';
-import { usePermissionStore } from '@/stores/auth.store';
-import {Imployee} from '@/models/employee';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/auth.store';
+import { Imployee } from '@/models/employee';
 import { logout } from '@/service/authApi';
 
 interface Shop {
@@ -38,7 +37,7 @@ interface Store {
 
 export default function ProfileViewPage() {
   const authUser = useAuthStore((state) => state.user);
-  const hydrated = useAuthStore((state) => state.hydrated);
+  const hydrated = useAuthStore((state) => state._hydrated);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const setAuthUser = useAuthStore((state) => state.setUser);
   const [profile, setProfile] = useState<Imployee | null>(null);
@@ -61,7 +60,7 @@ export default function ProfileViewPage() {
   const [updating, setUpdating] = useState(false);
   
   // Get store methods
-  const isInitialized = usePermissionStore((state) => state._isInitialized);
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -293,7 +292,7 @@ export default function ProfileViewPage() {
   }
 
   // Handle case when profile data is not available
-  if (!profile || !isInitialized) {
+  if (!profile) {
     return (
       <div className='flex h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900'>
         <div className='max-w-md rounded-lg bg-white p-8 text-center shadow-md dark:bg-gray-800'>

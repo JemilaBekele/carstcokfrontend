@@ -1,6 +1,6 @@
 import { AxiosError } from "axios";
 import api from "./api";
-import { tokenService } from "./tokenService";
+import { useAuthStore } from "@/stores/auth.store";
 import { clearClientAuth, normalizeAuthUser } from "./authSession";
 import type { BackendAuthUser } from "@/types/auth";
 
@@ -19,12 +19,16 @@ type ProfileResponse = {
 export const login = async (email: string, password: string) => {
   const response = await api.post<LoginResponse>("/login", { email, password });
 
-  tokenService.set({
+  const user = normalizeAuthUser(response.data.user);
+  const tokens = {
     accessToken: response.data.tokens.access.token,
     refreshToken: response.data.tokens.refresh.token,
-  });
+  };
 
-  return normalizeAuthUser(response.data.user);
+  // Store everything in the unified store
+  useAuthStore.getState().setAuth(user, tokens);
+
+  return user;
 };
 
 export const getProfile = async () => {

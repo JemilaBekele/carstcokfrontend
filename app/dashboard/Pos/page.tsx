@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import FormCardSkeleton from '@/components/form-card-skeleton';
 import PageContainer from '@/components/layout/page-container';
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
+import { PermissionGuard } from '@/components/PermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import { ProductSearch } from '@/features/Shop/list';
 import { getCategories } from '@/service/Category';
@@ -60,7 +60,7 @@ export default function Page() {
   }
 
   return (
-    <PagePermissionGuard requiredPermission={PERMISSIONS.SELL.CREATE.name}>
+    <PermissionGuard requiredPermission={PERMISSIONS.SELL.CREATE.name}>
       <PageContainer scrollable>
         <div className='flex-1 space-y-4'>
           <ProductSearch
@@ -73,6 +73,6 @@ export default function Page() {
           />
         </div>
       </PageContainer>
-    </PagePermissionGuard>
+    </PermissionGuard>
   );
 }

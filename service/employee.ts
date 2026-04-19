@@ -3,8 +3,6 @@
 
 import { IEmployee } from '@/models/employee';
 import { api } from './api';
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 
 export interface GetParams {
   page?: number;
@@ -54,9 +52,9 @@ export const getAllEmployees = async ({
   }
 };
 
-export const getAllEmploy = async (req?: IncomingMessage) => {
+export const getAllEmploy = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/users`);
     return response.data.users;
   } catch (error) {
@@ -71,9 +69,9 @@ export const getAllEmployapi = async () => {
     throw error;
   }
 };
-export const getUserProfile = async (req?: IncomingMessage) => {
+export const getUserProfile = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/user/profile/view`);
     return response.data;
   } catch (error) {
@@ -83,11 +81,10 @@ export const getUserProfile = async (req?: IncomingMessage) => {
 export const changePassword = async (
   userId: string,
   currentPassword: string,
-  newPassword: string,
-  req?: IncomingMessage
+  newPassword: string
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.put(
       `/user/${userId}/change-password`,
       {
@@ -102,11 +99,10 @@ export const changePassword = async (
 };
 export const resetUserPassword = async (
   userId: string,
-  newPassword: string,
-  req?: IncomingMessage
+  newPassword: string
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.put(`/user/reset-password/${userId}`, {
       newPassword
     });
@@ -116,27 +112,27 @@ export const resetUserPassword = async (
   }
 };
 
-export const getAlldep = async (req?: IncomingMessage) => {
+export const getAlldep = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/user/assignd/employee`);
     return response.data.users;
   } catch (error) {
     throw error;
   }
 };
-export const fetchUserInvoices = async (req?: IncomingMessage) => {
+export const fetchUserInvoices = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get('/invoices/fetch/userinvoice');
     return response.data.invoices;
   } catch (error) {
     throw error;
   }
 };
-export const getAllTen = async (req?: IncomingMessage) => {
+export const getAllTen = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/user/roletentant`);
     return response.data.users;
   } catch (error) {
@@ -210,11 +206,10 @@ export const getEmployeeById = async (id: string | number) => {
 };
 
 export const getEmployeeId = async (
-  id: string | number,
-  req?: IncomingMessage
+  id: string | number
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     // Send `id` as a query parameter
     const response = await axiosInstance.get(`/user/${id}`);
     return response.data;
@@ -224,11 +219,10 @@ export const getEmployeeId = async (
 };
 
 export const createEmployee = async (
-  employeeData: any,
-  req?: IncomingMessage
+  employeeData: any
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.post('/register', employeeData);
     return response.data;
   } catch (error) {
@@ -238,11 +232,10 @@ export const createEmployee = async (
 
 export const updateEmployee = async (
   id: string,
-  formData: any,
-  req?: IncomingMessage
+  formData: any
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.put(`/users/${id}`, formData);
     return response;
   } catch (error) {
@@ -251,14 +244,13 @@ export const updateEmployee = async (
 };
 
 export const deleteUser = async (
-  id: string | number,
-  req?: IncomingMessage
+  id: string | number
 ) => {
   if (!id) {
     throw new Error('Service ID is required');
   }
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.delete(`/users/${id}`);
     return response;
   } catch (error) {

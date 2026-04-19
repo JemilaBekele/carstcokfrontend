@@ -7,7 +7,6 @@ import { searchParamsCache } from '@/lib/searchparams';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 
 import ItemTableAction from '@/features/genralinfo/Branch/tableaction';
@@ -32,7 +31,7 @@ export default async function StorePage(props: pageProps) {
   // const key = serialize({ ...searchParams });
 
   return (
-    <PagePermissionGuard requiredPermission={PERMISSIONS.STORE.VIEW_ALL.name}>
+    <PermissionGuard requiredPermission={PERMISSIONS.STORE.VIEW_ALL.name}>
       <PageContainer scrollable={false}>
         <div className='flex flex-1 flex-col space-y-4'>
           <div className='flex items-start justify-between'>
@@ -55,6 +54,6 @@ export default async function StorePage(props: pageProps) {
           </Suspense>
         </div>
       </PageContainer>
-    </PagePermissionGuard>
+    </PermissionGuard>
   );
 }

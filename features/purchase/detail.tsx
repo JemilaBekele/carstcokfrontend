@@ -167,7 +167,7 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
             </CardTitle>
           </CardHeader>
           <CardContent className='p-4 pt-0 md:p-6 md:pt-0'>
-            <PermissionGuard
+            <PermissionGuard fallback="hide"
               requiredPermission={PERMISSIONS.PURCHASE.ACCEPT.name}
             >
               <div className='flex flex-col items-start gap-3 sm:flex-row sm:items-center'>

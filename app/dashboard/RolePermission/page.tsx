@@ -11,7 +11,6 @@ import Link from 'next/link';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import ItemTableAction from '@/features/genralinfo/Branch/tableaction';
 export const metadata = {
@@ -31,7 +30,7 @@ export default async function RolePermissionPage(props: pageProps) {
   // const key = serialize({ ...searchParams });
 
   return (
-    <PagePermissionGuard requiredPermission={PERMISSIONS.ROLE_PERMISSION.VIEW_ALL.name}>
+    <PermissionGuard requiredPermission={PERMISSIONS.ROLE_PERMISSION.VIEW_ALL.name}>
       <PageContainer scrollable={false}>
         <div className='flex flex-1 flex-col space-y-4'>
           <div className='flex items-start justify-between gap-2'>
@@ -64,6 +63,6 @@ export default async function RolePermissionPage(props: pageProps) {
           </Suspense>
         </div>
       </PageContainer>
-    </PagePermissionGuard>
+    </PermissionGuard>
   );
 }

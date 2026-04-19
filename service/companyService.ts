@@ -1,12 +1,10 @@
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 import { api } from './api';
 import { ICompany } from '@/models/employee';
 
 // Get all companies
-export const getCompanies = async (req?: IncomingMessage) => {
+export const getCompanies = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/companies`);
     return response.data.companies as ICompany[];
   } catch (error) {
@@ -27,11 +25,10 @@ export const getCompanyById = async (id: string) => {
 // Create a company
 // Create a company
 export const createCompany = async (
-  data: ICompany | FormData,
-  req?: IncomingMessage
+  data: ICompany | FormData
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     // Check if data is FormData
     const config =
@@ -49,11 +46,10 @@ export const createCompany = async (
 // Update a company
 export const updateCompany = async (
   id: string,
-  data: Partial<ICompany> | FormData,
-  req?: IncomingMessage
+  data: Partial<ICompany> | FormData
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     // Check if data is FormData
     const config =
@@ -69,9 +65,9 @@ export const updateCompany = async (
 };
 
 // Delete a company
-export const deleteCompany = async (id: string, req?: IncomingMessage) => {
+export const deleteCompany = async (id: string) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.delete(`/companies/${id}`);
     return response.data;
   } catch (error) {

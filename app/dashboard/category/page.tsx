@@ -8,7 +8,6 @@ import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import CategoryModal from '@/features/Inventory/catagory/view-page';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import ItemTableAction from '@/features/genralinfo/Branch/tableaction';
 
@@ -25,7 +24,7 @@ export default async function SupplierPage({ searchParams }: PageProps) {
   searchParamsCache.parse(parsedParams);
 
   return (
-    <PagePermissionGuard requiredPermission={PERMISSIONS.CATEGORY.VIEW_ALL.name}>
+    <PermissionGuard requiredPermission={PERMISSIONS.CATEGORY.VIEW_ALL.name}>
       <PageContainer scrollable={false}>
         <div className='flex flex-1 flex-col space-y-4'>
           <div className='flex items-start justify-between'>
@@ -49,6 +48,6 @@ export default async function SupplierPage({ searchParams }: PageProps) {
           </Suspense>
         </div>
       </PageContainer>
-    </PagePermissionGuard>
+    </PermissionGuard>
   );
 }

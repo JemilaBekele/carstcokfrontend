@@ -1,7 +1,5 @@
 /* eslint-disable import/no-unresolved */
 import { api } from './api';
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 import { ISupplier } from '@/models/supplier';
 import { GetParams } from './roleService';
 
@@ -35,9 +33,9 @@ export const getAllSuppliers = async ({
   }
 };
 
-export const getSupplier = async (req?: IncomingMessage) => {
+export const getSupplier = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const response = await axiosInstance.get(`/suppliers`);
     return response.data.suppliers;
@@ -55,11 +53,10 @@ export const getSupplierById = async (id: string | number) => {
 };
 
 export const createSupplier = async (
-  supplierData: ISupplier,
-  req?: IncomingMessage
+  supplierData: ISupplier
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.post('/suppliers', supplierData);
     return response.data;
   } catch (error) {
@@ -69,11 +66,10 @@ export const createSupplier = async (
 
 export const updateSupplier = async (
   id: string,
-  updatedData: Partial<ISupplier>,
-  req?: IncomingMessage
+  updatedData: Partial<ISupplier>
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.put(`/suppliers/${id}`, updatedData);
     return response.data;
   } catch (error) {
@@ -82,11 +78,10 @@ export const updateSupplier = async (
 };
 
 export const deleteSupplier = async (
-  id: string | number,
-  req?: IncomingMessage
+  id: string | number
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.delete(`/suppliers/${id}`);
     return response.data;
   } catch (error) {

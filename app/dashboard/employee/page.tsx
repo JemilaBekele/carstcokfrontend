@@ -12,7 +12,6 @@ import Link from 'next/link';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 export const metadata = {
   title: 'Dashboard: Employee'
@@ -31,12 +30,12 @@ export default async function EmployeePage(props: pageProps) {
   // const key = serialize({ ...searchParams });
 
   return (
-    <PagePermissionGuard requiredPermission={PERMISSIONS.Employee.VIEW_ALL.name}>
+    <PermissionGuard requiredPermission={PERMISSIONS.EMPLOYEE.VIEW_ALL.name}>
       <PageContainer scrollable={false}>
         <div className='flex flex-1 flex-col space-y-4'>
           <div className='flex items-start justify-between'>
             <Heading title='Employee' description='Manage Employee ' />
-            <PermissionGuard requiredPermission={PERMISSIONS.Employee.CREATE.name}>
+            <PermissionGuard requiredPermission={PERMISSIONS.EMPLOYEE.CREATE.name}>
               <Link
                 href='/dashboard/employee/new'
                 className={cn(buttonVariants(), 'text-xs md:text-sm')}
@@ -56,6 +55,6 @@ export default async function EmployeePage(props: pageProps) {
           </Suspense>
         </div>
       </PageContainer>
-    </PagePermissionGuard>
+    </PermissionGuard>
   );
 }

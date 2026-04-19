@@ -1,20 +1,18 @@
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
+import { api } from './api';
 
 export const InventoryDashboardApi = {
   // 📊 Get comprehensive inventory dashboard data
-  getDashboard: async (req?: IncomingMessage) => {
-    const axiosInstance = axiosWithAuth(req);
+  getDashboard: async () => {
+    const axiosInstance = api;
     const response = await axiosInstance.get('/inventory-dashboard/dashboard');
     return response.data;
   },
 
   // ⏳ Get batch expiration details
   getExpiringBatches: async (
-    options?: { withinDays?: number },
-    req?: IncomingMessage
+    options?: { withinDays?: number }
   ) => {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const query = new URLSearchParams();
 
     if (options?.withinDays) {
@@ -30,8 +28,8 @@ export const InventoryDashboardApi = {
   },
 
   // 🏬 Get stock summary by location (stores + shops)
-  getStockSummaryByLocation: async (req?: IncomingMessage) => {
-    const axiosInstance = axiosWithAuth(req);
+  getStockSummaryByLocation: async () => {
+    const axiosInstance = api;
     const response = await axiosInstance.get(
       '/inventory-dashboard/location-summary'
     );

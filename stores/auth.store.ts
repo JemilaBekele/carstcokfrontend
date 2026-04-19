@@ -1,146 +1,164 @@
 // stores/auth.store.ts
+// Unified auth store: user + tokens + permissions (persisted)
 import { create } from 'zustand';
-import { persist, PersistStorage } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import type { AuthUser } from '@/types/auth';
 
-interface PermissionState {
+/* ── Types ─────────────────────────────────────── */
+
+type Tokens = {
+  accessToken: string;
+  refreshToken: string;
+};
+
+interface AuthState {
+  // State
+  user: AuthUser | null;
+  tokens: Tokens | null;
   permissions: string[];
-  _hasHydrated: boolean;
-  _isInitialized: boolean; // Track if initialized from server
+  _hydrated: boolean;
+
+  // Derived
+  isAuthenticated: boolean;
+
+  // Actions
+  setAuth: (user: AuthUser, tokens: Tokens) => void;
+  setUser: (user: AuthUser) => void;
+  setTokens: (tokens: Tokens) => void;
   setPermissions: (permissions: string[]) => void;
-  clearPermissions: () => void;
+  clearAuth: () => void;
+  setHydrated: (state: boolean) => void;
+
+  // Permission helpers
   hasPermission: (permission: string) => boolean;
   hasAnyPermission: (permissions: string[]) => boolean;
   hasAllPermissions: (permissions: string[]) => boolean;
-  initializeFromSession: (sessionPermissions: string[]) => void;
-  setHasHydrated: (state: boolean) => void;
-  setIsInitialized: (state: boolean) => void;
 }
 
-// Custom storage to handle SSR/CSR mismatch
-const storage: PersistStorage<PermissionState> = {
-  getItem: (name) => {
-    if (typeof window === 'undefined') return null;
-    
-    try {
-      const item = localStorage.getItem(name);
-      return item ? JSON.parse(item) : null;
-    } catch (error) {
-      console.error('Error reading from localStorage:', error);
-      return null;
-    }
-  },
-  setItem: (name, value) => {
-    if (typeof window === 'undefined') return;
-    
-    try {
-      localStorage.setItem(name, JSON.stringify(value));
-    } catch (error) {
-      console.error('Error writing to localStorage:', error);
-    }
-  },
-  removeItem: (name) => {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(name);
-  }
-};
+/* ── Store ──────────────────────────────────────── */
 
-export const usePermissionStore = create<PermissionState>()(
+export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
+      // Initial state
+      user: null,
+      tokens: null,
       permissions: [],
-      _hasHydrated: false,
-      _isInitialized: false,
-      
+      _hydrated: false,
+      isAuthenticated: false,
+
+      // Full login — sets everything in one call
+      setAuth: (user, tokens) => {
+        const permissions = Array.isArray(user.permissions)
+          ? user.permissions
+          : [];
+        set({
+          user,
+          tokens,
+          permissions,
+          isAuthenticated: true,
+        });
+      },
+
+      // Update user only (e.g. profile refresh)
+      setUser: (user) => {
+        const permissions = Array.isArray(user.permissions)
+          ? user.permissions
+          : [];
+        set({
+          user,
+          permissions,
+          isAuthenticated: true,
+        });
+      },
+
+      // Update tokens only (e.g. after refresh)
+      setTokens: (tokens) => {
+        set({ tokens });
+      },
+
+      // Overwrite permissions directly
       setPermissions: (permissions) => {
-        set({ permissions, _isInitialized: true });
+        set({ permissions: Array.isArray(permissions) ? permissions : [] });
       },
-      
-      clearPermissions: () => {
-        set({ permissions: [], _isInitialized: false });
+
+      // Full logout — clears everything
+      clearAuth: () => {
+        set({
+          user: null,
+          tokens: null,
+          permissions: [],
+          isAuthenticated: false,
+        });
       },
-      
+
+      // Hydration flag (set by persist middleware)
+      setHydrated: (state) => {
+        set({ _hydrated: state });
+      },
+
+      // Permission check helpers
       hasPermission: (permission) => {
-        // Wait for both hydration and initialization
-        if (!get()._hasHydrated || !get()._isInitialized) return false;
         return get().permissions.includes(permission);
       },
-      
-      hasAnyPermission: (permissions) => {
-        if (!get()._hasHydrated || !get()._isInitialized) return false;
-        return permissions.some((perm) =>
-          get().permissions.includes(perm)
-        );
+
+      hasAnyPermission: (perms) => {
+        const current = get().permissions;
+        return perms.some((p) => current.includes(p));
       },
-      
-      hasAllPermissions: (permissions) => {
-        if (!get()._hasHydrated || !get()._isInitialized) return false;
-        return permissions.every((perm) =>
-          get().permissions.includes(perm)
-        );
+
+      hasAllPermissions: (perms) => {
+        const current = get().permissions;
+        return perms.every((p) => current.includes(p));
       },
-      
-      initializeFromSession: (sessionPermissions) => {
-        if (sessionPermissions && sessionPermissions.length > 0) {
-          const current = get().permissions;
-          if (JSON.stringify(current) !== JSON.stringify(sessionPermissions)) {
-            set({ 
-              permissions: sessionPermissions,
-              _isInitialized: true 
-            });
-          }
-        }
-      },
-      
-      setHasHydrated: (state) => {
-        set({ _hasHydrated: state });
-      },
-      
-      setIsInitialized: (state) => {
-        set({ _isInitialized: state });
-      }
     }),
     {
-      name: 'permission-storage',
-      storage,
+      name: 'auth-storage',
+      storage: createJSONStorage(() => {
+        // SSR-safe — return a no-op storage on the server
+        if (typeof window === 'undefined') {
+          return {
+            getItem: () => null,
+            setItem: () => {},
+            removeItem: () => {},
+          };
+        }
+        return localStorage;
+      }),
+      // Only persist these fields
+      partialize: (state) => ({
+        user: state.user,
+        tokens: state.tokens,
+        permissions: state.permissions,
+        isAuthenticated: state.isAuthenticated,
+      }),
       onRehydrateStorage: () => {
         return (state) => {
           if (state) {
-            // Mark as hydrated first
-            state.setHasHydrated(true);
-            
-            // Reset initialization flag on rehydration
-            // This prevents using stale permissions from localStorage
-            state.setIsInitialized(false);
+            state.setHydrated(true);
           }
         };
-      }
+      },
     }
   )
 );
 
-// Hook to check if store is fully ready
-export const useStoreHydration = () => {
-  return usePermissionStore((state) => state._hasHydrated);
+/* ── Convenience hooks ─────────────────────────── */
+
+/** True when Zustand has finished reading localStorage */
+export const useStoreHydrated = () =>
+  useAuthStore((s) => s._hydrated);
+
+/** True when hydrated AND user is present */
+export const useAuthReady = () => {
+  const hydrated = useAuthStore((s) => s._hydrated);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  return hydrated && isAuthenticated;
 };
 
-// Hook to check if permissions are fully initialized
-export const usePermissionsReady = () => {
-  const hasHydrated = usePermissionStore((state) => state._hasHydrated);
-  const isInitialized = usePermissionStore((state) => state._isInitialized);
-  const permissions = usePermissionStore((state) => state.permissions);
-  
-  return hasHydrated && isInitialized;
-};
-
-// Hook to get safe permissions (empty array if not ready)
+/** Permission array (empty if not ready) */
 export const useSafePermissions = () => {
-  const hasHydrated = usePermissionStore((state) => state._hasHydrated);
-  const isInitialized = usePermissionStore((state) => state._isInitialized);
-  const permissions = usePermissionStore((state) => state.permissions);
-  
-  if (!hasHydrated || !isInitialized) {
-    return [];
-  }
-  
-  return permissions;
+  const hydrated = useAuthStore((s) => s._hydrated);
+  const permissions = useAuthStore((s) => s.permissions);
+  return hydrated ? permissions : [];
 };

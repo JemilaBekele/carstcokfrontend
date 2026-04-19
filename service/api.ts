@@ -3,8 +3,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import { apiConfig } from "@/config/apiConfig";
-import { tokenService } from "./tokenService";
-import { clearClientAuth, redirectToLogin } from "./authSession";
+import { useAuthStore } from "@/stores/auth.store";
 
 type RetryConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
@@ -22,26 +21,26 @@ const api = axios.create({
   timeout: apiConfig.TIMEOUT_MS,
 });
 
+// Separate instance for refresh calls to avoid interceptor loops
 const refreshApi = axios.create({
   baseURL: apiConfig.BASE_URL,
   timeout: apiConfig.TIMEOUT_MS,
 });
 
+// Single-flight refresh promise to prevent concurrent refresh calls
 let refreshPromise: Promise<{
   accessToken: string;
   refreshToken: string;
 }> | null = null;
 
 const shouldSkipRefresh = (url?: string) => {
-  if (!url) {
-    return false;
-  }
-
+  if (!url) return false;
   return url.includes("/login") || url.includes("/auth/refresh-tokens");
 };
 
+// ── Request interceptor: attach access token ──
 api.interceptors.request.use((config) => {
-  const tokens = tokenService.get();
+  const tokens = useAuthStore.getState().tokens;
 
   if (tokens?.accessToken) {
     config.headers = config.headers || {};
@@ -51,6 +50,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// ── Response interceptor: 401 → refresh → retry ──
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -68,10 +68,10 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const tokens = tokenService.get();
+    const tokens = useAuthStore.getState().tokens;
 
     if (!tokens?.refreshToken) {
-      clearClientAuth();
+      useAuthStore.getState().clearAuth();
       redirectToLogin();
       return Promise.reject(error);
     }
@@ -90,7 +90,8 @@ api.interceptors.response.use(
               refreshToken: response.data.tokens.refresh.token,
             };
 
-            tokenService.set(refreshedTokens);
+            // Update tokens in the unified store
+            useAuthStore.getState().setTokens(refreshedTokens);
             return refreshedTokens;
           })
           .finally(() => {
@@ -104,12 +105,22 @@ api.interceptors.response.use(
 
       return api(originalRequest);
     } catch (refreshError) {
-      clearClientAuth();
+      useAuthStore.getState().clearAuth();
       redirectToLogin();
       return Promise.reject(refreshError);
     }
   },
 );
+
+/** Redirect to login (browser only) */
+function redirectToLogin() {
+  if (typeof window === "undefined") return;
+  const callbackUrl = `${window.location.pathname}${window.location.search}`;
+  const loginUrl = callbackUrl.startsWith("/login")
+    ? "/login"
+    : `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+  window.location.assign(loginUrl);
+}
 
 export const apiUrl = apiConfig.BASE_URL;
 export { api };

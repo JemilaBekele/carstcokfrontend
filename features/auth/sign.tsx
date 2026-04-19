@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AxiosError } from "axios";
 import { login } from "@/service/authApi";
-import { clearClientAuth, setAuthenticatedUser } from "@/service/authSession";
-import { useAuthStore } from "@/stores/authStore";
+import { clearClientAuth } from "@/service/authSession";
+import { useAuthStore } from "@/stores/auth.store";
 
 /* ─── Ambient Particle Component ────────────────────────────── */
 function AmbientParticle({ delay, size, x }: { delay: number; size: number; x: number }) {
@@ -305,7 +305,7 @@ export default function SignInViewPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard/overview";
-  const { hydrated, isAuthenticated } = useAuthStore();
+  const { _hydrated: hydrated, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 100);
@@ -339,10 +339,9 @@ export default function SignInViewPage() {
     setLoading(true);
 
     try {
-      const user = await login(email, password);
-      setAuthenticatedUser(user);
-      router.replace(callbackUrl);
-      router.refresh();
+      // login() stores user + tokens in the unified store
+      // The useEffect above will handle redirect when isAuthenticated becomes true
+      await login(email, password);
     } catch (err) {
       console.error("Login error:", err);
       if (err instanceof AxiosError) {

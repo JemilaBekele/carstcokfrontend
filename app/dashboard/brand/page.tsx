@@ -6,7 +6,6 @@ import { searchParamsCache } from '@/lib/searchparams';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import UserTableAction from '@/features/Employee/components/employee-table-action';
 import BrandsListingPage from '@/features/Inventory/brand/listing';
@@ -25,7 +24,7 @@ export default async function SupplierPage({ searchParams }: PageProps) {
   searchParamsCache.parse(parsedParams);
 
   return (
-    <PagePermissionGuard requiredPermission={PERMISSIONS.CATEGORY.VIEW_ALL.name}>
+    <PermissionGuard requiredPermission={PERMISSIONS.CATEGORY.VIEW_ALL.name}>
       <PageContainer scrollable={false}>
         <div className='flex flex-col flex-1 space-y-4'>
           <div className='flex items-start justify-between'>
@@ -49,6 +48,6 @@ export default async function SupplierPage({ searchParams }: PageProps) {
           </Suspense>
         </div>
       </PageContainer>
-    </PagePermissionGuard>
+    </PermissionGuard>
   );
 }

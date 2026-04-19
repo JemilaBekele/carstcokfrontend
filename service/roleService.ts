@@ -1,5 +1,3 @@
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 import { api } from './api';
 
 // Role type
@@ -30,9 +28,9 @@ export interface IRolePermission {
 // Role CRUD Operations
 // ============================
 
-export const createRole = async (data: IRole, req?: IncomingMessage) => {
-  const axios = axiosWithAuth(req);
-  const res = await axios.post('/roles', data);
+export const createRole = async (data: IRole) => {
+  const axiosInstance = api;
+  const res = await axiosInstance.post('/roles', data);
   return res.data;
 };
 export interface GetParams {
@@ -83,37 +81,36 @@ export const getAllRoles = async ({
   }
 };
 
-export const getRoleall = async (req?: IncomingMessage) => {
-  const axios = axiosWithAuth(req);
-  const res = await axios.get(`/roles`);
+export const getRoleall = async () => {
+  const axiosInstance = api;
+  const res = await axiosInstance.get(`/roles`);
   return res.data.roles;
 };
 
-export const getRoleById = async (id: string, req?: IncomingMessage) => {
-  const axios = axiosWithAuth(req);
-  const res = await axios.get(`/roles/${id}`);
+export const getRoleById = async (id: string) => {
+  const axiosInstance = api;
+  const res = await axiosInstance.get(`/roles/${id}`);
   return res.data;
 };
 
-export const getRoleByName = async (name: string, req?: IncomingMessage) => {
-  const axios = req ? axiosWithAuth(req) : api;
-  const res = await axios.get(`/roles/name/${name}`);
+export const getRoleByName = async (name: string) => {
+  const axiosInstance = api;
+  const res = await axiosInstance.get(`/roles/name/${name}`);
   return res.data;
 };
 
 export const updateRole = async (
   id: string,
-  data: Partial<IRole>,
-  req?: IncomingMessage
+  data: Partial<IRole>
 ) => {
-  const axios = axiosWithAuth(req);
-  const res = await axios.put(`/roles/${id}`, data);
+  const axiosInstance = api;
+  const res = await axiosInstance.put(`/roles/${id}`, data);
   return res.data;
 };
 
-export const deleteRole = async (id: string, req?: IncomingMessage) => {
-  const axios = axiosWithAuth(req);
-  const res = await axios.delete(`/roles/${id}`);
+export const deleteRole = async (id: string) => {
+  const axiosInstance = api;
+  const res = await axiosInstance.delete(`/roles/${id}`);
   return res.data;
 };
 
@@ -123,11 +120,10 @@ export const deleteRole = async (id: string, req?: IncomingMessage) => {
 
 export const assignPermissionsToRole = async (
   roleId: string,
-  permissionIds: string[],
-  req?: IncomingMessage
+  permissionIds: string[]
 ) => {
-  const axios = req ? axiosWithAuth(req) : api;
-  const res = await axios.post(`/roles/${roleId}/permissions`, {
+  const axiosInstance = api;
+  const res = await axiosInstance.post(`/roles/${roleId}/permissions`, {
     permissionIds
   });
   return res.data;
@@ -135,21 +131,19 @@ export const assignPermissionsToRole = async (
 
 export const addPermissionToRole = async (
   roleId: string,
-  permissionId: string,
-  req?: IncomingMessage
+  permissionId: string
 ) => {
-  const axios = req ? axiosWithAuth(req) : api;
-  const res = await axios.post(`/roles/${roleId}/permissions/${permissionId}`);
+  const axiosInstance = api;
+  const res = await axiosInstance.post(`/roles/${roleId}/permissions/${permissionId}`);
   return res.data;
 };
 
 export const removePermissionFromRole = async (
   roleId: string,
-  permissionId: string,
-  req?: IncomingMessage
+  permissionId: string
 ) => {
-  const axios = req ? axiosWithAuth(req) : api;
-  const res = await axios.delete(
+  const axiosInstance = api;
+  const res = await axiosInstance.delete(
     `/roles/${roleId}/permissions/${permissionId}`
   );
   return res.data;
@@ -203,9 +197,9 @@ export const getAllPermissions = async ({
   }
 };
 
-export const getPermission = async (req?: IncomingMessage) => {
-  const axios = axiosWithAuth(req);
-  const res = await axios.get(`/permissions`);
+export const getPermission = async () => {
+  const axiosInstance = api;
+  const res = await axiosInstance.get(`/permissions`);
   return res.data.permissions;
 };
 
@@ -221,12 +215,11 @@ interface RolePermissionResponse {
 
 // Create a role-permission link
 export const createRolePermission = async (
-  data: { roleId: string; permissionIds: string[] },
-  req?: IncomingMessage
+  data: { roleId: string; permissionIds: string[] }
 ) => {
-  const axios = axiosWithAuth(req);
+  const axiosInstance = api;
 
-  const res = await axios.post('/role-permissions', {
+  const res = await axiosInstance.post('/role-permissions', {
     roleId: data.roleId,
     permissionIds: data.permissionIds
   });
@@ -234,12 +227,11 @@ export const createRolePermission = async (
   return res.data;
 };
 export const Createassign = async (
-  data: { roleId: string; permissionIds: string[] },
-  req?: IncomingMessage
+  data: { roleId: string; permissionIds: string[] }
 ) => {
-  const axios = axiosWithAuth(req);
+  const axiosInstance = api;
 
-  const res = await axios.post('/role-permissions/assign', {
+  const res = await axiosInstance.post('/role-permissions/assign', {
     roleId: data.roleId,
     permissionIds: data.permissionIds
   });
@@ -248,12 +240,11 @@ export const Createassign = async (
 };
 
 export const updateRolePermissionsService = async (
-  data: { roleId: string; permissionIds: string[] },
-  req?: IncomingMessage
+  data: { roleId: string; permissionIds: string[] }
 ) => {
-  const axios = axiosWithAuth(req);
+  const axiosInstance = api;
 
-  const res = await axios.put('/role/permissions/update/assign', {
+  const res = await axiosInstance.put('/role/permissions/update/assign', {
     roleId: data.roleId,
     permissionIds: data.permissionIds
   });
@@ -295,41 +286,37 @@ export const getAllRolePermissions = async ({
 
 // Get a role-permission by ID
 export const getRolePermissionById = async (
-  id: string,
-  req?: IncomingMessage
+  id: string
 ) => {
-  const axios = req ? axiosWithAuth(req) : api;
-  const res = await axios.get(`/role-permissions/${id}`);
+  const axiosInstance = api;
+  const res = await axiosInstance.get(`/role-permissions/${id}`);
   return res.data;
 };
 
 // Delete a role-permission by ID
 export const deleteRolePermission = async (
-  id: string,
-  req?: IncomingMessage
+  id: string
 ) => {
-  const axios = axiosWithAuth(req);
-  const res = await axios.delete(`/role-permissions/${id}`);
+  const axiosInstance = api;
+  const res = await axiosInstance.delete(`/role-permissions/${id}`);
   return res.data;
 };
 
 // Delete a role-permission by roleId and permissionId relation
 export const deleteRolePermissionByRelation = async (
   roleId: string,
-  permissionId: string,
-  req?: IncomingMessage
+  permissionId: string
 ) => {
-  const axios = axiosWithAuth(req);
-  const res = await axios.delete(`/role-permissions/${roleId}/${permissionId}`);
+  const axiosInstance = api;
+  const res = await axiosInstance.delete(`/role-permissions/${roleId}/${permissionId}`);
   return res.data;
 };
 
 export const updateRolePermission = async (
   id: string,
-  data: Partial<IRolePermission>,
-  req?: IncomingMessage
+  data: Partial<IRolePermission>
 ) => {
-  const axios = axiosWithAuth(req);
-  const res = await axios.put(`/role-permissions/${id}`, data);
+  const axiosInstance = api;
+  const res = await axiosInstance.put(`/role-permissions/${id}`, data);
   return res.data;
 };

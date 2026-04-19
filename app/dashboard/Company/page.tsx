@@ -1,7 +1,7 @@
 import PageContainer from '@/components/layout/page-container';
 import { Separator } from '@/components/ui/separator';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
+import { PermissionGuard } from '@/components/PermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import CompaniesPage from '@/features/Campany/all';
 import { searchParamsCache } from '@/lib/searchparams';
@@ -21,7 +21,7 @@ export default async function SupplierPage({ searchParams }: PageProps) {
   searchParamsCache.parse(parsedParams);
 
   return (
-    <PagePermissionGuard requiredPermission={PERMISSIONS.COMPANY.VIEW_ALL.name}>
+    <PermissionGuard requiredPermission={PERMISSIONS.COMPANY.VIEW_ALL.name}>
       <PageContainer scrollable={false}>
         <div className='flex flex-1 flex-col space-y-4'>
           <div className='flex items-start justify-between' />
@@ -35,6 +35,6 @@ export default async function SupplierPage({ searchParams }: PageProps) {
           </Suspense>
         </div>
       </PageContainer>
-    </PagePermissionGuard>
+    </PermissionGuard>
   );
 }

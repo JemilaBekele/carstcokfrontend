@@ -89,7 +89,7 @@ export const BrandCellAction: React.FC<BrandCellActionProps> = ({ data }) => {
         <DropdownMenuContent align='end'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-          {/* <PermissionGuard
+          {/* <PermissionGuard fallback="hide"
             requiredPermission={PERMISSIONS.BRAND.UPDATE.name}
           > */}
             <DropdownMenuItem onClick={() => setOpenEditModal(true)}>
@@ -97,7 +97,7 @@ export const BrandCellAction: React.FC<BrandCellActionProps> = ({ data }) => {
             </DropdownMenuItem>
           {/* </PermissionGuard> */}
 
-          {/* <PermissionGuard
+          {/* <PermissionGuard fallback="hide"
             requiredPermission={PERMISSIONS.BRAND.DELETE.name}
           > */}
             <DropdownMenuItem onClick={() => setOpenDeleteModal(true)}>

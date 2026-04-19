@@ -3,7 +3,7 @@
 // Used by AppSidebar and KBar so they always apply the same logic.
 
 import type { NavItem } from '@/types';
-import { usePermissionStore } from '@/stores/auth.store';
+import { useAuthStore } from '@/stores/auth.store';
 
 type PermissionCheckers = {
   hasPermission: (p: string) => boolean;
@@ -62,7 +62,7 @@ export function filterNavItemsWithCheckers(
  */
 export function filterNavItemsStatic(items: NavItem[]): NavItem[] {
   const { hasPermission, hasAnyPermission, hasAllPermissions } =
-    usePermissionStore.getState();
+    useAuthStore.getState();
   return filterNavItemsWithCheckers(items, {
     hasPermission,
     hasAnyPermission,

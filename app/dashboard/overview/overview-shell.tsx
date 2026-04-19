@@ -1,6 +1,6 @@
 'use client';
 
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
+import { PermissionGuard } from '@/components/PermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import React from 'react';
 
@@ -14,10 +14,10 @@ export function OverviewPermissionShell({
   children: React.ReactNode;
 }) {
   return (
-    <PagePermissionGuard
+    <PermissionGuard
       requiredPermission={PERMISSIONS.DASHBOARDS.MAIN_DASHBOARD.name}
     >
       {children}
-    </PagePermissionGuard>
+    </PermissionGuard>
   );
 }

@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 import { api } from './api';
 import { GetParams } from './roleService';
 import { IBrand } from '@/models/brand';
@@ -38,9 +36,9 @@ export const getAllBrands = async ({
 };
 
 // Get brands (SSR / server-side)
-export const getBrands = async (req?: IncomingMessage) => {
+export const getBrands = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/brands`);
     return response.data.brands as IBrand[];
   } catch (error) {
@@ -48,9 +46,9 @@ export const getBrands = async (req?: IncomingMessage) => {
   }
 };
 
-export const getTopBrands = async (req?: IncomingMessage) => {
+export const getTopBrands = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/brands?limit=10`);
     return response.data.brands as IBrand[];
   } catch (error) {
@@ -59,9 +57,9 @@ export const getTopBrands = async (req?: IncomingMessage) => {
 };
 
 // Get brand by ID
-export const getBrandById = async (id: string, req?: IncomingMessage) => {
+export const getBrandById = async (id: string) => {
   try {
-    const axiosInstance = req ? axiosWithAuth(req) : api;
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/brands/${id}`);
     return response.data.brand as IBrand;
   } catch (error) {
@@ -71,11 +69,10 @@ export const getBrandById = async (id: string, req?: IncomingMessage) => {
 
 // Create brand
 export const createBrand = async (
-  data: Partial<IBrand>,
-  req?: IncomingMessage
+  data: Partial<IBrand>
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     
     const response = await axiosInstance.post(`/brands`, data);
     return response.data;
@@ -88,11 +85,10 @@ export const createBrand = async (
 // Update brand
 export const updateBrand = async (
   id: string,
-  data: Partial<IBrand>,
-  req?: IncomingMessage
+  data: Partial<IBrand>
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     
     const response = await axiosInstance.put(`/brands/${id}`, data);
     return response.data;
@@ -103,9 +99,9 @@ export const updateBrand = async (
 };
 
 // Delete brand
-export const deleteBrand = async (id: string, req?: IncomingMessage) => {
+export const deleteBrand = async (id: string) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.delete(`/brands/${id}`);
     return response.data;
   } catch (error) {

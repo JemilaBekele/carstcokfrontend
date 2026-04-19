@@ -2,13 +2,13 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { tokenService } from "@/service/tokenService";
+import { useAuthStore } from "@/stores/auth.store";
 
 export default function Page() {
   const router = useRouter();
 
   useEffect(() => {
-    const tokens = tokenService.get();
+    const tokens = useAuthStore.getState().tokens;
     router.replace(tokens?.accessToken ? "/dashboard" : "/login");
   }, [router]);
 

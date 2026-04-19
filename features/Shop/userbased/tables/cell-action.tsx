@@ -68,7 +68,7 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           {(data.saleStatus === 'APPROVED' ||
             data.saleStatus === 'NOT_APPROVED') && (
-            <PermissionGuard requiredPermission={PERMISSIONS.SELL.UPDATE.name}>
+            <PermissionGuard fallback="hide" requiredPermission={PERMISSIONS.SELL.UPDATE.name}>
               <DropdownMenuItem
                 onClick={() =>
                   router.push(`/dashboard/UserBasedSell/${data.id}`)
@@ -86,7 +86,7 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
             <Edit className='mr-2 h-4 w-4' /> View
           </DropdownMenuItem>
           {/* {data.saleStatus === 'DELIVERED' && (
-                                    <PermissionGuard requiredPermission={PERMISSIONS.SELL_STOCK_CORRECTION.CREATE.name}>
+                                    <PermissionGuard fallback="hide" requiredPermission={PERMISSIONS.SELL_STOCK_CORRECTION.CREATE.name}>
 
             <DropdownMenuItem
               onClick={() =>
@@ -102,7 +102,7 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
           )} */}
 
           {data.saleStatus !== 'DELIVERED' && (
-            <PermissionGuard requiredPermission={PERMISSIONS.SELL.DELETE.name}>
+            <PermissionGuard fallback="hide" requiredPermission={PERMISSIONS.SELL.DELETE.name}>
               <DropdownMenuItem onClick={() => setOpen(true)}>
                 <IconTrash className='mr-2 h-4 w-4' /> Delete
               </DropdownMenuItem>

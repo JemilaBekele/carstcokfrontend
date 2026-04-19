@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 import { api } from './api';
 import { SalesReportResponse } from '@/features/Dasboard/ReportSell/staticgenerate';
 
@@ -17,9 +15,9 @@ interface SellTrendResponse {
   chartData: SellTrend[];
 }
 
-export const getSellTrendApi = async (req?: IncomingMessage) => {
+export const getSellTrendApi = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const response = await axiosInstance.get<SellTrendResponse>(`/trend`);
     return response.data.chartData;
@@ -38,11 +36,10 @@ interface TotalSoldResponse {
 }
 
 export const getTotalSold = async (
-  params: { startDate?: string; endDate?: string } = {},
-  req?: IncomingMessage
+  params: { startDate?: string; endDate?: string } = {}
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const query = new URLSearchParams(params).toString();
     const response = await axiosInstance.get<TotalSoldResponse>(
       `/total-sold?${query}`
@@ -96,11 +93,10 @@ export const getAllSells = async (
     branchId?: string;
     saleStatus?: string; // Add saleStatus filter
     itemSaleStatus?: string;
-  } = {},
-  req?: IncomingMessage
+  } = {}
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const query = new URLSearchParams(params).toString();
     const response = await axiosInstance.get<AllSellsResponse>(
       `/trend/all/sell?${query}`
@@ -118,11 +114,10 @@ export const getSalesReports = async (
     shopId?: string;
     limit?: number;
     slowMoveThreshold?: number;
-  } = {},
-  req?: IncomingMessage
+  } = {}
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const query = new URLSearchParams(
       Object.entries(params).reduce(
@@ -147,11 +142,10 @@ export const getSalesReports = async (
 };
 
 export const getUserDashboardSummaryApi = async (
-  params: { startDate?: string; endDate?: string; req?: IncomingMessage } = {}
+  params: { startDate?: string; endDate?: string; } = {}
 ) => {
   try {
-    const { req } = params;
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const response = await axiosInstance.get(`/reports/sales/user/dashboard`);
     return response.data;
@@ -160,11 +154,10 @@ export const getUserDashboardSummaryApi = async (
   }
 };
 export const getSalesCreatorDashboardSummaryApi = async (
-  params: { req?: IncomingMessage } = {}
+  params: { } = {}
 ) => {
   try {
-    const { req } = params;
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const response = await axiosInstance.get(
       '/reports/sales/user/creator/dashboard'
@@ -179,11 +172,10 @@ export const getSalesCreatorDashboardSummaryApi = async (
  * Fetch Financial Totals for Dashboard
  */
 export const getFinancialTotalsApi = async (
-  params: { req?: IncomingMessage } = {}
+  params: { } = {}
 ) => {
   try {
-    const { req } = params;
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const response = await axiosInstance.get('/dashboard/financial-totals');
     return response.data;
@@ -196,11 +188,10 @@ export const getFinancialTotalsApi = async (
  * Fetch Sell Status Pie Chart Data
  */
 export const getSellStatusChartApi = async (
-  params: { req?: IncomingMessage } = {}
+  params: { } = {}
 ) => {
   try {
-    const { req } = params;
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const response = await axiosInstance.get('/dashboard/sell-status-chart');
     return response.data;

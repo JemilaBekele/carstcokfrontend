@@ -2,15 +2,15 @@
 
 import { useEffect } from "react";
 import { getProfile } from "@/service/authApi";
-import { clearClientAuth, setAuthenticatedUser, redirectToLogin } from "@/service/authSession";
-import { tokenService } from "@/service/tokenService";
+import { clearClientAuth, redirectToLogin } from "@/service/authSession";
+import { useAuthStore } from "@/stores/auth.store";
 
 export default function AuthInitializer() {
   useEffect(() => {
     let cancelled = false;
 
     const init = async () => {
-      const tokens = tokenService.get();
+      const tokens = useAuthStore.getState().tokens;
 
       if (!tokens?.accessToken) {
         clearClientAuth();
@@ -21,7 +21,8 @@ export default function AuthInitializer() {
         const user = await getProfile();
 
         if (!cancelled) {
-          setAuthenticatedUser(user);
+          // Update user + permissions, keep existing tokens
+          useAuthStore.getState().setUser(user);
         }
       } catch {
         if (cancelled) {

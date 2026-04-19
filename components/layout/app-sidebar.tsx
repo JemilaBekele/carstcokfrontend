@@ -44,8 +44,7 @@ import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { Icons } from "../icons";
 import { OrgSwitcher } from "../org-switcher";
-import { usePermissionStore } from "@/stores/auth.store";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/stores/auth.store";
 import { logout } from "@/service/authApi";
 import { toast } from "sonner";
 import { filterNavItemsWithCheckers } from "@/lib/filterNavItems";
@@ -59,47 +58,37 @@ export const company = {
 export default function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [filteredNavItems, setFilteredNavItems] = React.useState(navItems);
-  const authUser = useAuthStore((state) => state.user);
-  const authHydrated = useAuthStore((state) => state.hydrated);
 
-  const hasPermission = usePermissionStore((state) => state.hasPermission);
-  const hasAnyPermission = usePermissionStore(
-    (state) => state.hasAnyPermission,
-  );
-  const hasAllPermissions = usePermissionStore(
-    (state) => state.hasAllPermissions,
-  );
-  const isInitialized = usePermissionStore((state) => state._isInitialized);
-  const hasHydrated = usePermissionStore((state) => state._hasHydrated);
-  const isLoading =
-    !authHydrated || !hasHydrated || (authUser && !isInitialized);
+  const user = useAuthStore((s) => s.user);
+  const hydrated = useAuthStore((s) => s._hydrated);
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const hasAnyPermission = useAuthStore((s) => s.hasAnyPermission);
+  const hasAllPermissions = useAuthStore((s) => s.hasAllPermissions);
+  const permissions = useAuthStore((s) => s.permissions);
 
-  const filterNavItemsByPermissions = React.useCallback(() => {
-    if (!hasHydrated || !authUser || !isInitialized) {
-      return [];
-    }
+  const isLoading = !hydrated;
+
+  // Memoize filtered nav items — no useEffect + setState needed
+  const filteredNavItems = React.useMemo(() => {
+    if (!user || permissions.length === 0) return [];
     return filterNavItemsWithCheckers(navItems, {
       hasPermission,
       hasAnyPermission,
       hasAllPermissions,
     });
-  }, [
-    hasPermission,
-    hasAnyPermission,
-    hasAllPermissions,
-    hasHydrated,
-    authUser,
-    isInitialized,
-  ]);
+  }, [user, permissions, hasPermission, hasAnyPermission, hasAllPermissions]);
 
-  React.useEffect(() => {
-    if (authUser && isInitialized) {
-      setFilteredNavItems(filterNavItemsByPermissions());
-    } else {
-      setFilteredNavItems([]);
-    }
-  }, [authUser, filterNavItemsByPermissions, isInitialized]);
+  // Memoize grouped nav items
+  const navGroups = React.useMemo(() => {
+    return filteredNavItems.reduce<
+      Record<string, typeof filteredNavItems>
+    >((acc, item) => {
+      const section = item.group ?? "Overview";
+      if (!acc[section]) acc[section] = [];
+      acc[section].push(item);
+      return acc;
+    }, {});
+  }, [filteredNavItems]);
 
   const handleSignOut = async () => {
     try {
@@ -111,9 +100,7 @@ export default function AppSidebar() {
     }
   };
 
-  const user = authUser;
-
-  if (!authUser || isLoading) {
+  if (!user || isLoading) {
     return (
       <Sidebar collapsible="icon">
         <SidebarContent className="flex items-center justify-center">
@@ -128,7 +115,7 @@ export default function AppSidebar() {
     );
   }
 
-  if (filteredNavItems.length === 0 && authUser) {
+  if (filteredNavItems.length === 0) {
     return (
       <Sidebar collapsible="icon">
         <SidebarContent className="flex items-center justify-center">
@@ -147,16 +134,6 @@ export default function AppSidebar() {
       </Sidebar>
     );
   }
-
-  // Group items by their section label for clean visual separation
-  const navGroups = filteredNavItems.reduce<
-    Record<string, typeof filteredNavItems>
-  >((acc, item) => {
-    const section = item.group ?? "Overview";
-    if (!acc[section]) acc[section] = [];
-    acc[section].push(item);
-    return acc;
-  }, {});
 
   return (
     <Sidebar collapsible="icon">

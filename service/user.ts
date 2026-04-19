@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
+import { api } from './api';
 // Get User by ID !QAZxsw2
-export const getUserById = async (req?: IncomingMessage) => {
+export const getUserById = async () => {
   try {
     // usser id is get by backend
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/users/Usermy/data`);
     return response.data.user;
   } catch (error: any) {
@@ -16,11 +15,10 @@ export const getUserById = async (req?: IncomingMessage) => {
 // Update User by ID
 export const updateUserById = async (
   userID: string,
-  updatedData: Record<string, any>,
-  req?: IncomingMessage
+  updatedData: Record<string, any>
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const response = await axiosInstance.put(`/users/${userID}`, updatedData);
     return response.data;
@@ -32,11 +30,10 @@ export const updateUserById = async (
 // Change Password
 export const changePassword = async (
   currentPassword: string,
-  newPassword: string,
-  req?: IncomingMessage
+  newPassword: string
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const response = await axiosInstance.patch(`/users/change-password`, {
       currentPassword,

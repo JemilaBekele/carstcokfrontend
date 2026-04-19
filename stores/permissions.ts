@@ -39,44 +39,43 @@ export const PERMISSIONS = {
       description: 'Delete role-permission by ID'
     }
   },
-DASHBOARDS: {
+  DASHBOARDS: {
     MAIN_DASHBOARD: {
       name: 'VIEW_MAIN_DASHBOARD',
       description: 'View main dashboard'
     },
-     VIEW_REPORT: {
+    VIEW_REPORT: {
       name: 'VIEW_SALES_REPORT_VIEW_DASHBOARD',
       description: 'View sales report'
     },
-      VIEW_SELL_DASHBOARD: {
+    VIEW_SELL_DASHBOARD: {
       name: 'VIEW_SELL_DASHBOARD',
       description: 'View comprehensive sell dashboard data'
     },
-     VIEW_PRODUCT_DASHBOARD: {
+    VIEW_PRODUCT_DASHBOARD: {
       name: 'VIEW_PRODUCT_DASHBOARD',
       description: 'View comprehensive product dashboard data'
     },
-      VIEW_Users_DASHBOARD: {
+    VIEW_USERS_DASHBOARD: {
       name: 'VIEW_Users_DASHBOARD',
       description: 'View comprehensive inventory dashboard data'
     },
-       VIEW_SYSTEM_DASHBOARD: {
+    VIEW_SYSTEM_DASHBOARD: {
       name: 'VIEW_SYSTEM_DASHBOARD',
       description: 'View comprehensive system dashboard data'
     },
   },
-  Employee: {
-  
+  EMPLOYEE: {
     CREATE: {
       name: 'CREATE_Employee',
       description: 'Register or create new Employee accounts'
     },
     VIEW: {
-      name: 'VIEW_Employee', // For viewing a single employee
+      name: 'VIEW_Employee',
       description: 'View specific Employee details'
     },
     VIEW_ALL: {
-      name: 'VIEW_ALL_EMPLOYEES', // Changed to be unique
+      name: 'VIEW_ALL_EMPLOYEES',
       description: 'View all Employee in the system'
     },
     UPDATE: {
@@ -173,7 +172,6 @@ DASHBOARDS: {
   },
 
   PRODUCT: {
-   
     CREATE: {
       name: 'CREATE_PRODUCT',
       description: 'Create new product'
@@ -198,7 +196,6 @@ DASHBOARDS: {
       name: 'DELETE_PRODUCT',
       description: 'Delete product'
     },
-
   },
 
   TRANSFER: {
@@ -263,7 +260,6 @@ DASHBOARDS: {
     }
   },
   SELL: {
-  
     CREATE: { name: 'CREATE_SELL', description: 'Create a new sell record' },
     VIEW: { name: 'VIEW_SELL', description: 'View details of a specific sell' },
     VIEW_ALL: { name: 'VIEW_ALL_SELLS', description: 'View all sell records' },
@@ -295,7 +291,7 @@ DASHBOARDS: {
       description: 'Cancel a sell record'
     }
   },
-  
+
   PURCHASE: {
     CREATE: {
       name: 'CREATE_PURCHASE',
@@ -319,7 +315,6 @@ DASHBOARDS: {
     }
   },
   REPORT: {
-
     VIEW_ALL_TRENDS: {
       name: 'VIEW_ALL_SELLS_TREND',
       description: 'View sales trends across all sells'
@@ -328,7 +323,6 @@ DASHBOARDS: {
       name: 'VIEW_SALES_RANK',
       description: 'View ranked sales report'
     },
-  
   },
 
   MANAGE_STORE_AND_SHOPS: {
@@ -337,4 +331,4 @@ DASHBOARDS: {
       description: 'View and manage stores and shops'
     }
   }
-};
+} as const;

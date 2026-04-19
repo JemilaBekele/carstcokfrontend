@@ -1,6 +1,6 @@
 'use client';
 import { navItems } from '@/constants/data';
-import { usePermissionStore } from '@/stores/auth.store';
+import { useAuthStore } from '@/stores/auth.store';
 import {
   KBarAnimator,
   KBarPortal,
@@ -15,10 +15,10 @@ import useThemeSwitching from './use-theme-switching';
 
 export default function KBar({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const hasPermission = usePermissionStore((s) => s.hasPermission);
-  const hasAnyPermission = usePermissionStore((s) => s.hasAnyPermission);
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const hasAnyPermission = useAuthStore((s) => s.hasAnyPermission);
   // Subscribe to the actual array so useMemo re-runs when permissions change
-  const permissions = usePermissionStore((s) => s.permissions);
+  const permissions = useAuthStore((s) => s.permissions);
 
   // Filter navigation actions by user permissions
   const actions = useMemo(() => {
@@ -95,4 +95,3 @@ const KBarComponent = ({ children }: { children: React.ReactNode }) => {
     </>
   );
 };
-

@@ -6,7 +6,6 @@ import RoleListingPage from '@/features/RoleandPermisson/listing';
 import RoleModal from '@/features/RoleandPermisson/modal';
 import { searchParamsCache } from '@/lib/searchparams';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
@@ -26,7 +25,7 @@ export default async function RolePage(props: pageProps) {
   searchParamsCache.parse(searchParams);
 
   return (
-    <PagePermissionGuard requiredPermission={PERMISSIONS.ROLE.VIEW_ALL.name}>
+    <PermissionGuard requiredPermission={PERMISSIONS.ROLE.VIEW_ALL.name}>
       <PageContainer scrollable={false}>
         <div className='flex flex-1 flex-col space-y-4'>
           <div className='flex items-start justify-between'>
@@ -46,6 +45,6 @@ export default async function RolePage(props: pageProps) {
           </Suspense>
         </div>
       </PageContainer>
-    </PagePermissionGuard>
+    </PermissionGuard>
   );
 }

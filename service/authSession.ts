@@ -1,7 +1,5 @@
 import type { BackendAuthUser, AuthUser } from "@/types/auth";
-import { tokenService } from "./tokenService";
-import { useAuthStore } from "@/stores/authStore";
-import { usePermissionStore } from "@/stores/auth.store";
+import { useAuthStore } from "@/stores/auth.store";
 
 export const normalizeAuthUser = (user: BackendAuthUser): AuthUser => ({
   id: user.id,
@@ -18,28 +16,27 @@ export const normalizeAuthUser = (user: BackendAuthUser): AuthUser => ({
   lastLoginAt: user.lastLoginAt,
 });
 
-export const syncPermissions = (permissions: string[]) => {
-  const permissionStore = usePermissionStore.getState();
-  permissionStore.setHasHydrated(true);
-  permissionStore.setPermissions(Array.isArray(permissions) ? permissions : []);
-};
-
-export const setAuthenticatedUser = (user: AuthUser) => {
-  useAuthStore.getState().setUser(user);
-  syncPermissions(user.permissions);
+export const setAuthenticatedUser = (
+  user: AuthUser,
+  tokens?: { accessToken: string; refreshToken: string },
+) => {
+  const store = useAuthStore.getState();
+  if (tokens) {
+    store.setAuth(user, tokens);
+  } else {
+    // Profile refresh — keep existing tokens
+    store.setUser(user);
+  }
 };
 
 export const clearClientAuth = () => {
-  tokenService.clear();
   useAuthStore.getState().clearAuth();
 
-  const permissionStore = usePermissionStore.getState();
-  permissionStore.setHasHydrated(true);
-  permissionStore.clearPermissions();
-  permissionStore.setIsInitialized(false);
-
+  // Clean up legacy keys from previous architecture
   if (typeof window !== "undefined") {
     localStorage.removeItem("permission-storage");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
   }
 };
 

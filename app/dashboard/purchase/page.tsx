@@ -13,7 +13,6 @@ import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 
 import { PermissionGuard } from '@/components/PermissionGuard';
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 
 export const metadata = {
@@ -33,7 +32,7 @@ export default async function PurchasePage(props: pageProps) {
   // const key = serialize({ ...searchParams });
 
   return (
-    <PagePermissionGuard requiredPermission={PERMISSIONS.PURCHASE.VIEW_ALL.name}>
+    <PermissionGuard requiredPermission={PERMISSIONS.PURCHASE.VIEW_ALL.name}>
       <PageContainer scrollable={false}>
         <div className='flex flex-1 flex-col space-y-4'>
           <div className='flex items-start justify-between'>
@@ -58,6 +57,6 @@ export default async function PurchasePage(props: pageProps) {
           </Suspense>
         </div>
       </PageContainer>
-    </PagePermissionGuard>
+    </PermissionGuard>
   );
 }

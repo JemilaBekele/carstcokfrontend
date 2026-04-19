@@ -75,7 +75,7 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
           
           {(data.saleStatus === 'APPROVED' ||
             data.saleStatus === 'NOT_APPROVED') && (
-            <PermissionGuard requiredPermission={PERMISSIONS.SELL.UPDATE.name}>
+            <PermissionGuard fallback="hide" requiredPermission={PERMISSIONS.SELL.UPDATE.name}>
               <DropdownMenuItem
                 onClick={() => router.push(`/dashboard/Sell/${data.id}`)}
               >
@@ -91,7 +91,7 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
           </DropdownMenuItem>
           
           {/* {data.saleStatus === 'DELIVERED' && (
-            <PermissionGuard requiredPermission={PERMISSIONS.SELL_STOCK_CORRECTION.CREATE.name}>
+            <PermissionGuard fallback="hide" requiredPermission={PERMISSIONS.SELL_STOCK_CORRECTION.CREATE.name}>
               <DropdownMenuItem
                 onClick={() =>
                   router.push(
@@ -106,7 +106,7 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
 
           {/* Add "Mark Correction as Checked" action */}
           {/* {hasUncheckedCorrections && (
-            // <PermissionGuard requiredPermission={PERMISSIONS.SELL_STOCK_CORRECTION.MARK_AS_CHECKED.name}>
+            // <PermissionGuard fallback="hide" requiredPermission={PERMISSIONS.SELL_STOCK_CORRECTION.MARK_AS_CHECKED.name}>
               <DropdownMenuItem
                 onClick={handleMarkCorrectionChecked}
               >
@@ -121,7 +121,7 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
             // </PermissionGuard>
           )} */}
 
-          <PermissionGuard requiredPermission={PERMISSIONS.SELL.DELETE.name}>
+          <PermissionGuard fallback="hide" requiredPermission={PERMISSIONS.SELL.DELETE.name}>
             <DropdownMenuItem onClick={() => setOpen(true)}>
               <IconTrash className='mr-2 h-4 w-4' /> Delete
             </DropdownMenuItem>

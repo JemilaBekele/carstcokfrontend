@@ -38,7 +38,7 @@ import { PermissionGuard } from '@/components/PermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import { getUserById } from '@/service/user';
 import { Imployee } from '@/models/employee';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/auth.store';
 
 type TransferViewProps = {
   id?: string;
@@ -46,7 +46,7 @@ type TransferViewProps = {
 
 const TransferDetailPage: React.FC<TransferViewProps> = ({ id }) => {
   const user = useAuthStore((state) => state.user);
-  const hydrated = useAuthStore((state) => state.hydrated);
+  const hydrated = useAuthStore((state) => state._hydrated);
   const [transfer, setTransfer] = useState<ITransfer | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -239,7 +239,7 @@ const TransferDetailPage: React.FC<TransferViewProps> = ({ id }) => {
             <div className='flex flex-col items-start gap-4 sm:flex-row sm:items-center'>
               <div className='flex w-full gap-2 sm:w-auto'>
                 {hasDestinationAccess ? (
-                  <PermissionGuard
+                  <PermissionGuard fallback="hide"
                     requiredPermission={PERMISSIONS.TRANSFER.COMPLETE.name}
                   >
                     <Button
@@ -275,7 +275,7 @@ const TransferDetailPage: React.FC<TransferViewProps> = ({ id }) => {
                   </div>
                 )}
 
-                <PermissionGuard
+                <PermissionGuard fallback="hide"
                   requiredPermission={PERMISSIONS.TRANSFER.CANCEL.name}
                 >
                   <Button

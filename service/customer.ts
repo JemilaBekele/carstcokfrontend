@@ -1,7 +1,5 @@
 /* eslint-disable import/no-unresolved */
 import { api } from './api';
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 import { GetParams } from './roleService';
 import { ICustomer } from '@/models/customer';
 
@@ -35,9 +33,9 @@ export const getAllCustomers = async ({
   }
 };
 
-export const getCustomer = async (req?: IncomingMessage) => {
+export const getCustomer = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get('/customers');
     return response.data.customers;
   } catch (error) {
@@ -55,11 +53,10 @@ export const getCustomerById = async (id: string | number) => {
 };
 
 export const createCustomer = async (
-  customerData: any,
-  req?: IncomingMessage
+  customerData: any
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.post('/customers', customerData);
     return response.data;
   } catch (error) {
@@ -69,11 +66,10 @@ export const createCustomer = async (
 
 export const updateCustomer = async (
   id: string,
-  updatedData: Partial<ICustomer>,
-  req?: IncomingMessage
+  updatedData: Partial<ICustomer>
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.put(`/customers/${id}`, updatedData);
     return response.data;
   } catch (error) {
@@ -82,11 +78,10 @@ export const updateCustomer = async (
 };
 
 export const deleteCustomer = async (
-  id: string | number,
-  req?: IncomingMessage
+  id: string | number
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.delete(`/customers/${id}`);
     return response.data;
   } catch (error) {

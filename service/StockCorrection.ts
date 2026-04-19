@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 import { api } from './api';
 import { PaginationParams } from './store';
 
@@ -59,9 +57,9 @@ export const getAllStockCorrections = async ({
 };
 
 // ✅ Get stock corrections (simple version)
-export const getStockCorrections = async (req?: IncomingMessage) => {
+export const getStockCorrections = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/stock-corrections`);
     return response.data.stockCorrections as IStockCorrection[];
   } catch (error) {
@@ -71,11 +69,10 @@ export const getStockCorrections = async (req?: IncomingMessage) => {
 
 // ✅ Get stock correction by ID
 export const getStockCorrectionById = async (
-  id: string,
-  req?: IncomingMessage
+  id: string
 ) => {
   try {
-    const axiosInstance = req ? axiosWithAuth(req) : api;
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/stock-corrections/${id}`);
     return response.data.stockCorrection;
   } catch (error) {
@@ -83,11 +80,10 @@ export const getStockCorrectionById = async (
   }
 };
 export const getStockCorrectionId = async (
-  id: string,
-  req?: IncomingMessage
+  id: string
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/stock-corrections/${id}`);
     return response.data.stockCorrection;
   } catch (error) {
@@ -97,11 +93,10 @@ export const getStockCorrectionId = async (
 
 // ✅ Get stock correction by reference
 export const getStockCorrectionByReference = async (
-  reference: string,
-  req?: IncomingMessage
+  reference: string
 ) => {
   try {
-    const axiosInstance = req ? axiosWithAuth(req) : api;
+    const axiosInstance = api;
     const response = await axiosInstance.get(
       `/stock-corrections/reference/${reference}`
     );
@@ -113,11 +108,10 @@ export const getStockCorrectionByReference = async (
 
 // ✅ Create stock correction
 export const createStockCorrection = async (
-  data: any,
-  req?: IncomingMessage
+  data: any
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     
     const response = await axiosInstance.post(`/stock-corrections`, data);
     return response.data;
@@ -129,11 +123,10 @@ export const createStockCorrection = async (
 // ✅ Update stock correction
 export const updateStockCorrection = async (
   id: string,
-  data: any,
-  req?: IncomingMessage
+  data: any
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.put(`/stock-corrections/${id}`, data);
     return response.data;
   } catch (error) {
@@ -143,11 +136,10 @@ export const updateStockCorrection = async (
 
 // ✅ Approve stock correction
 export const approveStockCorrection = async (
-  id: string,
-  req?: IncomingMessage
+  id: string
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.post(
       `/stock-corrections/${id}/approve`
     );
@@ -159,11 +151,10 @@ export const approveStockCorrection = async (
 
 // ✅ Reject stock correction
 export const rejectStockCorrection = async (
-  id: string,
-  req?: IncomingMessage
+  id: string
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.post(
       `/stock-corrections/${id}/reject`
     );
@@ -175,11 +166,10 @@ export const rejectStockCorrection = async (
 
 // ✅ Delete stock correction
 export const deleteStockCorrection = async (
-  id: string,
-  req?: IncomingMessage
+  id: string
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.delete(`/stock-corrections/${id}`);
     return response.data;
   } catch (error) {

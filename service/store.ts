@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 import { api } from './api';
 import { IShopStock, IStockLedger, IStore, IStoreStock } from '@/models/store';
 import { GetParams } from './roleService';
@@ -35,18 +33,18 @@ export const getAllstore = async ({ page = 1, limit = 10 }: GetParams = {}) => {
   }
 };
 
-export const getStores = async (req?: IncomingMessage) => {
+export const getStores = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/stores`);
     return response.data.stores as IStore[];
   } catch (error) {
     throw error;
   }
 };
-export const getStoresall = async (req?: IncomingMessage) => {
+export const getStoresall = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/stores/get/all`);
     console.log("store",response.data.stores)
     return response.data.stores as IStore[];
@@ -56,9 +54,9 @@ export const getStoresall = async (req?: IncomingMessage) => {
 };
 
 // Get a store by ID
-export const getStoreById = async (id: string, req?: IncomingMessage) => {
+export const getStoreById = async (id: string) => {
   try {
-    const axiosInstance = req ? axiosWithAuth(req) : api;
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/stores/${id}`);
     return response.data.store as IStore;
   } catch (error) {
@@ -68,11 +66,10 @@ export const getStoreById = async (id: string, req?: IncomingMessage) => {
 
 // Create a store
 export const createStore = async (
-  data: any | FormData,
-  req?: IncomingMessage
+  data: any | FormData
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -89,11 +86,10 @@ export const createStore = async (
 // Update a store
 export const updateStore = async (
   id: string,
-  data: Partial<IStore> | FormData,
-  req?: IncomingMessage
+  data: Partial<IStore> | FormData
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -108,9 +104,9 @@ export const updateStore = async (
 };
 
 // Delete a store
-export const deleteStore = async (id: string, req?: IncomingMessage) => {
+export const deleteStore = async (id: string) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.delete(`/stores/${id}`);
     return response.data;
   } catch (error) {
@@ -213,7 +209,6 @@ export const getAllShopStocks = async ({
 export interface PaginationParams {
   page?: number;
   limit?: number;
-  req?: IncomingMessage;
   startDate?: string;
   endDate?: string;
 }

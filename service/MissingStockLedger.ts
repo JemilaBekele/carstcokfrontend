@@ -1,15 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 import { IProduct } from '@/models/Product';
 import { api } from './api';
 
 /**
  * Find all missing stock ledgers across all sales
  */
-export const getMissingStockLedgers = async (req?: IncomingMessage) => {
+export const getMissingStockLedgers = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(
       `/stock-ledger-reconciliation/missing`
     );
@@ -23,11 +21,10 @@ export const getMissingStockLedgers = async (req?: IncomingMessage) => {
  * Create missing stock ledger entries for a specific sale
  */
 export const createMissingStockLedgerForSale = async (
-  saleId: string,
-  req?: IncomingMessage
+  saleId: string
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.post(
       `/stock-ledger-reconciliation/create/${saleId}`
     );
@@ -38,9 +35,9 @@ export const createMissingStockLedgerForSale = async (
 };
 
 
-export const getProductsall   = async (req?: IncomingMessage) => {
+export const getProductsall   = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/sell-corrections/products`);
     return response.data.products as any;
   } catch (error) {
@@ -86,9 +83,9 @@ export const getAllProductsallsell = async ({
 
 //delete/stockLedger
 
-export const deleteStockLedgerByIds = async (id: string, req?: IncomingMessage) => {
+export const deleteStockLedgerByIds = async (id: string) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.delete(`/delete/stockLedger/${id}`);
     return response.data;
   } catch (error) {

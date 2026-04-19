@@ -1,5 +1,3 @@
-import { IncomingMessage } from 'http';
-import { axiosWithAuth } from './cli';
 import { api } from './api';
 import { IBranch } from '@/models/Branch';
 import { GetParams } from './roleService';
@@ -35,9 +33,9 @@ export const getAllbranches = async ({
     throw error;
   }
 };
-export const getBranches = async (req?: IncomingMessage) => {
+export const getBranches = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/branches`);
     return response.data.branches as IBranch[];
   } catch (error) {
@@ -46,9 +44,9 @@ export const getBranches = async (req?: IncomingMessage) => {
 };
 
 // Get a branch by ID
-export const getBranchById = async (id: string, req?: IncomingMessage) => {
+export const getBranchById = async (id: string) => {
   try {
-    const axiosInstance = req ? axiosWithAuth(req) : api;
+    const axiosInstance = api;
     const response = await axiosInstance.get(`/branches/${id}`);
     return response.data.branch as IBranch;
   } catch (error) {
@@ -58,11 +56,10 @@ export const getBranchById = async (id: string, req?: IncomingMessage) => {
 
 // Create a branch
 export const createBranch = async (
-  data: any | FormData,
-  req?: IncomingMessage
+  data: any | FormData
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -79,11 +76,10 @@ export const createBranch = async (
 // Update a branch
 export const updateBranch = async (
   id: string,
-  data: Partial<IBranch> | FormData,
-  req?: IncomingMessage
+  data: Partial<IBranch> | FormData
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -98,9 +94,9 @@ export const updateBranch = async (
 };
 
 // Delete a branch
-export const deleteBranch = async (id: string, req?: IncomingMessage) => {
+export const deleteBranch = async (id: string) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
+    const axiosInstance = api;
     const response = await axiosInstance.delete(`/branches/${id}`);
     return response.data;
   } catch (error) {

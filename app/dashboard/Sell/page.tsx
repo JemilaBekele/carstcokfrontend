@@ -3,7 +3,7 @@ import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import { searchParamsCache } from '@/lib/searchparams';
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
+import { PermissionGuard } from '@/components/PermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 import { SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
@@ -23,7 +23,7 @@ export default async function SupplierPage({ searchParams }: PageProps) {
   searchParamsCache.parse(parsedParams);
 
   return (
-    <PagePermissionGuard requiredPermission={PERMISSIONS.SELL.VIEW_ALL.name}>
+    <PermissionGuard requiredPermission={PERMISSIONS.SELL.VIEW_ALL.name}>
       <PageContainer scrollable={true}>
         <div className='flex flex-1 flex-col space-y-4'>
           <div className='flex items-start justify-between'>
@@ -41,6 +41,6 @@ export default async function SupplierPage({ searchParams }: PageProps) {
           </Suspense>
         </div>
       </PageContainer>
-    </PagePermissionGuard>
+    </PermissionGuard>
   );
 }
