@@ -1,5 +1,5 @@
 /* eslint-disable import/no-unresolved */
-import { api } from './api';
+import { axiosInstance } from './api';
 import { ISupplier } from '@/models/supplier';
 import { GetParams } from './roleService';
 
@@ -20,7 +20,7 @@ export const getAllSuppliers = async ({
     });
 
     const url = `/suppliers?${query}`;
-    const response = await api.get<SupplierResponse>(url);
+    const response = await axiosInstance.get<SupplierResponse>(url);
     const suppliers = response.data.suppliers;
 
     return {
@@ -35,7 +35,6 @@ export const getAllSuppliers = async ({
 
 export const getSupplier = async () => {
   try {
-    const axiosInstance = api;
 
     const response = await axiosInstance.get(`/suppliers`);
     return response.data.suppliers;
@@ -45,7 +44,7 @@ export const getSupplier = async () => {
 };
 export const getSupplierById = async (id: string | number) => {
   try {
-    const response = await api.get(`/suppliers/${id}`);
+    const response = await axiosInstance.get(`/suppliers/${id}`);
     return response.data.supplier;
   } catch (error) {
     throw error;
@@ -56,7 +55,6 @@ export const createSupplier = async (
   supplierData: ISupplier
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.post('/suppliers', supplierData);
     return response.data;
   } catch (error) {
@@ -69,7 +67,6 @@ export const updateSupplier = async (
   updatedData: Partial<ISupplier>
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.put(`/suppliers/${id}`, updatedData);
     return response.data;
   } catch (error) {
@@ -81,7 +78,6 @@ export const deleteSupplier = async (
   id: string | number
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/suppliers/${id}`);
     return response.data;
   } catch (error) {

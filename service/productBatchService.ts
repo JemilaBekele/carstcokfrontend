@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { api } from './api';
+import { axiosInstance } from './api';
 import { TransferEntityType } from '@/models/transfer';
 
 // Pagination + filters
@@ -39,7 +39,7 @@ export const getAllProductBatches = async ({
 
     const url = `/product-batches?${query}`;
 
-    const response = await api.get<ProductBatchResponse>(url);
+    const response = await axiosInstance.get<ProductBatchResponse>(url);
 
     return {
       data: response.data.productBatches,
@@ -56,7 +56,6 @@ export const getProductBatchById = async (
   id: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/product-batches/${id}`);
     return response.data.batch as any;
   } catch (error) {
@@ -65,7 +64,6 @@ export const getProductBatchById = async (
 };
 export const getProductBatchId = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/product-batches/${id}`);
     return response.data.batch as any;
   } catch (error) {
@@ -76,7 +74,6 @@ export const getProductInfoByBatchId = async (
   id: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(
       `/product-batches/product/${id}/info`
     );
@@ -92,7 +89,6 @@ export const getAvailableProductsBySource = async (
   sourceId: string
 ) => {
   try {
-    const axiosInstance = api;
 
     let response;
     if (sourceType === TransferEntityType.STORE) {
@@ -123,7 +119,6 @@ export const createProductBatch = async (
   data: Partial<any> | FormData
 ) => {
   try {
-    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -143,7 +138,6 @@ export const updateProductBatch = async (
   data: Partial<any> | FormData
 ) => {
   try {
-    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -168,7 +162,6 @@ export const updateShopStock = async (
   unitOfMeasureId?: string | null
 ) => {
   try {
-    const axiosInstance = api;
 
     const response = await axiosInstance.put(
       `/update/shops/${shopId}/batches/${batchId}/stock`,
@@ -185,7 +178,6 @@ export const updateShopStock = async (
 // ✅ Delete product batch
 export const deleteProductBatch = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/product-batches/${id}`);
     return response.data;
   } catch (error) {

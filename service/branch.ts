@@ -1,4 +1,4 @@
-import { api } from './api';
+import { axiosInstance } from './api';
 import { IBranch } from '@/models/Branch';
 import { GetParams } from './roleService';
 
@@ -21,7 +21,7 @@ export const getAllbranches = async ({
 
     const url = `branches?${query}`;
 
-    const response = await api.get<BranchesResponse>(url);
+    const response = await axiosInstance.get<BranchesResponse>(url);
     const branches = response.data.branches;
 
     return {
@@ -35,7 +35,6 @@ export const getAllbranches = async ({
 };
 export const getBranches = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/branches`);
     return response.data.branches as IBranch[];
   } catch (error) {
@@ -46,7 +45,6 @@ export const getBranches = async () => {
 // Get a branch by ID
 export const getBranchById = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/branches/${id}`);
     return response.data.branch as IBranch;
   } catch (error) {
@@ -59,7 +57,6 @@ export const createBranch = async (
   data: any | FormData
 ) => {
   try {
-    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -79,7 +76,6 @@ export const updateBranch = async (
   data: Partial<IBranch> | FormData
 ) => {
   try {
-    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -96,7 +92,6 @@ export const updateBranch = async (
 // Delete a branch
 export const deleteBranch = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/branches/${id}`);
     return response.data;
   } catch (error) {

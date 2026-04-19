@@ -1,7 +1,4 @@
-import axios, {
-  AxiosError,
-  InternalAxiosRequestConfig,
-} from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { apiConfig } from "@/config/apiConfig";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -16,7 +13,7 @@ type RefreshResponse = {
   };
 };
 
-const api = axios.create({
+const axiosInstance = axios.create({
   baseURL: apiConfig.BASE_URL,
   timeout: apiConfig.TIMEOUT_MS,
 });
@@ -39,7 +36,7 @@ const shouldSkipRefresh = (url?: string) => {
 };
 
 // ── Request interceptor: attach access token ──
-api.interceptors.request.use((config) => {
+axiosInstance.interceptors.request.use((config) => {
   const tokens = useAuthStore.getState().tokens;
 
   if (tokens?.accessToken) {
@@ -51,7 +48,7 @@ api.interceptors.request.use((config) => {
 });
 
 // ── Response interceptor: 401 → refresh → retry ──
-api.interceptors.response.use(
+axiosInstance.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as RetryConfig | undefined;
@@ -103,7 +100,7 @@ api.interceptors.response.use(
       originalRequest.headers = originalRequest.headers || {};
       originalRequest.headers.Authorization = `Bearer ${refreshedTokens.accessToken}`;
 
-      return api(originalRequest);
+      return axiosInstance(originalRequest);
     } catch (refreshError) {
       useAuthStore.getState().clearAuth();
       redirectToLogin();
@@ -123,5 +120,4 @@ function redirectToLogin() {
 }
 
 export const apiUrl = apiConfig.BASE_URL;
-export { api };
-export default api;
+export { axiosInstance };

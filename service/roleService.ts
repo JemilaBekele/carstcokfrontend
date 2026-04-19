@@ -1,4 +1,4 @@
-import { api } from './api';
+import { axiosInstance } from './api';
 
 // Role type
 export interface IRole {
@@ -29,7 +29,6 @@ export interface IRolePermission {
 // ============================
 
 export const createRole = async (data: IRole) => {
-  const axiosInstance = api;
   const res = await axiosInstance.post('/roles', data);
   return res.data;
 };
@@ -68,7 +67,7 @@ export const getAllRoles = async ({
 
     const url = `roles?${query}`;
 
-    const response = await api.get<RoleResponse>(url);
+    const response = await axiosInstance.get<RoleResponse>(url);
     const roles = response.data.roles;
 
     return {
@@ -82,19 +81,16 @@ export const getAllRoles = async ({
 };
 
 export const getRoleall = async () => {
-  const axiosInstance = api;
   const res = await axiosInstance.get(`/roles`);
   return res.data.roles;
 };
 
 export const getRoleById = async (id: string) => {
-  const axiosInstance = api;
   const res = await axiosInstance.get(`/roles/${id}`);
   return res.data;
 };
 
 export const getRoleByName = async (name: string) => {
-  const axiosInstance = api;
   const res = await axiosInstance.get(`/roles/name/${name}`);
   return res.data;
 };
@@ -103,13 +99,11 @@ export const updateRole = async (
   id: string,
   data: Partial<IRole>
 ) => {
-  const axiosInstance = api;
   const res = await axiosInstance.put(`/roles/${id}`, data);
   return res.data;
 };
 
 export const deleteRole = async (id: string) => {
-  const axiosInstance = api;
   const res = await axiosInstance.delete(`/roles/${id}`);
   return res.data;
 };
@@ -122,7 +116,6 @@ export const assignPermissionsToRole = async (
   roleId: string,
   permissionIds: string[]
 ) => {
-  const axiosInstance = api;
   const res = await axiosInstance.post(`/roles/${roleId}/permissions`, {
     permissionIds
   });
@@ -133,7 +126,6 @@ export const addPermissionToRole = async (
   roleId: string,
   permissionId: string
 ) => {
-  const axiosInstance = api;
   const res = await axiosInstance.post(`/roles/${roleId}/permissions/${permissionId}`);
   return res.data;
 };
@@ -142,7 +134,6 @@ export const removePermissionFromRole = async (
   roleId: string,
   permissionId: string
 ) => {
-  const axiosInstance = api;
   const res = await axiosInstance.delete(
     `/roles/${roleId}/permissions/${permissionId}`
   );
@@ -184,7 +175,7 @@ export const getAllPermissions = async ({
 
     const url = `permissions?${query}`;
 
-    const response = await api.get<RoleResponse>(url);
+    const response = await axiosInstance.get<RoleResponse>(url);
     const permissions = response.data.permissions;
 
     return {
@@ -198,7 +189,6 @@ export const getAllPermissions = async ({
 };
 
 export const getPermission = async () => {
-  const axiosInstance = api;
   const res = await axiosInstance.get(`/permissions`);
   return res.data.permissions;
 };
@@ -217,7 +207,6 @@ interface RolePermissionResponse {
 export const createRolePermission = async (
   data: { roleId: string; permissionIds: string[] }
 ) => {
-  const axiosInstance = api;
 
   const res = await axiosInstance.post('/role-permissions', {
     roleId: data.roleId,
@@ -229,7 +218,6 @@ export const createRolePermission = async (
 export const Createassign = async (
   data: { roleId: string; permissionIds: string[] }
 ) => {
-  const axiosInstance = api;
 
   const res = await axiosInstance.post('/role-permissions/assign', {
     roleId: data.roleId,
@@ -242,7 +230,6 @@ export const Createassign = async (
 export const updateRolePermissionsService = async (
   data: { roleId: string; permissionIds: string[] }
 ) => {
-  const axiosInstance = api;
 
   const res = await axiosInstance.put('/role/permissions/update/assign', {
     roleId: data.roleId,
@@ -273,7 +260,7 @@ export const getAllRolePermissions = async ({
 
     const url = `role-permissions?${query.toString()}`;
 
-    const response = await api.get<RolePermissionResponse>(url);
+    const response = await axiosInstance.get<RolePermissionResponse>(url);
     return {
       rolePermissions: response.data.rolePermissions,
       totalCount: response.data.count ?? response.data.rolePermissions.length,
@@ -288,7 +275,6 @@ export const getAllRolePermissions = async ({
 export const getRolePermissionById = async (
   id: string
 ) => {
-  const axiosInstance = api;
   const res = await axiosInstance.get(`/role-permissions/${id}`);
   return res.data;
 };
@@ -297,7 +283,6 @@ export const getRolePermissionById = async (
 export const deleteRolePermission = async (
   id: string
 ) => {
-  const axiosInstance = api;
   const res = await axiosInstance.delete(`/role-permissions/${id}`);
   return res.data;
 };
@@ -307,7 +292,6 @@ export const deleteRolePermissionByRelation = async (
   roleId: string,
   permissionId: string
 ) => {
-  const axiosInstance = api;
   const res = await axiosInstance.delete(`/role-permissions/${roleId}/${permissionId}`);
   return res.data;
 };
@@ -316,7 +300,6 @@ export const updateRolePermission = async (
   id: string,
   data: Partial<IRolePermission>
 ) => {
-  const axiosInstance = api;
   const res = await axiosInstance.put(`/role-permissions/${id}`, data);
   return res.data;
 };

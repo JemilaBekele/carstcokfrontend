@@ -1,4 +1,4 @@
-import { api } from './api';
+import { axiosInstance } from './api';
 import { ICategory, ISubCategory } from '@/models/Category';
 
 // Generic Pagination Params
@@ -27,7 +27,7 @@ export const getAllCategories = async ({
     });
 
     const url = `categories?${query}`;
-    const response = await api.get<CategoriesResponse>(url);
+    const response = await axiosInstance.get<CategoriesResponse>(url);
     const categories = response.data.categories;
 
     return {
@@ -42,7 +42,6 @@ export const getAllCategories = async ({
 
 export const getCategories = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/categories`);
     return response.data.categories as ICategory[];
   } catch (error) {
@@ -51,7 +50,7 @@ export const getCategories = async () => {
 };
 export const getCategoriesapi = async () => {
   try {
-    const response = await api.get(`/categories`);
+    const response = await axiosInstance.get(`/categories`);
     return response.data.categories as ICategory[];
   } catch (error) {
     throw error;
@@ -60,7 +59,6 @@ export const getCategoriesapi = async () => {
 
 export const getCategoryById = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/categories/${id}`);
     return response.data.category as ICategory;
   } catch (error) {
@@ -72,7 +70,6 @@ export const createCategory = async (
   data: Partial<ICategory>
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.post(`/categories`, data);
     return response.data;
   } catch (error) {
@@ -85,7 +82,6 @@ export const updateCategory = async (
   data: Partial<ICategory>
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.put(`/categories/${id}`, data);
     return response.data;
   } catch (error) {
@@ -95,7 +91,6 @@ export const updateCategory = async (
 
 export const deleteCategory = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/categories/${id}`);
     return response.data;
   } catch (error) {

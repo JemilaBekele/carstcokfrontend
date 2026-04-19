@@ -1,4 +1,4 @@
-import { api } from './api';
+import { axiosInstance } from './api';
 import { ITransfer } from '@/models/transfer';
 import { PaginationParams } from './store';
 
@@ -20,7 +20,6 @@ export const getAllTransfers = async ({
   success?: boolean;
 }> => {
   try {
-    const axiosInstance = api;
 
     const query = new URLSearchParams({
       page: page.toString(),
@@ -51,7 +50,6 @@ export const getAllTransfers = async ({
 // ✅ Get transfers (simple version)
 export const getTransfers = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/transfers`);
     return response.data.transfers as ITransfer[];
   } catch (error) {
@@ -62,7 +60,6 @@ export const getTransfers = async () => {
 // ✅ Get transfer by ID
 export const getTransferById = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/transfers/${id}`);
     return response.data.transfer as ITransfer;
   } catch (error) {
@@ -72,7 +69,6 @@ export const getTransferById = async (id: string) => {
 
 export const getTransferId = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/transfers/${id}`);
     return response.data.transfer as ITransfer;
   } catch (error) {
@@ -84,7 +80,6 @@ export const getTransferBatches = async (
   transferId: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`transfers/batches/${transferId}`);
     return response.data.batches; // array of batches
   } catch (error) {
@@ -95,7 +90,6 @@ export const bulkUpdateAdditionalPrices = async (
   batchUpdates: any
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.put(
       '/transfers/batches/additional-prices',
       batchUpdates
@@ -110,7 +104,6 @@ export const getTransferByReference = async (
   reference: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(
       `/transfers/reference/${reference}`
     );
@@ -123,7 +116,6 @@ export const getTransferByReference = async (
 // ✅ Create a transfer
 export const createTransfer = async (data: any) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.post(`/transfers`, data);
     return response.data;
   } catch (error) {
@@ -137,7 +129,6 @@ export const updateTransfer = async (
   data: any
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.put(`/transfers/${id}`, data);
     return response.data;
   } catch (error) {
@@ -148,7 +139,6 @@ export const updateTransfer = async (
 // ✅ Complete a transfer
 export const completeTransfer = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.post(`/transfers/${id}/complete`);
     return response.data;
   } catch (error) {
@@ -159,7 +149,6 @@ export const completeTransfer = async (id: string) => {
 // ✅ Cancel a transfer
 export const cancelTransfer = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.post(`/transfers/${id}/cancel`);
     return response.data;
   } catch (error) {
@@ -170,7 +159,6 @@ export const cancelTransfer = async (id: string) => {
 // ✅ Delete a transfer
 export const deleteTransfer = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/transfers/${id}`);
     return response.data;
   } catch (error) {

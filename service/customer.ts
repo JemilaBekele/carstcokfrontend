@@ -1,5 +1,5 @@
 /* eslint-disable import/no-unresolved */
-import { api } from './api';
+import { axiosInstance } from './api';
 import { GetParams } from './roleService';
 import { ICustomer } from '@/models/customer';
 
@@ -20,7 +20,7 @@ export const getAllCustomers = async ({
     });
 
     const url = `/customers?${query}`;
-    const response = await api.get<CustomerResponse>(url);
+    const response = await axiosInstance.get<CustomerResponse>(url);
     const customers = response.data.customers;
 
     return {
@@ -35,7 +35,6 @@ export const getAllCustomers = async ({
 
 export const getCustomer = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get('/customers');
     return response.data.customers;
   } catch (error) {
@@ -45,7 +44,7 @@ export const getCustomer = async () => {
 
 export const getCustomerById = async (id: string | number) => {
   try {
-    const response = await api.get(`/customers/${id}`);
+    const response = await axiosInstance.get(`/customers/${id}`);
     return response.data.customer;
   } catch (error) {
     throw error;
@@ -56,7 +55,6 @@ export const createCustomer = async (
   customerData: any
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.post('/customers', customerData);
     return response.data;
   } catch (error) {
@@ -69,7 +67,6 @@ export const updateCustomer = async (
   updatedData: Partial<ICustomer>
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.put(`/customers/${id}`, updatedData);
     return response.data;
   } catch (error) {
@@ -81,7 +78,6 @@ export const deleteCustomer = async (
   id: string | number
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/customers/${id}`);
     return response.data;
   } catch (error) {

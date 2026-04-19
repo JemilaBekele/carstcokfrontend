@@ -1,4 +1,4 @@
-import { api } from './api';
+import { axiosInstance } from './api';
 import { GetParams } from './roleService';
 import { IPurchase } from '@/models/purchase';
 import { IStockCorrection } from '@/models/StockCorrection';
@@ -33,7 +33,7 @@ export const getAllPurchases = async (
     });
 
     const url = `purchases?${query}`;
-    const response = await api.get<PurchasesResponse>(url);
+    const response = await axiosInstance.get<PurchasesResponse>(url);
     const purchases = response.data.purchases;
 
     return {
@@ -49,7 +49,6 @@ export const getAllPurchases = async (
 // Get all purchases (simple version)
 export const getPurchases = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/purchases`);
     return response.data.purchases as IPurchase[];
   } catch (error) {
@@ -60,7 +59,6 @@ export const getPurchases = async () => {
 // Get a purchase by ID
 export const getPurchaseById = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/purchases/${id}`);
     return response.data.purchase as IPurchase;
   } catch (error) {
@@ -69,7 +67,6 @@ export const getPurchaseById = async (id: string) => {
 };
 export const getPurchaseId = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/purchases/${id}`);
     return response.data.purchase as IPurchase;
   } catch (error) {
@@ -80,7 +77,6 @@ export const getStockCorrectionsByPurchaseId = async (
   id: string
 ): Promise<IStockCorrection[]> => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(
       `/stock-corrections/purchase/${id}`
     );
@@ -94,7 +90,6 @@ export const getPurchaseByInvoiceNo = async (
   invoiceNo: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/purchases/invoice/${invoiceNo}`);
     return response.data.purchase as IPurchase;
   } catch (error) {
@@ -105,7 +100,6 @@ export const getPurchaseByInvoiceNo = async (
 // Create a purchase
 export const createPurchase = async (data: any) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.post(`/purchases`, data);
     return response.data;
   } catch (error) {
@@ -119,7 +113,6 @@ export const updatePurchase = async (
   data: any
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.put(`/purchases/${id}`, data);
     return response.data;
   } catch (error) {
@@ -131,7 +124,6 @@ export const acceptPurchase = async (
   paymentStatus: string
 ) => {
   try {
-    const axiosInstance = api;
 
     // ✅ Send paymentStatus inside request body
     const response = await axiosInstance.put(`/purchases/accept/${id}`, {
@@ -147,7 +139,6 @@ export const acceptPurchase = async (
 // Delete a purchase
 export const deletePurchase = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/purchases/${id}`);
     return response.data;
   } catch (error) {

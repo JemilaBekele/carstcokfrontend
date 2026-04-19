@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { api } from './api';
+import { axiosInstance } from './api';
 import { PaginationParams } from './store';
 
 // 🔹 Define StockCorrection type (adjust fields to your model)
@@ -32,7 +32,6 @@ export const getAllStockCorrections = async ({
   success?: boolean;
 }> => {
   try {
-    const axiosInstance = api;
 
     const query = new URLSearchParams({
       page: page.toString(),
@@ -59,7 +58,6 @@ export const getAllStockCorrections = async ({
 // ✅ Get stock corrections (simple version)
 export const getStockCorrections = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/stock-corrections`);
     return response.data.stockCorrections as IStockCorrection[];
   } catch (error) {
@@ -72,7 +70,6 @@ export const getStockCorrectionById = async (
   id: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/stock-corrections/${id}`);
     return response.data.stockCorrection;
   } catch (error) {
@@ -83,7 +80,6 @@ export const getStockCorrectionId = async (
   id: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/stock-corrections/${id}`);
     return response.data.stockCorrection;
   } catch (error) {
@@ -96,7 +92,6 @@ export const getStockCorrectionByReference = async (
   reference: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(
       `/stock-corrections/reference/${reference}`
     );
@@ -111,7 +106,6 @@ export const createStockCorrection = async (
   data: any
 ) => {
   try {
-    const axiosInstance = api;
     
     const response = await axiosInstance.post(`/stock-corrections`, data);
     return response.data;
@@ -126,7 +120,6 @@ export const updateStockCorrection = async (
   data: any
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.put(`/stock-corrections/${id}`, data);
     return response.data;
   } catch (error) {
@@ -139,7 +132,6 @@ export const approveStockCorrection = async (
   id: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.post(
       `/stock-corrections/${id}/approve`
     );
@@ -154,7 +146,6 @@ export const rejectStockCorrection = async (
   id: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.post(
       `/stock-corrections/${id}/reject`
     );
@@ -169,7 +160,6 @@ export const deleteStockCorrection = async (
   id: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/stock-corrections/${id}`);
     return response.data;
   } catch (error) {

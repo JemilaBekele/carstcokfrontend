@@ -1,10 +1,9 @@
-import { api } from './api';
+import { axiosInstance } from './api';
 import { ICompany } from '@/models/employee';
 
 // Get all companies
 export const getCompanies = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/companies`);
     return response.data.companies as ICompany[];
   } catch (error) {
@@ -15,7 +14,7 @@ export const getCompanies = async () => {
 // Get a company by ID
 export const getCompanyById = async (id: string) => {
   try {
-    const response = await api.get(`/companies/${id}`);
+    const response = await axiosInstance.get(`/companies/${id}`);
     return response.data as ICompany;
   } catch (error) {
     throw error;
@@ -28,7 +27,6 @@ export const createCompany = async (
   data: ICompany | FormData
 ) => {
   try {
-    const axiosInstance = api;
 
     // Check if data is FormData
     const config =
@@ -49,7 +47,6 @@ export const updateCompany = async (
   data: Partial<ICompany> | FormData
 ) => {
   try {
-    const axiosInstance = api;
 
     // Check if data is FormData
     const config =
@@ -67,7 +64,6 @@ export const updateCompany = async (
 // Delete a company
 export const deleteCompany = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/companies/${id}`);
     return response.data;
   } catch (error) {

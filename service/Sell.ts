@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { api } from './api';
+import { axiosInstance } from './api';
 import { PaginationParams } from './store';
 import { ISell } from '@/models/Sell';
 
@@ -21,7 +21,6 @@ export const getAllSells = async ({
   success?: boolean;
 }> => {
   try {
-    const axiosInstance = api;
 
     const query = new URLSearchParams({
       page: page.toString(),
@@ -58,7 +57,6 @@ export const getAllSellsuserBased = async ({
   success?: boolean;
 }> => {
   try {
-    const axiosInstance = api;
 
     const query = new URLSearchParams({
       page: page.toString(),
@@ -94,7 +92,6 @@ export const getAllSellsstoregetAll = async ({
   success?: boolean;
 }> => {
   try {
-    const axiosInstance = api;
 
     const query = new URLSearchParams({
       page: page.toString(),
@@ -123,7 +120,6 @@ export const getAllSellsstoregetAll = async ({
 // ✅ Get sells (simple version)
 export const getSells = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/sells`);
     return response.data.sells as ISell[];
   } catch (error) {
@@ -134,7 +130,6 @@ export const getSells = async () => {
 // ✅ Get sell by ID
 export const getSellById = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/sells/${id}`);
     return response.data.sell as ISell;
   } catch (error) {
@@ -143,7 +138,6 @@ export const getSellById = async (id: string) => {
 };
 export const getSellByIds = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/sells/${id}`);
     return response.data.sell as ISell;
   } catch (error) {
@@ -153,7 +147,6 @@ export const getSellByIds = async (id: string) => {
 // ✅ Get sell by ID but user-based
 export const getSellByIdByUser = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/sells/${id}/user/based`);
     return response.data.sell as ISell;
   } catch (error) {
@@ -162,7 +155,6 @@ export const getSellByIdByUser = async (id: string) => {
 };
 export const unlockSellById = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.patch(`/sells/With/Lock/${id}`);
     return response.data; // You might want to specify a return type based on what your API returns
   } catch (error) {
@@ -171,7 +163,6 @@ export const unlockSellById = async (id: string) => {
 };
 export const getSellId = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/sells/${id}`);
     return response.data.sell as ISell;
   } catch (error) {
@@ -182,7 +173,6 @@ export const getSellId = async (id: string) => {
 // ✅ Create a sell
 export const createSell = async (data: any) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.post(`/sells`, data);
     return response.data;
   } catch (error) {
@@ -196,7 +186,6 @@ export const updateSell = async (
   data: any
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.put(`/sells/${id}`, data);
     return response.data;
   } catch (error) {
@@ -207,7 +196,6 @@ export const updateSell = async (
 // ✅ Delete a sell
 export const deleteSell = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/sells/${id}`);
     return response.data;
   } catch (error) {
@@ -222,7 +210,6 @@ export const deliverAllSaleItems = async (
   deliveryData: DeliveryData
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.patch(`/sells/deliver/all/${id}`, {
       deliveryData
     });
@@ -238,7 +225,6 @@ export const completeSaleDelivery = async (
   deliveryData: DeliveryData
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.patch(`/sells/deliver/${id}`, {
       deliveryData
     });
@@ -254,7 +240,6 @@ export const partialSaleDelivery = async (
   deliveryData: DeliveryData
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.patch(`/sells/partial/deliver/${id}`, {
       deliveryData
     });
@@ -284,7 +269,6 @@ export const updateSaleStatus = async (
   newStatus: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.patch(`/sells/${id}/status`, {
       newStatus
     });
@@ -300,7 +284,6 @@ export const updatePaymentStatus = async (
   newPaymentStatus: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.patch(`/sells/${id}/payment-status`, {
       newPaymentStatus
     });
@@ -313,7 +296,6 @@ export const updatePaymentStatus = async (
 // ✅ Cancel Sale
 export const cancelSale = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.patch(`/sells/${id}/cancel`);
     return response.data;
   } catch (error) {

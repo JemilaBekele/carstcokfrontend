@@ -2,7 +2,7 @@
 /* eslint-disable import/no-unresolved */
 
 import { IEmployee } from '@/models/employee';
-import { api } from './api';
+import { axiosInstance } from './api';
 
 export interface GetParams {
   page?: number;
@@ -39,7 +39,7 @@ export const getAllEmployees = async ({
 
     const url = `users?${query}`;
 
-    const response = await api.get<EmployeeResponse>(url);
+    const response = await axiosInstance.get<EmployeeResponse>(url);
     const employees = response.data.users;
 
     return {
@@ -54,7 +54,6 @@ export const getAllEmployees = async ({
 
 export const getAllEmploy = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/users`);
     return response.data.users;
   } catch (error) {
@@ -63,7 +62,7 @@ export const getAllEmploy = async () => {
 };
 export const getAllEmployapi = async () => {
   try {
-    const response = await api.get(`/users`);
+    const response = await axiosInstance.get(`/users`);
     return response.data.users;
   } catch (error) {
     throw error;
@@ -71,7 +70,6 @@ export const getAllEmployapi = async () => {
 };
 export const getUserProfile = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/user/profile/view`);
     return response.data;
   } catch (error) {
@@ -84,7 +82,6 @@ export const changePassword = async (
   newPassword: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.put(
       `/user/${userId}/change-password`,
       {
@@ -102,7 +99,6 @@ export const resetUserPassword = async (
   newPassword: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.put(`/user/reset-password/${userId}`, {
       newPassword
     });
@@ -114,7 +110,6 @@ export const resetUserPassword = async (
 
 export const getAlldep = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/user/assignd/employee`);
     return response.data.users;
   } catch (error) {
@@ -123,7 +118,6 @@ export const getAlldep = async () => {
 };
 export const fetchUserInvoices = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get('/invoices/fetch/userinvoice');
     return response.data.invoices;
   } catch (error) {
@@ -132,7 +126,6 @@ export const fetchUserInvoices = async () => {
 };
 export const getAllTen = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/user/roletentant`);
     return response.data.users;
   } catch (error) {
@@ -161,7 +154,7 @@ export const getAllTentant = async ({
 
     const url = `/user/roletentant?${query}`;
 
-    const response = await api.get<EmployeeResponse>(url);
+    const response = await axiosInstance.get<EmployeeResponse>(url);
     const employees = response.data.users;
 
     return {
@@ -181,7 +174,7 @@ export const getAllnotconfirm = async (page = 1, limit = 10) => {
   });
 
   try {
-    const response = await api.get(`/user/confirmfalse?${query}`);
+    const response = await axiosInstance.get(`/user/confirmfalse?${query}`);
 
     // Extract bicycles from response
     const { users = [] } = response.data || {};
@@ -198,7 +191,7 @@ export const getAllnotconfirm = async (page = 1, limit = 10) => {
 export const getEmployeeById = async (id: string | number) => {
   try {
     // Send `id` as a query parameter
-    const response = await api.get(`/users/${id}`);
+    const response = await axiosInstance.get(`/users/${id}`);
     return response.data.user;
   } catch (error) {
     throw error;
@@ -209,7 +202,6 @@ export const getEmployeeId = async (
   id: string | number
 ) => {
   try {
-    const axiosInstance = api;
     // Send `id` as a query parameter
     const response = await axiosInstance.get(`/user/${id}`);
     return response.data;
@@ -222,7 +214,6 @@ export const createEmployee = async (
   employeeData: any
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.post('/register', employeeData);
     return response.data;
   } catch (error) {
@@ -235,7 +226,6 @@ export const updateEmployee = async (
   formData: any
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.put(`/users/${id}`, formData);
     return response;
   } catch (error) {
@@ -250,7 +240,6 @@ export const deleteUser = async (
     throw new Error('Service ID is required');
   }
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/users/${id}`);
     return response;
   } catch (error) {

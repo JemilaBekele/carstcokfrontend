@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import api from "./api";
+import { axiosInstance } from "./api";
 import { useAuthStore } from "@/stores/auth.store";
 import { clearClientAuth, normalizeAuthUser } from "./authSession";
 import type { BackendAuthUser } from "@/types/auth";
@@ -17,7 +17,7 @@ type ProfileResponse = {
 };
 
 export const login = async (email: string, password: string) => {
-  const response = await api.post<LoginResponse>("/login", { email, password });
+  const response = await axiosInstance.post<LoginResponse>("/login", { email, password });
 
   const user = normalizeAuthUser(response.data.user);
   const tokens = {
@@ -32,7 +32,7 @@ export const login = async (email: string, password: string) => {
 };
 
 export const getProfile = async () => {
-  const response = await api.get<ProfileResponse>("/users/Usermy/data");
+  const response = await axiosInstance.get<ProfileResponse>("/users/Usermy/data");
   return normalizeAuthUser(response.data.user);
 };
 

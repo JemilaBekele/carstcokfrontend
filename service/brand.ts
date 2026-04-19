@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { api } from './api';
+import { axiosInstance } from './api';
 import { GetParams } from './roleService';
 import { IBrand } from '@/models/brand';
 
@@ -22,7 +22,7 @@ export const getAllBrands = async ({
 
     const url = `brands?${query}`;
 
-    const response = await api.get<BrandsResponse>(url);
+    const response = await axiosInstance.get<BrandsResponse>(url);
     const brands = response.data.brands;
 
     return {
@@ -38,7 +38,6 @@ export const getAllBrands = async ({
 // Get brands (SSR / server-side)
 export const getBrands = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/brands`);
     return response.data.brands as IBrand[];
   } catch (error) {
@@ -48,7 +47,6 @@ export const getBrands = async () => {
 
 export const getTopBrands = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/brands?limit=10`);
     return response.data.brands as IBrand[];
   } catch (error) {
@@ -59,7 +57,6 @@ export const getTopBrands = async () => {
 // Get brand by ID
 export const getBrandById = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/brands/${id}`);
     return response.data.brand as IBrand;
   } catch (error) {
@@ -72,7 +69,6 @@ export const createBrand = async (
   data: Partial<IBrand>
 ) => {
   try {
-    const axiosInstance = api;
     
     const response = await axiosInstance.post(`/brands`, data);
     return response.data;
@@ -88,7 +84,6 @@ export const updateBrand = async (
   data: Partial<IBrand>
 ) => {
   try {
-    const axiosInstance = api;
     
     const response = await axiosInstance.put(`/brands/${id}`, data);
     return response.data;
@@ -101,7 +96,6 @@ export const updateBrand = async (
 // Delete brand
 export const deleteBrand = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/brands/${id}`);
     return response.data;
   } catch (error) {

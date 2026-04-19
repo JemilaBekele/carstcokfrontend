@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { api } from './api';
+import { axiosInstance } from './api';
 import { IShopStock, IStockLedger, IStore, IStoreStock } from '@/models/store';
 import { GetParams } from './roleService';
 
@@ -20,7 +20,7 @@ export const getAllstore = async ({ page = 1, limit = 10 }: GetParams = {}) => {
 
     const url = `stores?${query}`;
 
-    const response = await api.get<storeResponse>(url);
+    const response = await axiosInstance.get<storeResponse>(url);
     const stores = response.data.stores;
 
     return {
@@ -35,7 +35,6 @@ export const getAllstore = async ({ page = 1, limit = 10 }: GetParams = {}) => {
 
 export const getStores = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/stores`);
     return response.data.stores as IStore[];
   } catch (error) {
@@ -44,7 +43,6 @@ export const getStores = async () => {
 };
 export const getStoresall = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/stores/get/all`);
     console.log("store",response.data.stores)
     return response.data.stores as IStore[];
@@ -56,7 +54,6 @@ export const getStoresall = async () => {
 // Get a store by ID
 export const getStoreById = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/stores/${id}`);
     return response.data.store as IStore;
   } catch (error) {
@@ -69,7 +66,6 @@ export const createStore = async (
   data: any | FormData
 ) => {
   try {
-    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -89,7 +85,6 @@ export const updateStore = async (
   data: Partial<IStore> | FormData
 ) => {
   try {
-    const axiosInstance = api;
 
     const config =
       data instanceof FormData
@@ -106,7 +101,6 @@ export const updateStore = async (
 // Delete a store
 export const deleteStore = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/stores/${id}`);
     return response.data;
   } catch (error) {
@@ -132,7 +126,6 @@ export const getAllStockLedgers = async ({
   success?: boolean;
 }> => {
   try {
-    const axiosInstance = api;
 
     const query = new URLSearchParams({
       page: page.toString(),
@@ -178,7 +171,6 @@ export const getAllShopStocks = async ({
   success?: boolean;
 }> => {
   try {
-    const axiosInstance = api;
 
     const query = new URLSearchParams({
       page: page.toString(),
@@ -230,7 +222,6 @@ export const getAllStoreStocks = async ({
   success?: boolean;
 }> => {
   try {
-    const axiosInstance = api;
 
     const query = new URLSearchParams({
       page: page.toString(),

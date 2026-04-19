@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { api } from './api';
+import { axiosInstance } from './api';
 import { SalesReportResponse } from '@/features/Dasboard/ReportSell/staticgenerate';
 
 // ========================= SELL REPORTS ========================= //
@@ -17,7 +17,6 @@ interface SellTrendResponse {
 
 export const getSellTrendApi = async () => {
   try {
-    const axiosInstance = api;
 
     const response = await axiosInstance.get<SellTrendResponse>(`/trend`);
     return response.data.chartData;
@@ -39,7 +38,6 @@ export const getTotalSold = async (
   params: { startDate?: string; endDate?: string } = {}
 ) => {
   try {
-    const axiosInstance = api;
     const query = new URLSearchParams(params).toString();
     const response = await axiosInstance.get<TotalSoldResponse>(
       `/total-sold?${query}`
@@ -55,7 +53,7 @@ export const getTotalSoldApi = async (
 ) => {
   try {
     const query = new URLSearchParams(params).toString();
-    const response = await api.get<TotalSoldResponse>(
+    const response = await axiosInstance.get<TotalSoldResponse>(
       `/api/total-sold?${query}`
     );
     return response.data;
@@ -96,7 +94,6 @@ export const getAllSells = async (
   } = {}
 ) => {
   try {
-    const axiosInstance = api;
     const query = new URLSearchParams(params).toString();
     const response = await axiosInstance.get<AllSellsResponse>(
       `/trend/all/sell?${query}`
@@ -117,7 +114,6 @@ export const getSalesReports = async (
   } = {}
 ) => {
   try {
-    const axiosInstance = api;
 
     const query = new URLSearchParams(
       Object.entries(params).reduce(
@@ -145,7 +141,6 @@ export const getUserDashboardSummaryApi = async (
   params: { startDate?: string; endDate?: string; } = {}
 ) => {
   try {
-    const axiosInstance = api;
 
     const response = await axiosInstance.get(`/reports/sales/user/dashboard`);
     return response.data;
@@ -157,7 +152,6 @@ export const getSalesCreatorDashboardSummaryApi = async (
   params: { } = {}
 ) => {
   try {
-    const axiosInstance = api;
 
     const response = await axiosInstance.get(
       '/reports/sales/user/creator/dashboard'
@@ -175,7 +169,6 @@ export const getFinancialTotalsApi = async (
   params: { } = {}
 ) => {
   try {
-    const axiosInstance = api;
 
     const response = await axiosInstance.get('/dashboard/financial-totals');
     return response.data;
@@ -191,7 +184,6 @@ export const getSellStatusChartApi = async (
   params: { } = {}
 ) => {
   try {
-    const axiosInstance = api;
 
     const response = await axiosInstance.get('/dashboard/sell-status-chart');
     return response.data;

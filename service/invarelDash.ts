@@ -1,9 +1,8 @@
-import { api } from './api';
+import { axiosInstance } from './api';
 
 export const InventoryDashboardApi = {
   // 📊 Get comprehensive inventory dashboard data
   getDashboard: async () => {
-    const axiosInstance = api;
     const response = await axiosInstance.get('/inventory-dashboard/dashboard');
     return response.data;
   },
@@ -12,7 +11,6 @@ export const InventoryDashboardApi = {
   getExpiringBatches: async (
     options?: { withinDays?: number }
   ) => {
-    const axiosInstance = api;
     const query = new URLSearchParams();
 
     if (options?.withinDays) {
@@ -29,7 +27,6 @@ export const InventoryDashboardApi = {
 
   // 🏬 Get stock summary by location (stores + shops)
   getStockSummaryByLocation: async () => {
-    const axiosInstance = api;
     const response = await axiosInstance.get(
       '/inventory-dashboard/location-summary'
     );

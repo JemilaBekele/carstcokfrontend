@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { api } from './api';
+import { axiosInstance } from './api';
 import { IProduct } from '@/models/Product';
 
 export interface GetParams {
@@ -26,7 +26,7 @@ export const getAllProducts = async ({
     });
 
     const url = `/products?${query}`;
-    const response = await api.get<ProductsResponse>(url);
+    const response = await axiosInstance.get<ProductsResponse>(url);
     const products = response.data.products;
     return {
       products: products,
@@ -41,7 +41,6 @@ export const getAllProducts = async ({
 // Get Products (SSR-safe)
 export const getProducts = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/products`);
     return response.data.products as IProduct[];
   } catch (error) {
@@ -50,7 +49,6 @@ export const getProducts = async () => {
 };
 export const getProductsnew = async () => {
   try {
-    const axiosInstance = api;
 
     const response = await axiosInstance.get(`/products`);
     return response.data.products as IProduct[];
@@ -60,7 +58,6 @@ export const getProductsnew = async () => {
 };
 export const ActivegetProducts = async () => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/products/Active/All`);
     return response.data.products as IProduct[];
   } catch (error) {
@@ -76,7 +73,6 @@ interface TopProductsOptions {
 export const TopProducts = async (options: TopProductsOptions = {}) => {
   try {
     const { searchTerm, categoryName, brandName } = options;
-    const axiosInstance = api;
 
     // Build query parameters - using names instead of IDs
     const params: any = {};
@@ -117,8 +113,8 @@ export const TopProducts = async (options: TopProductsOptions = {}) => {
 // Get Product by ID /api/
 export const getProductById = async (id: string) => {
   try {
-    // const axiosInstance = api;
-    const response = await api.get(`/products/${id}`);
+    //
+    const response = await axiosInstance.get(`/products/${id}`);
     return response.data.product as IProduct;
   } catch (error) {
     throw error;
@@ -129,7 +125,6 @@ export const getProductById = async (id: string) => {
 // Get Product by Code
 export const getProductByCode = async (code: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/products/code/${code}`);
     return response.data.product as IProduct;
   } catch (error) {
@@ -140,7 +135,6 @@ export const getProductByCode = async (code: string) => {
 // Create Product
 export const createProduct = async (data: any) => {
   try {
-    const axiosInstance = api;
     const config =
       data instanceof FormData
         ? { headers: { 'Content-Type': 'multipart/form-data' } }
@@ -161,7 +155,6 @@ export const updateProduct = async (
   data: any
 ) => {
   try {
-    const axiosInstance = api;
     const config =
       data instanceof FormData
         ? { headers: { 'Content-Type': 'multipart/form-data' } }
@@ -177,7 +170,6 @@ export const updateProduct = async (
 // Delete Product
 export const deleteProduct = async (id: string) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.delete(`/products/${id}`);
     return response.data;
   } catch (error) {
@@ -190,7 +182,6 @@ export const getProductdetailaById = async (
   id: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(`/product/detail/${id}`);
     return response.data.product;
   } catch (error) {
@@ -202,7 +193,6 @@ export const getProductByShops = async (
   productId: string
 ) => {
   try {
-    const axiosInstance = api;
     const response = await axiosInstance.get(
       `/products/shop/find/ByShops/${productId}`
     );
