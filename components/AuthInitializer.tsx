@@ -3,10 +3,13 @@
 import { useEffect } from "react";
 import { getProfile } from "@/service/authApi";
 import { clearClientAuth, redirectToLogin } from "@/service/authSession";
-import { useAuthStore } from "@/stores/auth.store";
+import { useAuthStore, useStoreHydrated } from "@/stores/auth.store";
 
 export default function AuthInitializer() {
+  const hydrated = useStoreHydrated();
+
   useEffect(() => {
+    if (!hydrated) return;
     let cancelled = false;
 
     const init = async () => {
@@ -21,7 +24,6 @@ export default function AuthInitializer() {
         const user = await getProfile();
 
         if (!cancelled) {
-          // Update user + permissions, keep existing tokens
           useAuthStore.getState().setUser(user);
         }
       } catch {
@@ -46,7 +48,7 @@ export default function AuthInitializer() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [hydrated]);
 
   return null;
 }

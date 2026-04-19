@@ -2,15 +2,17 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/stores/auth.store";
+import { useAuthStore, useStoreHydrated } from "@/stores/auth.store";
 
 export default function Page() {
   const router = useRouter();
+  const hydrated = useStoreHydrated();
+  const tokens = useAuthStore((s) => s.tokens);
 
   useEffect(() => {
-    const tokens = useAuthStore.getState().tokens;
+    if (!hydrated) return;
     router.replace(tokens?.accessToken ? "/dashboard" : "/login");
-  }, [router]);
+  }, [hydrated, tokens, router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">

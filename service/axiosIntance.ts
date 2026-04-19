@@ -30,9 +30,17 @@ let refreshPromise: Promise<{
   refreshToken: string;
 }> | null = null;
 
+const REFRESH_SKIP_PATHS = new Set<string>([
+  "/login",
+  "/login/Store/only",
+  "/login/Sales/only",
+  "/auth/refresh-tokens",
+]);
+
 const shouldSkipRefresh = (url?: string) => {
   if (!url) return false;
-  return url.includes("/login") || url.includes("/auth/refresh-tokens");
+  const path = url.split("?")[0];
+  return REFRESH_SKIP_PATHS.has(path);
 };
 
 // ── Request interceptor: attach access token ──
