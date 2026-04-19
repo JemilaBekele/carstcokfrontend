@@ -1,5 +1,5 @@
-import { axiosInstance } from './api';
-import { ICategory, ISubCategory } from '@/models/Category';
+import { axiosInstance } from "./axiosIntance";
+import { ICategory, ISubCategory } from "@/models/Category";
 
 // Generic Pagination Params
 export interface GetParams {
@@ -18,12 +18,12 @@ interface CategoriesResponse {
 
 export const getAllCategories = async ({
   page = 1,
-  limit = 10
+  limit = 10,
 }: GetParams = {}) => {
   try {
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     const url = `categories?${query}`;
@@ -33,7 +33,7 @@ export const getAllCategories = async ({
     return {
       categories,
       totalCount: response.data.count ?? categories.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -66,9 +66,7 @@ export const getCategoryById = async (id: string) => {
   }
 };
 
-export const createCategory = async (
-  data: Partial<ICategory>
-) => {
+export const createCategory = async (data: Partial<ICategory>) => {
   try {
     const response = await axiosInstance.post(`/categories`, data);
     return response.data;
@@ -77,10 +75,7 @@ export const createCategory = async (
   }
 };
 
-export const updateCategory = async (
-  id: string,
-  data: Partial<ICategory>
-) => {
+export const updateCategory = async (id: string, data: Partial<ICategory>) => {
   try {
     const response = await axiosInstance.put(`/categories/${id}`, data);
     return response.data;
@@ -97,5 +92,3 @@ export const deleteCategory = async (id: string) => {
     throw error;
   }
 };
-
-

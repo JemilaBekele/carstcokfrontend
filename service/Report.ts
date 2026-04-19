@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { axiosInstance } from './api';
-import { SalesReportResponse } from '@/features/Dasboard/ReportSell/staticgenerate';
+import { axiosInstance } from "./axiosIntance";
+import { SalesReportResponse } from "@/features/Dasboard/ReportSell/staticgenerate";
 
 // ========================= SELL REPORTS ========================= //
 
@@ -17,7 +17,6 @@ interface SellTrendResponse {
 
 export const getSellTrendApi = async () => {
   try {
-
     const response = await axiosInstance.get<SellTrendResponse>(`/trend`);
     return response.data.chartData;
   } catch (error) {
@@ -35,12 +34,12 @@ interface TotalSoldResponse {
 }
 
 export const getTotalSold = async (
-  params: { startDate?: string; endDate?: string } = {}
+  params: { startDate?: string; endDate?: string } = {},
 ) => {
   try {
     const query = new URLSearchParams(params).toString();
     const response = await axiosInstance.get<TotalSoldResponse>(
-      `/total-sold?${query}`
+      `/total-sold?${query}`,
     );
     return response.data;
   } catch (error) {
@@ -49,12 +48,12 @@ export const getTotalSold = async (
 };
 
 export const getTotalSoldApi = async (
-  params: { startDate?: string; endDate?: string } = {}
+  params: { startDate?: string; endDate?: string } = {},
 ) => {
   try {
     const query = new URLSearchParams(params).toString();
     const response = await axiosInstance.get<TotalSoldResponse>(
-      `/api/total-sold?${query}`
+      `/api/total-sold?${query}`,
     );
     return response.data;
   } catch (error) {
@@ -91,12 +90,12 @@ export const getAllSells = async (
     branchId?: string;
     saleStatus?: string; // Add saleStatus filter
     itemSaleStatus?: string;
-  } = {}
+  } = {},
 ) => {
   try {
     const query = new URLSearchParams(params).toString();
     const response = await axiosInstance.get<AllSellsResponse>(
-      `/trend/all/sell?${query}`
+      `/trend/all/sell?${query}`,
     );
     return response.data;
   } catch (error) {
@@ -111,10 +110,9 @@ export const getSalesReports = async (
     shopId?: string;
     limit?: number;
     slowMoveThreshold?: number;
-  } = {}
+  } = {},
 ) => {
   try {
-
     const query = new URLSearchParams(
       Object.entries(params).reduce(
         (acc, [key, value]) => {
@@ -123,12 +121,12 @@ export const getSalesReports = async (
           }
           return acc;
         },
-        {} as Record<string, string>
-      )
+        {} as Record<string, string>,
+      ),
     ).toString();
 
     const response = await axiosInstance.get<SalesReportResponse>(
-      `/reports/sales/rank?${query}`
+      `/reports/sales/rank?${query}`,
     );
 
     return response.data;
@@ -138,23 +136,19 @@ export const getSalesReports = async (
 };
 
 export const getUserDashboardSummaryApi = async (
-  params: { startDate?: string; endDate?: string; } = {}
+  params: { startDate?: string; endDate?: string } = {},
 ) => {
   try {
-
     const response = await axiosInstance.get(`/reports/sales/user/dashboard`);
     return response.data;
   } catch (error) {
     throw error;
   }
 };
-export const getSalesCreatorDashboardSummaryApi = async (
-  params: { } = {}
-) => {
+export const getSalesCreatorDashboardSummaryApi = async (params: {} = {}) => {
   try {
-
     const response = await axiosInstance.get(
-      '/reports/sales/user/creator/dashboard'
+      "/reports/sales/user/creator/dashboard",
     );
     return response.data;
   } catch (error) {
@@ -165,12 +159,9 @@ export const getSalesCreatorDashboardSummaryApi = async (
 /**
  * Fetch Financial Totals for Dashboard
  */
-export const getFinancialTotalsApi = async (
-  params: { } = {}
-) => {
+export const getFinancialTotalsApi = async (params: {} = {}) => {
   try {
-
-    const response = await axiosInstance.get('/dashboard/financial-totals');
+    const response = await axiosInstance.get("/dashboard/financial-totals");
     return response.data;
   } catch (error) {
     throw error;
@@ -180,12 +171,9 @@ export const getFinancialTotalsApi = async (
 /**
  * Fetch Sell Status Pie Chart Data
  */
-export const getSellStatusChartApi = async (
-  params: { } = {}
-) => {
+export const getSellStatusChartApi = async (params: {} = {}) => {
   try {
-
-    const response = await axiosInstance.get('/dashboard/sell-status-chart');
+    const response = await axiosInstance.get("/dashboard/sell-status-chart");
     return response.data;
   } catch (error) {
     throw error;

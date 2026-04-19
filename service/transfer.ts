@@ -1,6 +1,6 @@
-import { axiosInstance } from './api';
-import { ITransfer } from '@/models/transfer';
-import { PaginationParams } from './store';
+import { axiosInstance } from "./axiosIntance";
+import { ITransfer } from "@/models/transfer";
+import { PaginationParams } from "./store";
 
 interface TransfersResponse {
   success: boolean;
@@ -13,24 +13,23 @@ export const getAllTransfers = async ({
   page = 1,
   limit = 10,
   startDate,
-  endDate
+  endDate,
 }: PaginationParams = {}): Promise<{
   data: ITransfer[];
   totalCount: number;
   success?: boolean;
 }> => {
   try {
-
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     if (startDate) {
-      query.append('startDate', startDate);
+      query.append("startDate", startDate);
     }
     if (endDate) {
-      query.append('endDate', endDate);
+      query.append("endDate", endDate);
     }
 
     const url = `/transfers?${query}`;
@@ -40,7 +39,7 @@ export const getAllTransfers = async ({
     return {
       data: response.data.transfers,
       totalCount: response.data.count ?? response.data.transfers.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -76,9 +75,7 @@ export const getTransferId = async (id: string) => {
   }
 };
 // Get batches by transfer ID
-export const getTransferBatches = async (
-  transferId: string
-) => {
+export const getTransferBatches = async (transferId: string) => {
   try {
     const response = await axiosInstance.get(`transfers/batches/${transferId}`);
     return response.data.batches; // array of batches
@@ -86,13 +83,11 @@ export const getTransferBatches = async (
     throw error;
   }
 };
-export const bulkUpdateAdditionalPrices = async (
-  batchUpdates: any
-) => {
+export const bulkUpdateAdditionalPrices = async (batchUpdates: any) => {
   try {
     const response = await axiosInstance.put(
-      '/transfers/batches/additional-prices',
-      batchUpdates
+      "/transfers/batches/additional-prices",
+      batchUpdates,
     );
     return response.data; // contains totalProcessed and updated batches
   } catch (error) {
@@ -100,12 +95,10 @@ export const bulkUpdateAdditionalPrices = async (
   }
 };
 // ✅ Get transfer by reference
-export const getTransferByReference = async (
-  reference: string
-) => {
+export const getTransferByReference = async (reference: string) => {
   try {
     const response = await axiosInstance.get(
-      `/transfers/reference/${reference}`
+      `/transfers/reference/${reference}`,
     );
     return response.data.transfer as ITransfer;
   } catch (error) {
@@ -124,10 +117,7 @@ export const createTransfer = async (data: any) => {
 };
 
 // ✅ Update a transfer
-export const updateTransfer = async (
-  id: string,
-  data: any
-) => {
+export const updateTransfer = async (id: string, data: any) => {
   try {
     const response = await axiosInstance.put(`/transfers/${id}`, data);
     return response.data;

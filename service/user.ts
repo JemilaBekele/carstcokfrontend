@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { axiosInstance } from "./api";
+import { axiosInstance } from "./axiosIntance";
 // Get User by ID !QAZxsw2
 
 export const getUserById = async () => {

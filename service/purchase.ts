@@ -1,7 +1,7 @@
-import { axiosInstance } from './api';
-import { GetParams } from './roleService';
-import { IPurchase } from '@/models/purchase';
-import { IStockCorrection } from '@/models/StockCorrection';
+import { axiosInstance } from "./axiosIntance";
+import { GetParams } from "./roleService";
+import { IPurchase } from "@/models/purchase";
+import { IStockCorrection } from "@/models/StockCorrection";
 
 // Types
 
@@ -16,18 +16,18 @@ export const getAllPurchases = async (
   params: GetParams & {
     startDate?: string;
     endDate?: string;
-  } = {}
+  } = {},
 ) => {
   try {
     const { page = 1, limit = 10, ...filters } = params;
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     // Add filter params if they exist
     Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
+      if (value !== undefined && value !== null && value !== "") {
         query.append(key, value.toString());
       }
     });
@@ -39,7 +39,7 @@ export const getAllPurchases = async (
     return {
       purchases,
       totalCount: response.data.count ?? purchases.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -74,11 +74,11 @@ export const getPurchaseId = async (id: string) => {
   }
 };
 export const getStockCorrectionsByPurchaseId = async (
-  id: string
+  id: string,
 ): Promise<IStockCorrection[]> => {
   try {
     const response = await axiosInstance.get(
-      `/stock-corrections/purchase/${id}`
+      `/stock-corrections/purchase/${id}`,
     );
     return response.data.stockCorrection as IStockCorrection[];
   } catch (error) {
@@ -86,9 +86,7 @@ export const getStockCorrectionsByPurchaseId = async (
   }
 };
 // Get a purchase by invoice number
-export const getPurchaseByInvoiceNo = async (
-  invoiceNo: string
-) => {
+export const getPurchaseByInvoiceNo = async (invoiceNo: string) => {
   try {
     const response = await axiosInstance.get(`/purchases/invoice/${invoiceNo}`);
     return response.data.purchase as IPurchase;
@@ -108,10 +106,7 @@ export const createPurchase = async (data: any) => {
 };
 
 // Update a purchase
-export const updatePurchase = async (
-  id: string,
-  data: any
-) => {
+export const updatePurchase = async (id: string, data: any) => {
   try {
     const response = await axiosInstance.put(`/purchases/${id}`, data);
     return response.data;
@@ -119,15 +114,11 @@ export const updatePurchase = async (
     throw error;
   }
 };
-export const acceptPurchase = async (
-  id: string,
-  paymentStatus: string
-) => {
+export const acceptPurchase = async (id: string, paymentStatus: string) => {
   try {
-
     // ✅ Send paymentStatus inside request body
     const response = await axiosInstance.put(`/purchases/accept/${id}`, {
-      paymentStatus
+      paymentStatus,
     });
 
     return response.data;

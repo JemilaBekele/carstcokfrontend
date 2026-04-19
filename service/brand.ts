@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { axiosInstance } from './api';
-import { GetParams } from './roleService';
-import { IBrand } from '@/models/brand';
+import { axiosInstance } from "./axiosIntance";
+import { GetParams } from "./roleService";
+import { IBrand } from "@/models/brand";
 
 // Get all brands (paginated)
 interface BrandsResponse {
@@ -65,30 +65,23 @@ export const getBrandById = async (id: string) => {
 };
 
 // Create brand
-export const createBrand = async (
-  data: Partial<IBrand>
-) => {
+export const createBrand = async (data: Partial<IBrand>) => {
   try {
-    
     const response = await axiosInstance.post(`/brands`, data);
     return response.data;
   } catch (error) {
-    console.error('Error creating brand:', error);
+    console.error("Error creating brand:", error);
     throw error;
   }
 };
 
 // Update brand
-export const updateBrand = async (
-  id: string,
-  data: Partial<IBrand>
-) => {
+export const updateBrand = async (id: string, data: Partial<IBrand>) => {
   try {
-    
     const response = await axiosInstance.put(`/brands/${id}`, data);
     return response.data;
   } catch (error) {
-    console.error('Error updating brand:', error);
+    console.error("Error updating brand:", error);
     throw error;
   }
 };
@@ -102,11 +95,3 @@ export const deleteBrand = async (id: string) => {
     throw error;
   }
 };
-
-
-
-
-
-
-
-

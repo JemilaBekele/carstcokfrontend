@@ -1,7 +1,7 @@
 /* eslint-disable import/no-unresolved */
-import { axiosInstance } from './api';
-import { ISupplier } from '@/models/supplier';
-import { GetParams } from './roleService';
+import { axiosInstance } from "./axiosIntance";
+import { ISupplier } from "@/models/supplier";
+import { GetParams } from "./roleService";
 
 interface SupplierResponse {
   success: boolean;
@@ -11,12 +11,12 @@ interface SupplierResponse {
 
 export const getAllSuppliers = async ({
   page = 1,
-  limit = 10
+  limit = 10,
 }: GetParams = {}) => {
   try {
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     const url = `/suppliers?${query}`;
@@ -26,7 +26,7 @@ export const getAllSuppliers = async ({
     return {
       suppliers,
       totalCount: response.data.count ?? suppliers.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -35,7 +35,6 @@ export const getAllSuppliers = async ({
 
 export const getSupplier = async () => {
   try {
-
     const response = await axiosInstance.get(`/suppliers`);
     return response.data.suppliers;
   } catch (error) {
@@ -51,11 +50,9 @@ export const getSupplierById = async (id: string | number) => {
   }
 };
 
-export const createSupplier = async (
-  supplierData: ISupplier
-) => {
+export const createSupplier = async (supplierData: ISupplier) => {
   try {
-    const response = await axiosInstance.post('/suppliers', supplierData);
+    const response = await axiosInstance.post("/suppliers", supplierData);
     return response.data;
   } catch (error) {
     throw error;
@@ -64,7 +61,7 @@ export const createSupplier = async (
 
 export const updateSupplier = async (
   id: string,
-  updatedData: Partial<ISupplier>
+  updatedData: Partial<ISupplier>,
 ) => {
   try {
     const response = await axiosInstance.put(`/suppliers/${id}`, updatedData);
@@ -74,9 +71,7 @@ export const updateSupplier = async (
   }
 };
 
-export const deleteSupplier = async (
-  id: string | number
-) => {
+export const deleteSupplier = async (id: string | number) => {
   try {
     const response = await axiosInstance.delete(`/suppliers/${id}`);
     return response.data;

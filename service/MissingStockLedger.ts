@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IProduct } from '@/models/Product';
-import { axiosInstance } from './api';
+import { IProduct } from "@/models/Product";
+import { axiosInstance } from "./axiosIntance";
 
 /**
  * Find all missing stock ledgers across all sales
@@ -8,7 +8,7 @@ import { axiosInstance } from './api';
 export const getMissingStockLedgers = async () => {
   try {
     const response = await axiosInstance.get(
-      `/stock-ledger-reconciliation/missing`
+      `/stock-ledger-reconciliation/missing`,
     );
     return response.data;
   } catch (error) {
@@ -19,12 +19,10 @@ export const getMissingStockLedgers = async () => {
 /**
  * Create missing stock ledger entries for a specific sale
  */
-export const createMissingStockLedgerForSale = async (
-  saleId: string
-) => {
+export const createMissingStockLedgerForSale = async (saleId: string) => {
   try {
     const response = await axiosInstance.post(
-      `/stock-ledger-reconciliation/create/${saleId}`
+      `/stock-ledger-reconciliation/create/${saleId}`,
     );
     return response.data;
   } catch (error) {
@@ -32,8 +30,7 @@ export const createMissingStockLedgerForSale = async (
   }
 };
 
-
-export const getProductsall   = async () => {
+export const getProductsall = async () => {
   try {
     const response = await axiosInstance.get(`/sell-corrections/products`);
     return response.data.products as any;
@@ -57,12 +54,12 @@ interface ProductsResponse {
 // Get all Products (paginated) getAllProductsallsell
 export const getAllProductsallsell = async ({
   page = 1,
-  limit = 10
+  limit = 10,
 }: GetParams = {}) => {
   try {
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     const url = `/sell-corrections/products?${query}`;
@@ -71,7 +68,7 @@ export const getAllProductsallsell = async ({
     return {
       products: products,
       totalCount: response.data.count ?? products.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;

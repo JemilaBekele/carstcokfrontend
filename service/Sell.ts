@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { axiosInstance } from './api';
-import { PaginationParams } from './store';
-import { ISell } from '@/models/Sell';
+import { axiosInstance } from "./axiosIntance";
+import { PaginationParams } from "./store";
+import { ISell } from "@/models/Sell";
 
 interface SellsResponse {
   success: boolean;
@@ -14,24 +14,23 @@ export const getAllSells = async ({
   page = 1,
   limit = 10,
   startDate,
-  endDate
+  endDate,
 }: PaginationParams = {}): Promise<{
   data: ISell[];
   totalCount: number;
   success?: boolean;
 }> => {
   try {
-
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     if (startDate) {
-      query.append('startDate', startDate);
+      query.append("startDate", startDate);
     }
     if (endDate) {
-      query.append('endDate', endDate);
+      query.append("endDate", endDate);
     }
 
     const url = `/sells?${query}`;
@@ -40,7 +39,7 @@ export const getAllSells = async ({
     return {
       data: response.data.sells,
       totalCount: response.data.count ?? response.data.sells.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -50,24 +49,23 @@ export const getAllSellsuserBased = async ({
   page = 1,
   limit = 10,
   startDate,
-  endDate
+  endDate,
 }: PaginationParams = {}): Promise<{
   data: ISell[];
   totalCount: number;
   success?: boolean;
 }> => {
   try {
-
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     if (startDate) {
-      query.append('startDate', startDate);
+      query.append("startDate", startDate);
     }
     if (endDate) {
-      query.append('endDate', endDate);
+      query.append("endDate", endDate);
     }
 
     const url = `/sells/user/based/web?${query}`;
@@ -75,7 +73,7 @@ export const getAllSellsuserBased = async ({
     return {
       data: response.data.sells,
       totalCount: response.data.count ?? response.data.sells.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -85,24 +83,23 @@ export const getAllSellsstoregetAll = async ({
   page = 1,
   limit = 10,
   startDate,
-  endDate
+  endDate,
 }: PaginationParams = {}): Promise<{
   data: ISell[];
   totalCount: number;
   success?: boolean;
 }> => {
   try {
-
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     if (startDate) {
-      query.append('startDate', startDate);
+      query.append("startDate", startDate);
     }
     if (endDate) {
-      query.append('endDate', endDate);
+      query.append("endDate", endDate);
     }
 
     const url = `/sells/store/getAll/web?${query}`;
@@ -110,7 +107,7 @@ export const getAllSellsstoregetAll = async ({
     return {
       data: response.data.sells,
       totalCount: response.data.count ?? response.data.sells.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -181,10 +178,7 @@ export const createSell = async (data: any) => {
 };
 
 // ✅ Update a sell
-export const updateSell = async (
-  id: string,
-  data: any
-) => {
+export const updateSell = async (id: string, data: any) => {
   try {
     const response = await axiosInstance.put(`/sells/${id}`, data);
     return response.data;
@@ -207,11 +201,11 @@ export const deleteSell = async (id: string) => {
 // ✅ Deliver ALL items of a sale with batch assignment
 export const deliverAllSaleItems = async (
   id: string,
-  deliveryData: DeliveryData
+  deliveryData: DeliveryData,
 ) => {
   try {
     const response = await axiosInstance.patch(`/sells/deliver/all/${id}`, {
-      deliveryData
+      deliveryData,
     });
     return response.data;
   } catch (error) {
@@ -222,11 +216,11 @@ export const deliverAllSaleItems = async (
 // ✅ Complete Sale Delivery with batch assignment
 export const completeSaleDelivery = async (
   id: string,
-  deliveryData: DeliveryData
+  deliveryData: DeliveryData,
 ) => {
   try {
     const response = await axiosInstance.patch(`/sells/deliver/${id}`, {
-      deliveryData
+      deliveryData,
     });
     return response.data;
   } catch (error) {
@@ -237,11 +231,11 @@ export const completeSaleDelivery = async (
 // ✅ Partial Sale Delivery with batch assignment
 export const partialSaleDelivery = async (
   id: string,
-  deliveryData: DeliveryData
+  deliveryData: DeliveryData,
 ) => {
   try {
     const response = await axiosInstance.patch(`/sells/partial/deliver/${id}`, {
-      deliveryData
+      deliveryData,
     });
     return response.data;
   } catch (error) {
@@ -264,13 +258,10 @@ export interface BatchAssignment {
 }
 
 // ✅ Update Sale Status
-export const updateSaleStatus = async (
-  id: string,
-  newStatus: string
-) => {
+export const updateSaleStatus = async (id: string, newStatus: string) => {
   try {
     const response = await axiosInstance.patch(`/sells/${id}/status`, {
-      newStatus
+      newStatus,
     });
     return response.data;
   } catch (error) {
@@ -281,11 +272,11 @@ export const updateSaleStatus = async (
 // ✅ Update Payment Status
 export const updatePaymentStatus = async (
   id: string,
-  newPaymentStatus: string
+  newPaymentStatus: string,
 ) => {
   try {
     const response = await axiosInstance.patch(`/sells/${id}/payment-status`, {
-      newPaymentStatus
+      newPaymentStatus,
     });
     return response.data;
   } catch (error) {

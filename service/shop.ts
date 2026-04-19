@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { axiosInstance } from './api';
-import { IShop } from '@/models/shop';
-import { GetParams } from './roleService';
+import { axiosInstance } from "./axiosIntance";
+import { IShop } from "@/models/shop";
+import { GetParams } from "./roleService";
 
 interface locationResponse {
   success: boolean;
@@ -13,7 +13,7 @@ export const getAllshop = async ({ page = 1, limit = 10 }: GetParams = {}) => {
   try {
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     const url = `shops?${query}`;
@@ -24,7 +24,7 @@ export const getAllshop = async ({ page = 1, limit = 10 }: GetParams = {}) => {
     return {
       shops: shops,
       totalCount: response.data.count ?? shops.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -85,14 +85,11 @@ export const getShopById = async (id: string) => {
 };
 
 // Create a shop
-export const createShop = async (
-  data: any | FormData
-) => {
+export const createShop = async (data: any | FormData) => {
   try {
-
     const config =
       data instanceof FormData
-        ? { headers: { 'Content-Type': 'multipart/form-data' } }
+        ? { headers: { "Content-Type": "multipart/form-data" } }
         : {};
 
     const response = await axiosInstance.post(`/shops`, data, config);
@@ -105,13 +102,12 @@ export const createShop = async (
 // Update a shop
 export const updateShop = async (
   id: string,
-  data: Partial<IShop> | FormData
+  data: Partial<IShop> | FormData,
 ) => {
   try {
-
     const config =
       data instanceof FormData
-        ? { headers: { 'Content-Type': 'multipart/form-data' } }
+        ? { headers: { "Content-Type": "multipart/form-data" } }
         : {};
 
     const response = await axiosInstance.put(`/shops/${id}`, data, config);
@@ -137,11 +133,11 @@ export interface IBatchesResponse {
 
 export const getAvailableBatchesByProductAndShop = async (
   shopId: string,
-  productId: string
+  productId: string,
 ) => {
   try {
     const response = await axiosInstance.get(
-      `/shops/${shopId}/products/${productId}/batches`
+      `/shops/${shopId}/products/${productId}/batches`,
     );
     return response.data;
   } catch (error) {
@@ -150,11 +146,11 @@ export const getAvailableBatchesByProductAndShop = async (
 };
 export const UsergetAvailableBatchesByProductAndShop = async (
   shopId: string,
-  productId: string
+  productId: string,
 ): Promise<IBatchesResponse> => {
   try {
     const response = await axiosInstance.get(
-      `/shops/${shopId}/products/${productId}/batches/user/based`
+      `/shops/${shopId}/products/${productId}/batches/user/based`,
     );
     return response.data.batches as IBatchesResponse;
   } catch (error) {

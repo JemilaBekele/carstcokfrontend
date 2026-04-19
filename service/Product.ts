@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { axiosInstance } from './api';
-import { IProduct } from '@/models/Product';
+import { axiosInstance } from "./axiosIntance";
+import { IProduct } from "@/models/Product";
 
 export interface GetParams {
   page?: number;
@@ -17,12 +17,12 @@ interface ProductsResponse {
 // Get all Products (paginated)
 export const getAllProducts = async ({
   page = 1,
-  limit = 10
+  limit = 10,
 }: GetParams = {}) => {
   try {
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     const url = `/products?${query}`;
@@ -31,7 +31,7 @@ export const getAllProducts = async ({
     return {
       products: products,
       totalCount: response.data.count ?? products.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -49,7 +49,6 @@ export const getProducts = async () => {
 };
 export const getProductsnew = async () => {
   try {
-
     const response = await axiosInstance.get(`/products`);
     return response.data.products as IProduct[];
   } catch (error) {
@@ -80,17 +79,20 @@ export const TopProducts = async (options: TopProductsOptions = {}) => {
     if (categoryName?.trim()) params.categoryName = categoryName.trim();
     if (brandName?.trim()) params.brandName = brandName.trim();
 
-    console.log('TopProducts request params:', params);
+    console.log("TopProducts request params:", params);
 
     const response = await axiosInstance.get(
       `/products/get/all/Top/Selling/Products`,
       {
-        params
-      }
+        params,
+      },
     );
 
-    console.log('TopProducts response status:', response.status);
-    console.log('TopProducts response data count:', response.data?.products?.length || 0);
+    console.log("TopProducts response status:", response.status);
+    console.log(
+      "TopProducts response data count:",
+      response.data?.products?.length || 0,
+    );
 
     // ✅ Extract only the product info from each item
     const products = (response.data?.products || []).map((item: any) => {
@@ -99,13 +101,13 @@ export const TopProducts = async (options: TopProductsOptions = {}) => {
 
       return {
         ...productData,
-        availableQuantity: item.availableQuantity ?? 0 // Use the availableQuantity from the item, not product
+        availableQuantity: item.availableQuantity ?? 0, // Use the availableQuantity from the item, not product
       };
     });
 
     return products as IProduct[];
   } catch (error) {
-    console.error('TopProducts error:', error);
+    console.error("TopProducts error:", error);
     throw error;
   }
 };
@@ -120,7 +122,6 @@ export const getProductById = async (id: string) => {
     throw error;
   }
 };
-
 
 // Get Product by Code
 export const getProductByCode = async (code: string) => {
@@ -137,7 +138,7 @@ export const createProduct = async (data: any) => {
   try {
     const config =
       data instanceof FormData
-        ? { headers: { 'Content-Type': 'multipart/form-data' } }
+        ? { headers: { "Content-Type": "multipart/form-data" } }
         : {};
 
     const response = await axiosInstance.post(`/products`, data, config);
@@ -147,17 +148,12 @@ export const createProduct = async (data: any) => {
   }
 };
 
-
-
 // Update Product
-export const updateProduct = async (
-  id: string,
-  data: any
-) => {
+export const updateProduct = async (id: string, data: any) => {
   try {
     const config =
       data instanceof FormData
-        ? { headers: { 'Content-Type': 'multipart/form-data' } }
+        ? { headers: { "Content-Type": "multipart/form-data" } }
         : {};
 
     const response = await axiosInstance.put(`/products/${id}`, data, config);
@@ -177,10 +173,7 @@ export const deleteProduct = async (id: string) => {
   }
 };
 
-
-export const getProductdetailaById = async (
-  id: string
-) => {
+export const getProductdetailaById = async (id: string) => {
   try {
     const response = await axiosInstance.get(`/product/detail/${id}`);
     return response.data.product;
@@ -189,12 +182,10 @@ export const getProductdetailaById = async (
   }
 };
 
-export const getProductByShops = async (
-  productId: string
-) => {
+export const getProductByShops = async (productId: string) => {
   try {
     const response = await axiosInstance.get(
-      `/products/shop/find/ByShops/${productId}`
+      `/products/shop/find/ByShops/${productId}`,
     );
     return response.data.products; // ✅ returns array of products with shops
   } catch (error) {

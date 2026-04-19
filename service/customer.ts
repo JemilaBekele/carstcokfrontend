@@ -1,7 +1,7 @@
 /* eslint-disable import/no-unresolved */
-import { axiosInstance } from './api';
-import { GetParams } from './roleService';
-import { ICustomer } from '@/models/customer';
+import { axiosInstance } from "./axiosIntance";
+import { GetParams } from "./roleService";
+import { ICustomer } from "@/models/customer";
 
 interface CustomerResponse {
   success: boolean;
@@ -11,12 +11,12 @@ interface CustomerResponse {
 
 export const getAllCustomers = async ({
   page = 1,
-  limit = 10
+  limit = 10,
 }: GetParams = {}) => {
   try {
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     const url = `/customers?${query}`;
@@ -26,7 +26,7 @@ export const getAllCustomers = async ({
     return {
       customers,
       totalCount: response.data.count ?? customers.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -35,7 +35,7 @@ export const getAllCustomers = async ({
 
 export const getCustomer = async () => {
   try {
-    const response = await axiosInstance.get('/customers');
+    const response = await axiosInstance.get("/customers");
     return response.data.customers;
   } catch (error) {
     throw error;
@@ -51,11 +51,9 @@ export const getCustomerById = async (id: string | number) => {
   }
 };
 
-export const createCustomer = async (
-  customerData: any
-) => {
+export const createCustomer = async (customerData: any) => {
   try {
-    const response = await axiosInstance.post('/customers', customerData);
+    const response = await axiosInstance.post("/customers", customerData);
     return response.data;
   } catch (error) {
     throw error;
@@ -64,7 +62,7 @@ export const createCustomer = async (
 
 export const updateCustomer = async (
   id: string,
-  updatedData: Partial<ICustomer>
+  updatedData: Partial<ICustomer>,
 ) => {
   try {
     const response = await axiosInstance.put(`/customers/${id}`, updatedData);
@@ -74,9 +72,7 @@ export const updateCustomer = async (
   }
 };
 
-export const deleteCustomer = async (
-  id: string | number
-) => {
+export const deleteCustomer = async (id: string | number) => {
   try {
     const response = await axiosInstance.delete(`/customers/${id}`);
     return response.data;

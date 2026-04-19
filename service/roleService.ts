@@ -1,4 +1,4 @@
-import { axiosInstance } from './api';
+import { axiosInstance } from "./axiosIntance";
 
 // Role type
 export interface IRole {
@@ -29,7 +29,7 @@ export interface IRolePermission {
 // ============================
 
 export const createRole = async (data: IRole) => {
-  const res = await axiosInstance.post('/roles', data);
+  const res = await axiosInstance.post("/roles", data);
   return res.data;
 };
 export interface GetParams {
@@ -49,20 +49,20 @@ export const getAllRoles = async ({
   page = 1,
   limit = 10,
   startDate,
-  endDate
+  endDate,
 }: GetParams = {}) => {
   try {
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     // Add date filters to query if they exist
     if (startDate) {
-      query.append('startDate', startDate);
+      query.append("startDate", startDate);
     }
     if (endDate) {
-      query.append('endDate', endDate);
+      query.append("endDate", endDate);
     }
 
     const url = `roles?${query}`;
@@ -73,7 +73,7 @@ export const getAllRoles = async ({
     return {
       roles: roles,
       totalCount: response.data.count ?? roles.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -95,10 +95,7 @@ export const getRoleByName = async (name: string) => {
   return res.data;
 };
 
-export const updateRole = async (
-  id: string,
-  data: Partial<IRole>
-) => {
+export const updateRole = async (id: string, data: Partial<IRole>) => {
   const res = await axiosInstance.put(`/roles/${id}`, data);
   return res.data;
 };
@@ -114,28 +111,30 @@ export const deleteRole = async (id: string) => {
 
 export const assignPermissionsToRole = async (
   roleId: string,
-  permissionIds: string[]
+  permissionIds: string[],
 ) => {
   const res = await axiosInstance.post(`/roles/${roleId}/permissions`, {
-    permissionIds
+    permissionIds,
   });
   return res.data;
 };
 
 export const addPermissionToRole = async (
   roleId: string,
-  permissionId: string
+  permissionId: string,
 ) => {
-  const res = await axiosInstance.post(`/roles/${roleId}/permissions/${permissionId}`);
+  const res = await axiosInstance.post(
+    `/roles/${roleId}/permissions/${permissionId}`,
+  );
   return res.data;
 };
 
 export const removePermissionFromRole = async (
   roleId: string,
-  permissionId: string
+  permissionId: string,
 ) => {
   const res = await axiosInstance.delete(
-    `/roles/${roleId}/permissions/${permissionId}`
+    `/roles/${roleId}/permissions/${permissionId}`,
   );
   return res.data;
 };
@@ -157,20 +156,20 @@ export const getAllPermissions = async ({
   page = 1,
   limit = 10,
   startDate,
-  endDate
+  endDate,
 }: GetParams = {}) => {
   try {
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     // Add date filters to query if they exist
     if (startDate) {
-      query.append('startDate', startDate);
+      query.append("startDate", startDate);
     }
     if (endDate) {
-      query.append('endDate', endDate);
+      query.append("endDate", endDate);
     }
 
     const url = `permissions?${query}`;
@@ -181,7 +180,7 @@ export const getAllPermissions = async ({
     return {
       permissions: permissions,
       totalCount: response.data.count ?? permissions.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -204,36 +203,36 @@ interface RolePermissionResponse {
 // ============================
 
 // Create a role-permission link
-export const createRolePermission = async (
-  data: { roleId: string; permissionIds: string[] }
-) => {
-
-  const res = await axiosInstance.post('/role-permissions', {
+export const createRolePermission = async (data: {
+  roleId: string;
+  permissionIds: string[];
+}) => {
+  const res = await axiosInstance.post("/role-permissions", {
     roleId: data.roleId,
-    permissionIds: data.permissionIds
+    permissionIds: data.permissionIds,
   });
 
   return res.data;
 };
-export const Createassign = async (
-  data: { roleId: string; permissionIds: string[] }
-) => {
-
-  const res = await axiosInstance.post('/role-permissions/assign', {
+export const Createassign = async (data: {
+  roleId: string;
+  permissionIds: string[];
+}) => {
+  const res = await axiosInstance.post("/role-permissions/assign", {
     roleId: data.roleId,
-    permissionIds: data.permissionIds
+    permissionIds: data.permissionIds,
   });
 
   return res.data;
 };
 
-export const updateRolePermissionsService = async (
-  data: { roleId: string; permissionIds: string[] }
-) => {
-
-  const res = await axiosInstance.put('/role/permissions/update/assign', {
+export const updateRolePermissionsService = async (data: {
+  roleId: string;
+  permissionIds: string[];
+}) => {
+  const res = await axiosInstance.put("/role/permissions/update/assign", {
     roleId: data.roleId,
-    permissionIds: data.permissionIds
+    permissionIds: data.permissionIds,
   });
 
   return res.data;
@@ -243,7 +242,7 @@ export const getAllRolePermissions = async ({
   page = 1,
   limit = 10,
   startDate,
-  endDate
+  endDate,
 }: {
   page?: number;
   limit?: number;
@@ -253,10 +252,10 @@ export const getAllRolePermissions = async ({
   try {
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
-    if (startDate) query.append('startDate', startDate);
-    if (endDate) query.append('endDate', endDate);
+    if (startDate) query.append("startDate", startDate);
+    if (endDate) query.append("endDate", endDate);
 
     const url = `role-permissions?${query.toString()}`;
 
@@ -264,7 +263,7 @@ export const getAllRolePermissions = async ({
     return {
       rolePermissions: response.data.rolePermissions,
       totalCount: response.data.count ?? response.data.rolePermissions.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -272,17 +271,13 @@ export const getAllRolePermissions = async ({
 };
 
 // Get a role-permission by ID
-export const getRolePermissionById = async (
-  id: string
-) => {
+export const getRolePermissionById = async (id: string) => {
   const res = await axiosInstance.get(`/role-permissions/${id}`);
   return res.data;
 };
 
 // Delete a role-permission by ID
-export const deleteRolePermission = async (
-  id: string
-) => {
+export const deleteRolePermission = async (id: string) => {
   const res = await axiosInstance.delete(`/role-permissions/${id}`);
   return res.data;
 };
@@ -290,15 +285,17 @@ export const deleteRolePermission = async (
 // Delete a role-permission by roleId and permissionId relation
 export const deleteRolePermissionByRelation = async (
   roleId: string,
-  permissionId: string
+  permissionId: string,
 ) => {
-  const res = await axiosInstance.delete(`/role-permissions/${roleId}/${permissionId}`);
+  const res = await axiosInstance.delete(
+    `/role-permissions/${roleId}/${permissionId}`,
+  );
   return res.data;
 };
 
 export const updateRolePermission = async (
   id: string,
-  data: Partial<IRolePermission>
+  data: Partial<IRolePermission>,
 ) => {
   const res = await axiosInstance.put(`/role-permissions/${id}`, data);
   return res.data;

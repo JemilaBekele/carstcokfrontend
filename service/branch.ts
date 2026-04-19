@@ -1,6 +1,6 @@
-import { axiosInstance } from './api';
-import { IBranch } from '@/models/Branch';
-import { GetParams } from './roleService';
+import { axiosInstance } from "./axiosIntance";
+import { IBranch } from "@/models/Branch";
+import { GetParams } from "./roleService";
 
 // Get all branches
 interface BranchesResponse {
@@ -11,12 +11,12 @@ interface BranchesResponse {
 
 export const getAllbranches = async ({
   page = 1,
-  limit = 10
+  limit = 10,
 }: GetParams = {}) => {
   try {
     const query = new URLSearchParams({
       page: page.toString(),
-      limit: limit.toString()
+      limit: limit.toString(),
     });
 
     const url = `branches?${query}`;
@@ -27,7 +27,7 @@ export const getAllbranches = async ({
     return {
       branches: branches,
       totalCount: response.data.count ?? branches.length,
-      success: response.data.success
+      success: response.data.success,
     };
   } catch (error) {
     throw error;
@@ -53,14 +53,11 @@ export const getBranchById = async (id: string) => {
 };
 
 // Create a branch
-export const createBranch = async (
-  data: any | FormData
-) => {
+export const createBranch = async (data: any | FormData) => {
   try {
-
     const config =
       data instanceof FormData
-        ? { headers: { 'Content-Type': 'multipart/form-data' } }
+        ? { headers: { "Content-Type": "multipart/form-data" } }
         : {};
 
     const response = await axiosInstance.post(`/branches`, data, config);
@@ -73,13 +70,12 @@ export const createBranch = async (
 // Update a branch
 export const updateBranch = async (
   id: string,
-  data: Partial<IBranch> | FormData
+  data: Partial<IBranch> | FormData,
 ) => {
   try {
-
     const config =
       data instanceof FormData
-        ? { headers: { 'Content-Type': 'multipart/form-data' } }
+        ? { headers: { "Content-Type": "multipart/form-data" } }
         : {};
 
     const response = await axiosInstance.put(`/branches/${id}`, data, config);
