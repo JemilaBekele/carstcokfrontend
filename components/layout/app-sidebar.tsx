@@ -48,13 +48,13 @@ import { usePermissionStore } from "@/stores/auth.store";
 import { useAuthStore } from "@/stores/authStore";
 import { logout } from "@/service/authApi";
 import { toast } from "sonner";
+import { filterNavItemsWithCheckers } from "@/lib/filterNavItems";
 
 export const company = {
   name: "Acme Inc",
   logo: IconPhotoUp,
   plan: "Enterprise",
 };
-
 
 export default function AppSidebar() {
   const pathname = usePathname();
@@ -63,7 +63,6 @@ export default function AppSidebar() {
   const authUser = useAuthStore((state) => state.user);
   const authHydrated = useAuthStore((state) => state.hydrated);
 
-  // Get permission store state and methods
   const hasPermission = usePermissionStore((state) => state.hasPermission);
   const hasAnyPermission = usePermissionStore(
     (state) => state.hasAnyPermission,
@@ -73,56 +72,18 @@ export default function AppSidebar() {
   );
   const isInitialized = usePermissionStore((state) => state._isInitialized);
   const hasHydrated = usePermissionStore((state) => state._hasHydrated);
-  const isLoading = !authHydrated || !hasHydrated || (authUser && !isInitialized);
+  const isLoading =
+    !authHydrated || !hasHydrated || (authUser && !isInitialized);
 
-  // Filter navigation items based on user permissions
   const filterNavItemsByPermissions = React.useCallback(() => {
     if (!hasHydrated || !authUser || !isInitialized) {
-      return []; // Return empty while loading or no session
+      return [];
     }
-
-    const filterItems = (items: typeof navItems): typeof navItems => {
-      return items
-        .map((item) => {
-          // Check if user has permission to access this item
-          let hasAccess = true;
-
-          if (item.permission) {
-            // Single permission check - but wait for initialization
-            hasAccess = hasPermission(item.permission);
-          } else if (item.permissions) {
-            // Multiple permissions check
-            if (item.permissionMode === "all") {
-              hasAccess = hasAllPermissions(item.permissions);
-            } else {
-              hasAccess = hasAnyPermission(item.permissions);
-            }
-          }
-
-          // If no access, return null (will be filtered out)
-          if (!hasAccess) return null;
-
-          // Create a copy of the item
-          const filteredItem = { ...item };
-
-          // Recursively filter child items
-          if (filteredItem.items && filteredItem.items.length > 0) {
-            const filteredChildren = filterItems(filteredItem.items);
-
-            // Only keep the parent if it has children OR has a direct URL
-            if (filteredChildren.length === 0 && filteredItem.url === "#") {
-              return null; // Hide parent if no children and no direct link
-            }
-
-            filteredItem.items = filteredChildren;
-          }
-
-          return filteredItem;
-        })
-        .filter(Boolean) as typeof navItems;
-    };
-
-    return filterItems(navItems);
+    return filterNavItemsWithCheckers(navItems, {
+      hasPermission,
+      hasAnyPermission,
+      hasAllPermissions,
+    });
   }, [
     hasPermission,
     hasAnyPermission,
@@ -132,11 +93,9 @@ export default function AppSidebar() {
     isInitialized,
   ]);
 
-  // Update filtered items when permissions or session change
   React.useEffect(() => {
     if (authUser && isInitialized) {
-      const filtered = filterNavItemsByPermissions();
-      setFilteredNavItems(filtered);
+      setFilteredNavItems(filterNavItemsByPermissions());
     } else {
       setFilteredNavItems([]);
     }
@@ -154,7 +113,6 @@ export default function AppSidebar() {
 
   const user = authUser;
 
-  // Show loading state
   if (!authUser || isLoading) {
     return (
       <Sidebar collapsible="icon">
@@ -170,7 +128,6 @@ export default function AppSidebar() {
     );
   }
 
-  // If no filtered items (user has no permissions)
   if (filteredNavItems.length === 0 && authUser) {
     return (
       <Sidebar collapsible="icon">
@@ -191,86 +148,95 @@ export default function AppSidebar() {
     );
   }
 
+  // Group items by their section label for clean visual separation
+  const navGroups = filteredNavItems.reduce<
+    Record<string, typeof filteredNavItems>
+  >((acc, item) => {
+    const section = item.group ?? "Overview";
+    if (!acc[section]) acc[section] = [];
+    acc[section].push(item);
+    return acc;
+  }, {});
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <OrgSwitcher />
       </SidebarHeader>
       <SidebarContent className="overflow-x-hidden">
-        <SidebarGroup>
-          <SidebarGroupLabel>Overview</SidebarGroupLabel>
-          <SidebarMenu>
-            {filteredNavItems.map((item) => {
-              const Icon = item.icon ? Icons[item.icon] : Icons.logo;
+        {Object.entries(navGroups).map(([groupLabel, items]) => (
+          <SidebarGroup key={groupLabel} className="py-0">
+            <SidebarGroupLabel className="px-1.5 py-0 text-[11px]">
+              {groupLabel}
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              {items.map((item) => {
+                const Icon = item.icon ? Icons[item.icon] : Icons.logo;
+                const isActive =
+                  pathname === item.url ||
+                  item.items?.some((child) => pathname === child.url) ||
+                  false;
 
-              // Check if item is active (current page or child page)
-              const isActive =
-                pathname === item.url ||
-                item.items?.some((child) => pathname === child.url) ||
-                false;
-
-              return item?.items && item?.items?.length > 0 ? (
-                <Collapsible
-                  key={item.title}
-                  asChild
-                  defaultOpen={isActive}
-                  className="group/collapsible"
-                >
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                      <SidebarMenuButton
-                        tooltip={item.title}
-                        isActive={isActive}
-                      >
+                return item?.items && item?.items?.length > 0 ? (
+                  <Collapsible
+                    key={item.title}
+                    asChild
+                    defaultOpen={isActive}
+                    className="group/collapsible"
+                  >
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton
+                          tooltip={item.title}
+                          isActive={isActive}
+                        >
+                          {item.icon && <Icon />}
+                          <span>{item.title}</span>
+                          <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.items?.map((subItem) => {
+                            const SubIcon = subItem.icon
+                              ? Icons[subItem.icon]
+                              : undefined;
+                            return (
+                              <SidebarMenuSubItem key={subItem.title}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={pathname === subItem.url}
+                                >
+                                  <Link href={subItem.url}>
+                                    {SubIcon && <SubIcon className="h-4 w-4" />}
+                                    <span>{subItem.title}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                ) : (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={item.title}
+                      isActive={pathname === item.url}
+                    >
+                      <Link href={item.url || "#"}>
                         {item.icon && <Icon />}
                         <span>{item.title}</span>
-                        <IconChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                      </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {item.items?.map((subItem) => {
-                          const SubIcon = subItem.icon
-                            ? Icons[subItem.icon]
-                            : undefined;
-                          return (
-                            <SidebarMenuSubItem key={subItem.title}>
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={pathname === subItem.url}
-                              >
-                                <Link href={subItem.url}>
-                                  {SubIcon && <SubIcon className="h-4 w-4" />}
-                                  <span>{subItem.title}</span>
-                                </Link>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          );
-                        })}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
+                      </Link>
+                    </SidebarMenuButton>
                   </SidebarMenuItem>
-                </Collapsible>
-              ) : (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    tooltip={item.title}
-                    isActive={pathname === item.url}
-                    data-slot="sidebar-menu-button"
-                    data-sidebar="menu-button"
-                    data-size="default"
-                  >
-                    <Link href={item.url || "#"}>
-                      {item.icon && <Icon />}
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
-          </SidebarMenu>
-        </SidebarGroup>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>

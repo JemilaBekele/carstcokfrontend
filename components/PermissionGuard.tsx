@@ -1,17 +1,17 @@
 // components/PermissionGuard.tsx
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useCheckPermissions } from '@/stores/checker';
+import { ReactNode } from 'react';
+import { useAuthStore } from '@/stores/authStore';
 import { usePermissionStore } from '@/stores/auth.store';
+import { useCheckPermissions } from '@/stores/checker';
 
 interface PermissionGuardProps {
   children: ReactNode;
   requiredPermission?: string;
   requiredPermissions?: string[];
   mode?: 'all' | 'any';
-  redirectTo?: string;
+  /** When true, renders nothing while loading instead of waiting */
   hideInsteadOfRedirect?: boolean;
 }
 
@@ -20,19 +20,22 @@ export const PermissionGuard = ({
   requiredPermission,
   requiredPermissions,
   mode = 'any',
-  hideInsteadOfRedirect = false
 }: PermissionGuardProps) => {
-  const hasAccess = useCheckPermissions(
-    requiredPermission,
-    requiredPermissions,
-    mode
-  );
-  const router = useRouter();
-  // No need for checked state or effect; render directly based on hasAccess
+  const authHydrated = useAuthStore((s) => s.hydrated);
+  const authUser = useAuthStore((s) => s.user);
+  const hasHydrated = usePermissionStore((s) => s._hasHydrated);
+  const isInitialized = usePermissionStore((s) => s._isInitialized);
+
+  const hasAccess = useCheckPermissions(requiredPermission, requiredPermissions, mode);
+
+  // Still loading — hide until ready to prevent flash-of-content
+  const isLoading = !authHydrated || !hasHydrated || (!!authUser && !isInitialized);
+  if (isLoading) return null;
+
   return hasAccess ? <>{children}</> : null;
 };
 
-// Standalone permission check function for non-React contexts
+// Standalone permission check function for non-React contexts (e.g. nav filtering)
 PermissionGuard.check = (
   requiredPermission?: string,
   requiredPermissions?: string[],

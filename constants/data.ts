@@ -19,15 +19,17 @@ export const navItems: NavItem[] = [
     isActive: false,
     shortcut: ['d', 'd'],
     permission: 'VIEW_MAIN_DASHBOARD',
+    group: 'Main',
     items: [] 
   },
   {
     title: 'Report',
-    url: '/dashboard/',
+    url: '#',
     icon: 'chart',
     isActive: false,
     shortcut: ['d', 'd'],
     permission: 'VIEW_SALES_REPORT_VIEW_DASHBOARD',
+    group: 'Analytics',
     items: [
       {
         title: 'All Sells Trend',
@@ -47,11 +49,12 @@ export const navItems: NavItem[] = [
   },
   {
     title: 'POS',
-    url: '/dashboard/',
+    url: '#',
     icon: 'receipt',
     isActive: false,
     shortcut: ['d', 'd'],
     permission: 'VIEW_SELL_DASHBOARD',
+    group: 'Sales',
     items: [
       {
         title: 'Order',
@@ -78,11 +81,12 @@ export const navItems: NavItem[] = [
   },
   {
     title: 'Manage Store and shops',
-    url: '/dashboard/',
+    url: '#',
     icon: 'store',
     isActive: false,
     shortcut: ['d', 'd'],
     permission: 'VIEW_AND_MANAGE_STORE_AND_SHOPS',
+    group: 'Sales',
     items: [
       {
         title: 'Orders',
@@ -99,6 +103,7 @@ export const navItems: NavItem[] = [
     icon: 'box',
     isActive: true,
     permission: 'VIEW_PRODUCT_DASHBOARD',
+    group: 'Inventory',
     items: [
       {
         title: 'Category',
@@ -112,7 +117,7 @@ export const navItems: NavItem[] = [
         url: '/dashboard/brand',
         icon: 'tags',
         shortcut: ['b', 'b'],
-        permission: 'VIEW_ALL_CATEGORIES'
+        permission: 'VIEW_ALL_BRANDS'
       },
       {
         title: 'Products',
@@ -150,6 +155,7 @@ export const navItems: NavItem[] = [
     icon: 'users',
     isActive: true,
     permission: 'VIEW_Users_DASHBOARD',
+    group: 'Management',
     items: [
       {
         title: 'Employee',
@@ -180,6 +186,7 @@ export const navItems: NavItem[] = [
     icon: 'settings',
     isActive: true,
     permission: 'VIEW_SYSTEM_DASHBOARD',
+    group: 'Management',
     items: [
       {
         title: 'Branch',
@@ -209,6 +216,7 @@ export const navItems: NavItem[] = [
     url: '#',
     icon: 'user2',
     isActive: true,
+    group: 'Personal',
     items: [
       {
         title: 'Profile',
@@ -224,6 +232,7 @@ export const navItems: NavItem[] = [
     icon: 'shield',
     isActive: true,
     permission: 'VIEW_ROLE_PERMISSION_DASHBOARD',
+    group: 'Administration',
     items: [
       {
         title: 'Role',

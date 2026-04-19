@@ -17,6 +17,8 @@ export default function KBar({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const hasPermission = usePermissionStore((s) => s.hasPermission);
   const hasAnyPermission = usePermissionStore((s) => s.hasAnyPermission);
+  // Subscribe to the actual array so useMemo re-runs when permissions change
+  const permissions = usePermissionStore((s) => s.permissions);
 
   // Filter navigation actions by user permissions
   const actions = useMemo(() => {
@@ -64,7 +66,7 @@ export default function KBar({ children }: { children: React.ReactNode }) {
 
       return baseAction ? [baseAction, ...childActions] : childActions;
     });
-  }, [router, hasPermission, hasAnyPermission]);
+  }, [router, permissions, hasPermission, hasAnyPermission]);
 
   return (
     <KBarProvider actions={actions}>

@@ -1,20 +1,18 @@
-'use client';
-
+// Server Component — no 'use client' needed here
 import PageContainer from '@/components/layout/page-container';
-import { PagePermissionGuard } from '@/components/PagePermissionGuard';
-import { PERMISSIONS } from '@/stores/permissions';
 import { TableDashboard } from '@/features/Dasboard/tableexpireinv';
+import { OverviewPermissionShell } from './overview-shell';
 import React from 'react';
 
 export default function OverViewLayout({
   sales,
-  bar_stats
+  bar_stats,
 }: {
   sales: React.ReactNode;
   bar_stats: React.ReactNode;
 }) {
   return (
-    <PagePermissionGuard requiredPermission={PERMISSIONS.DASHBOARDS.MAIN_DASHBOARD.name}>
+    <OverviewPermissionShell>
       <PageContainer>
         <div className='flex flex-1 flex-col space-y-5 animate-in fade-in duration-300'>
           <div className='flex items-center justify-between pb-2 border-b'>
@@ -42,6 +40,6 @@ export default function OverViewLayout({
           </div>
         </div>
       </PageContainer>
-    </PagePermissionGuard>
+    </OverviewPermissionShell>
   );
 }

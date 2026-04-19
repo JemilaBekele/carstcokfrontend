@@ -1,20 +1,24 @@
 import FormCardSkeleton from '@/components/form-card-skeleton';
 import PageContainer from '@/components/layout/page-container';
 import StockLedgerReconciliationPage from '@/features/Missingstockleger/missstockleger';
+import { PagePermissionGuard } from '@/components/PagePermissionGuard';
+import { PERMISSIONS } from '@/stores/permissions';
 import { Suspense } from 'react';
 
 export const metadata = {
-  title: 'Dashboard : Sale Reports'
+  title: 'Dashboard : Stock Ledger Reconciliation'
 };
 
-export default async function SellPage() {
+export default async function MissingStockPage() {
   return (
-    <PageContainer scrollable={false}>
-      <div className='flex-1 space-y-4'>
-        <Suspense fallback={<FormCardSkeleton />}>
-          <StockLedgerReconciliationPage />
-        </Suspense>
-      </div>
-    </PageContainer>
+    <PagePermissionGuard requiredPermission={PERMISSIONS.PRODUCT.VIEW_ALL.name}>
+      <PageContainer scrollable={false}>
+        <div className='flex-1 space-y-4'>
+          <Suspense fallback={<FormCardSkeleton />}>
+            <StockLedgerReconciliationPage />
+          </Suspense>
+        </div>
+      </PageContainer>
+    </PagePermissionGuard>
   );
 }

@@ -96,6 +96,7 @@ DASHBOARDS: {
   COMPANY: {
     CREATE: { name: 'CREATE_COMPANY', description: 'Create new companies' },
     VIEW: { name: 'VIEW_COMPANY', description: 'View company details' },
+    VIEW_ALL: { name: 'VIEW_ALL_COMPANIES', description: 'View all companies' },
     UPDATE: {
       name: 'UPDATE_COMPANY',
       description: 'Update company information'
@@ -162,6 +163,13 @@ DASHBOARDS: {
       description: 'Update category information'
     },
     DELETE: { name: 'DELETE_CATEGORY', description: 'Delete categories' }
+  },
+
+  BRAND: {
+    CREATE: { name: 'CREATE_BRAND', description: 'Create new brands' },
+    VIEW_ALL: { name: 'VIEW_ALL_BRANDS', description: 'View all brands' },
+    UPDATE: { name: 'UPDATE_BRAND', description: 'Update brand information' },
+    DELETE: { name: 'DELETE_BRAND', description: 'Delete brands' }
   },
 
   PRODUCT: {
