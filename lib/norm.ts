@@ -1,4 +1,4 @@
-const BACKEND_URL = 'http://store.smartdent.online';
+const BACKEND_URL = 'http://192.168.1.6:5000';
 
 export const normalizeImagePath = (path?: string) => {
   if (!path) return undefined;
