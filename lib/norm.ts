@@ -1,4 +1,4 @@
-const BACKEND_URL = 'http://192.168.1.6:5000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://store.smartdent.online';
 
 export const normalizeImagePath = (path?: string) => {
   if (!path) return undefined;

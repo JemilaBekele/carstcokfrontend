@@ -43,7 +43,8 @@ import {
   oilTypeOptions, 
   additiveTypeOptions 
 } from '@/models/Branch'
-const BACKEND_URL = 'http://192.168.1.6:5000';
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://store.smartdent.online';
 
 // Helper functions
 const normalizeImagePath = (path?: string | File) => {
