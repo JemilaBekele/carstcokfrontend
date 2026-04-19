@@ -44,7 +44,7 @@ import {
   additiveTypeOptions 
 } from '@/models/Branch'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://store.smartdent.online';
+const BACKEND_URL =  'https://store.smartdent.online';
 
 // Helper functions
 const normalizeImagePath = (path?: string | File) => {
