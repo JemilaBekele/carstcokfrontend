@@ -301,6 +301,8 @@ export interface DeliveryData {
 
 export interface DeliveryItem {
   itemId: string;
+  givenQuantity?: number;
+
 }
 
 export interface BatchAssignment {
@@ -347,6 +349,46 @@ export const cancelSale = async (id: string, req?: IncomingMessage) => {
   try {
     const axiosInstance = axiosWithAuth(req);
     const response = await axiosInstance.patch(`/sells/${id}/cancel`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+
+export const addSellPayment = async (
+  sellId: string,
+  paymentData: {
+    amount: number;
+    notes?: string;
+  },
+  req?: IncomingMessage
+) => {
+  try {
+    const axiosInstance = axiosWithAuth(req);
+    const response = await axiosInstance.post(
+      `/sells/${sellId}/payments`,
+      paymentData
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+export const getSellPaymentHistory = async (
+  sellId: string,
+  req?: IncomingMessage
+) => {
+  try {
+    const axiosInstance = axiosWithAuth(req);
+    const response = await axiosInstance.get(
+      `/sells/${sellId}/payments`
+    );
+
     return response.data;
   } catch (error) {
     throw error;

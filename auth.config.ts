@@ -17,10 +17,13 @@ const authConfig: NextAuthOptions = {
             console.log("LOGIN TRY:", credentials);
 
         try {
-      const response = await api.post('/login', {
-            email: credentials?.email,
-            password: credentials?.password
-          });
+        const response = await axios.post(
+      "https://store.smartdent.online/api/login",
+      {
+        email: credentials?.email,
+        password: credentials?.password
+      }
+    );
 
           const user = response.data.user;
           const accessToken = response.data.tokens?.access?.token;

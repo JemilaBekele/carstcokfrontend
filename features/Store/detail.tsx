@@ -20,7 +20,8 @@ import {
   CreditCard,
   Printer,
   Box,
-  PackageOpen
+  PackageOpen,
+  AlertCircle
 } from 'lucide-react';
 import {
   Table,
@@ -44,7 +45,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
-
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { getUserById } from '@/service/user';
 
 type SaleViewProps = {
@@ -56,6 +66,11 @@ interface UserShop {
   name: string;
 }
 
+interface DeliveryItem {
+  itemId: string;
+  givenQuantity?: number;
+}
+
 const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
   const [sale, setSale] = useState<ISell | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,6 +80,10 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [deliverDialogOpen, setDeliverDialogOpen] = useState(false);
+  const [partialDeliveryDialogOpen, setPartialDeliveryDialogOpen] = useState(false);
+  const [selectedItemForPartial, setSelectedItemForPartial] = useState<ISellItem | null>(null);
+  const [givenQuantity, setGivenQuantity] = useState<number>(0);
+  const [quantityError, setQuantityError] = useState<string>('');
   const [userShops, setUserShops] = useState<UserShop[]>([]);
   const [userShopsMap, setUserShopsMap] = useState<Map<string, UserShop>>(new Map());
 
@@ -119,7 +138,6 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
     if (!sale) return;
     window.print();
   };
-
 
   const confirmStatusUpdate = async () => {
     if (!id || !selectedStatus) return;
@@ -220,6 +238,46 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
     }
   };
 
+  const handlePartialDelivery = async () => {
+    if (!id || !selectedItemForPartial) return;
+
+    if (givenQuantity <= 0) {
+      setQuantityError('Quantity must be greater than 0');
+      return;
+    }
+
+    const maxQuantity = selectedItemForPartial.remainingQuantity || selectedItemForPartial.quantity;
+    if (givenQuantity > maxQuantity) {
+      setQuantityError(`Quantity cannot exceed ${maxQuantity}`);
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      const deliveryData = {
+        items: [{ 
+          itemId: selectedItemForPartial.id, 
+          givenQuantity: givenQuantity 
+        }]
+      };
+      
+      await deliverAllSaleItems(id, deliveryData);
+      toast.success(`${givenQuantity} item(s) delivered successfully`);
+      
+      // Refresh sale data
+      const updatedSale = await getSellId(id);
+      setSale(updatedSale);
+      setPartialDeliveryDialogOpen(false);
+      setSelectedItemForPartial(null);
+      setGivenQuantity(0);
+      setQuantityError('');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to deliver items');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const handleItemSelection = (itemId: string) => {
     setSelectedItems((prev) =>
       prev.includes(itemId)
@@ -244,6 +302,14 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
     } else {
       setSelectedItems(undeliveredItemIds);
     }
+  };
+
+  const openPartialDeliveryModal = (item: ISellItem) => {
+    const remainingQty = item.remainingQuantity || item.quantity;
+    setSelectedItemForPartial(item);
+    setGivenQuantity(remainingQty > 0 ? Math.min(remainingQty, item.quantity) : item.quantity);
+    setQuantityError('');
+    setPartialDeliveryDialogOpen(true);
   };
 
   // Check if user can deliver selected items
@@ -349,6 +415,69 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
         variant='default'
       />
 
+      {/* Partial Delivery Modal */}
+      <Dialog open={partialDeliveryDialogOpen} onOpenChange={setPartialDeliveryDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Partial Delivery</DialogTitle>
+            <DialogDescription>
+              Enter the quantity to deliver for {selectedItemForPartial?.product?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity to Deliver</Label>
+              <Input
+                id="quantity"
+                type="number"
+                min={1}
+                max={selectedItemForPartial?.remainingQuantity || selectedItemForPartial?.quantity}
+                value={givenQuantity}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  setGivenQuantity(value);
+                  if (value > 0) setQuantityError('');
+                }}
+                placeholder="Enter quantity"
+              />
+              {quantityError && (
+                <div className="flex items-center gap-2 text-sm text-red-600">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{quantityError}</span>
+                </div>
+              )}
+              <div className="text-sm text-muted-foreground">
+                <p>Total Quantity: {selectedItemForPartial?.quantity}</p>
+                <p>Already Given: {selectedItemForPartial?.givenQuantity || 0}</p>
+                <p>Remaining: {selectedItemForPartial?.remainingQuantity || selectedItemForPartial?.quantity}</p>
+                {selectedItemForPartial?.isBox && selectedItemForPartial?.product?.boxSize && (
+                  <p className="text-xs">
+                    Box size: {selectedItemForPartial.product.boxSize} pieces/box
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPartialDeliveryDialogOpen(false);
+                setSelectedItemForPartial(null);
+                setGivenQuantity(0);
+                setQuantityError('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handlePartialDelivery} disabled={updating}>
+              {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirm Delivery
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Status Update Dialog */}
       <AlertDialog
         open={statusUpdateDialog}
@@ -376,8 +505,6 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-    
 
       <Card className='shadow-lg'>
         <CardHeader>
@@ -599,6 +726,8 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                           <TableHead className='min-w-28'>Shop</TableHead>
                           <TableHead className='min-w-24'>Type</TableHead>
                           <TableHead className='min-w-20'>Quantity</TableHead>
+                          <TableHead className='min-w-28'>Given</TableHead>
+                          <TableHead className='min-w-28'>Remaining</TableHead>
                           <TableHead className='min-w-28'>Unit Price</TableHead>
                           <TableHead className='min-w-28'>Total Price</TableHead>
                           <TableHead className='min-w-32'>Status</TableHead>
@@ -610,6 +739,8 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                           const isDelivered = item.itemSaleStatus === ItemSaleStatus.DELIVERED;
                           const hasAccess = hasShopAccess(item.shop?.id, item.shop?.name);
                           const canDeliver = !isDelivered && hasAccess;
+                          const remainingQty = item.remainingQuantity || item.quantity;
+                          const givenQty = item.givenQuantity || 0;
 
                           return (
                             <TableRow
@@ -668,9 +799,20 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                                     </>
                                   )}
                                 </Badge>
+                                {item.isBox && item.product?.boxSize && (
+                                  <div className='text-xs text-muted-foreground mt-1'>
+                                    {item.product.boxSize} pcs/box
+                                  </div>
+                                )}
                               </TableCell>
                               <TableCell>
                                 <span className='font-medium'>{item.quantity}</span>
+                              </TableCell>
+                              <TableCell>
+                                <span className='font-medium text-green-600'>{givenQty}</span>
+                              </TableCell>
+                              <TableCell>
+                                <span className='font-medium text-orange-600'>{remainingQty}</span>
                               </TableCell>
                               <TableCell>
                                 <span className='font-medium'>{item.unitPrice.toFixed(2)}</span>
@@ -699,18 +841,28 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                               </TableCell>
                               <TableCell>
                                 {!isDelivered && hasAccess && (
-                                  <Button
-                                    variant='outline'
-                                    size='sm'
-                                    onClick={() => {
-                                      setSelectedItems([item.id]);
-                                      setDeliverDialogOpen(true);
-                                    }}
-                                    disabled={updating}
-                                  >
-                                    <Truck className='mr-1 h-3 w-3' />
-                                    Deliver
-                                  </Button>
+                                  <div className='flex gap-2'>
+                                    <Button
+                                      variant='outline'
+                                      size='sm'
+                                      onClick={() => {
+                                        setSelectedItems([item.id]);
+                                        setDeliverDialogOpen(true);
+                                      }}
+                                      disabled={updating}
+                                    >
+                                      <Truck className='mr-1 h-3 w-3' />
+                                      Deliver All
+                                    </Button>
+                                    <Button
+                                      variant='secondary'
+                                      size='sm'
+                                      onClick={() => openPartialDeliveryModal(item)}
+                                      disabled={updating || remainingQty <= 0}
+                                    >
+                                      Partial
+                                    </Button>
+                                  </div>
                                 )}
                                 {!isDelivered && !hasAccess && (
                                   <span className='text-xs text-red-500'>No access</span>

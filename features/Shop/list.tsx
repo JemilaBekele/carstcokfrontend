@@ -11,13 +11,6 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { Modal } from '@/components/ui/modal';
@@ -46,12 +39,11 @@ import { Package, PackageOpen, Info, ChevronLeft, ChevronRight } from 'lucide-re
 import { Switch } from '@/components/ui/switch';
 import { IBrand } from '@/models/brand';
 import { 
-  genericOptions, 
   viscosityOptions, 
   oilTypeOptions, 
   additiveTypeOptions 
 } from '@/models/Branch'
-const BACKEND_URL = 'http://192.168.1.6:5000';
+const BACKEND_URL = 'http://store.smartdent.online';
 
 // Helper functions
 const normalizeImagePath = (path?: string | File) => {
@@ -490,23 +482,61 @@ const ShopBatchModal = ({
     return shopStock?.additionalPrices || [];
   };
 
-  const getUnitPrice = (): number => {
-    if (!product) return 0;
+  // Filter additional prices based on isBox toggle
+  const getFilteredAdditionalPrices = (): IAdditionalPrice[] => {
+    const allPrices = getAdditionalPricesForSelectedShop();
+    
+    // Filter prices that match the current isBox state
+    return allPrices.filter(price => price.isBox === isBox);
+  };
+
+  const getUnitPrice = (): number | null => {
+    if (!product) return null;
 
     if (selectedPriceOption === 'custom') {
-      return parseFloat(customPrice) || 0;
+      // Return null for empty string to indicate no price set
+      if (customPrice === '') {
+        return null;
+      }
+      const price = parseFloat(customPrice);
+      return isNaN(price) ? null : price;
     } else {
-      const additionalPrice = getAdditionalPricesForSelectedShop().find(
+      const filteredPrices = getFilteredAdditionalPrices();
+      const additionalPrice = filteredPrices.find(
         (option) => option.id === selectedPriceOption
       );
-      return additionalPrice?.price || 0;
+      return additionalPrice?.price || null;
     }
+  };
+
+  const handlePriceChange = (value: string) => {
+    setSelectedPriceOption('custom');
+    setCustomPrice(value);
+  };
+
+  const handleSuggestedPriceClick = (option: IAdditionalPrice) => {
+    // Allow using any price regardless of isBox type, just show a warning
+    if (option.isBox !== isBox) {
+      const priceType = option.isBox ? 'box' : 'piece';
+      const currentType = isBox ? 'box' : 'piece';
+      toast.warning(`Using ${priceType} price for ${currentType} sales. You can still edit the price.`);
+    }
+    
+    setSelectedPriceOption(option.id);
+    setCustomPrice(option.price.toString());
   };
 
   const handleAddToCart = () => {
     if (!product || !selectedShop) return;
 
     const unitPrice = getUnitPrice();
+    
+    // Only check if price is valid (greater than 0 and not null)
+    if (!unitPrice || unitPrice <= 0) {
+      toast.error('Please enter a valid price greater than 0');
+      return;
+    }
+    
     const availableQuantity = getMaxAvailableQuantity();
 
     // Validate stock based on isBox flag
@@ -516,7 +546,9 @@ const ShopBatchModal = ({
     }
 
     // Calculate total pieces for display and validation in the backend
-    const totalPieces = isBox && product.boxSize ? quantity * product.boxSize : quantity;
+    const totalPieces = isBox && product.boxSize 
+      ? quantity * product.boxSize 
+      : quantity;
 
     const cartItem: CartItem = {
       id: `temp-${Date.now()}`,
@@ -561,6 +593,8 @@ const ShopBatchModal = ({
     setSelectedShop(shop);
     setQuantity(1);
     setIsBox(false);
+    setSelectedPriceOption('custom');
+    setCustomPrice('');
   };
 
   const handleQuantityChange = (value: string) => {
@@ -582,17 +616,19 @@ const ShopBatchModal = ({
   const totalPieces = (isBox && product?.hasBox && product?.boxSize) 
     ? quantity * product.boxSize 
     : quantity;
-  const totalPrice = unitPrice * totalPieces;
+  const totalPrice = unitPrice && unitPrice > 0 ? unitPrice * totalPieces : 0;
   
-  const additionalPrices = getAdditionalPricesForSelectedShop();
+  const allAdditionalPrices = getAdditionalPricesForSelectedShop();
+  const filteredAdditionalPrices = getFilteredAdditionalPrices();
   const canShowBoxes = product?.hasBox && product?.boxSize && product.boxSize > 0;
 
+  // Reset price when isBox toggles
   useEffect(() => {
     if (selectedShop) {
-      setCustomPrice('');
       setSelectedPriceOption('custom');
+      setCustomPrice('');
     }
-  }, [selectedShop]);
+  }, [isBox, selectedShop]);
 
   return (
     <Modal
@@ -749,7 +785,7 @@ const ShopBatchModal = ({
           </div>
         )}
 
-        {/* Price Selection */}
+        {/* Price Selection - Fully Editable, No Default */}
         <div className='space-y-4 border-t border-gray-200 pt-4'>
           <div className='space-y-2'>
             <Label
@@ -769,20 +805,22 @@ const ShopBatchModal = ({
               min='0'
               step='0.01'
               value={customPrice}
-              onChange={(e) => {
-                setSelectedPriceOption('custom');
-                setCustomPrice(e.target.value);
-              }}
+              onChange={(e) => handlePriceChange(e.target.value)}
               placeholder={`Enter price per ${isBox ? 'box' : 'piece'}`}
               className='w-full'
               disabled={!selectedShop}
             />
+        
           </div>
 
-          {selectedShop && additionalPrices.length > 0 && (
+          {/* Display filtered additional prices based on isBox - Optional suggestions */}
+          {selectedShop && filteredAdditionalPrices.length > 0 && (
             <div className='space-y-2'>
+              <Label className='text-sm font-medium'>
+                Suggested Prices 
+              </Label>
               <div className='flex flex-wrap gap-2'>
-                {additionalPrices.map((option) => (
+                {filteredAdditionalPrices.map((option) => (
                   <Button
                     key={option.id}
                     type='button'
@@ -790,16 +828,24 @@ const ShopBatchModal = ({
                       selectedPriceOption === option.id ? 'default' : 'outline'
                     }
                     size='sm'
-                    onClick={() => {
-                      setSelectedPriceOption(option.id);
-                      setCustomPrice(option.price.toString());
-                    }}
+                    onClick={() => handleSuggestedPriceClick(option)}
                     className='text-xs'
                   >
-                    {option.label}: {formatPrice(option.price)} per piece
+                    {option.label || 'Price'}: {formatPrice(option.price)} per {isBox ? 'box' : 'piece'}
                   </Button>
                 ))}
               </div>
+           
+            </div>
+          )}
+
+          {/* Informational message when no additional prices */}
+          {selectedShop && allAdditionalPrices.length > 0 && filteredAdditionalPrices.length === 0 && (
+            <div className='rounded-md bg-blue-50 p-3 text-sm text-blue-800'>
+              <p className='font-medium'>No suggested prices for {isBox ? 'box' : 'piece'} sales</p>
+              <p className='text-xs mt-1'>
+                Please enter a custom price in the field above.
+              </p>
             </div>
           )}
         </div>
@@ -869,8 +915,8 @@ const ShopBatchModal = ({
                   <span className='font-medium text-gray-700'>
                     Unit Price (per {isBox ? 'box' : 'piece'}):
                   </span>
-                  <span className='font-bold text-green-600'>
-                    {formatPrice(unitPrice)}
+                  <span className={`font-bold ${unitPrice && unitPrice > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                    {unitPrice && unitPrice > 0 ? formatPrice(unitPrice) : 'Not set'}
                   </span>
                 </div>
 
@@ -894,7 +940,7 @@ const ShopBatchModal = ({
                   <div className='flex items-center justify-between text-sm font-bold'>
                     <span>Total:</span>
                     <span className='text-blue-600'>
-                      {quantity > 0 ? formatPrice(totalPrice) : '--'}
+                      {quantity > 0 && unitPrice && unitPrice > 0 ? formatPrice(totalPrice) : '--'}
                     </span>
                   </div>
                 </div>
@@ -928,7 +974,9 @@ const ShopBatchModal = ({
               loading ||
               quantity > availableStock ||
               quantity <= 0 ||
-              availableStock === 0
+              availableStock === 0 ||
+              !unitPrice ||
+              unitPrice <= 0
             }
             className='w-full sm:w-auto'
           >
@@ -1769,10 +1817,7 @@ export const ProductSearch = ({
     ...additiveTypeOptions
   ];
 
-  const genericSelectOptions = [
-    { value: 'all', label: 'All ACEA Standards' },
-    ...genericOptions
-  ];
+
 
   // Initialize state with props directly
   const [searchFilters, setSearchFilters] = useState<SearchFilters>(() => {
@@ -2047,9 +2092,6 @@ export const ProductSearch = ({
     return additiveTypeSelectOptions.find(option => option.value === searchFilters.additiveType);
   };
 
-  const getSelectedGeneric = () => {
-    return genericSelectOptions.find(option => option.value === searchFilters.generic);
-  };
 
   return (
     <div className='flex flex-col space-y-6 lg:flex-row lg:space-y-0 lg:space-x-6'>
@@ -2141,21 +2183,7 @@ export const ProductSearch = ({
               />
             </div>
 
-            {/* Generic (ACEA Standards) Select with Search */}
-            <div>
-              <label className='mb-1 block text-xs font-medium sm:mb-2 sm:text-sm'>
-                ACEA Standard
-              </label>
-              <SelectReac
-                value={getSelectedGeneric()}
-                onChange={(option) => handleFilterChange('generic', option?.value || 'all')}
-                options={genericSelectOptions}
-                isSearchable={true}
-                placeholder="Search ACEA standard..."
-                className="text-xs sm:text-sm"
-                classNamePrefix="react-select"
-              />
-            </div>
+       
 
             {/* Product Name Search */}
             <div>

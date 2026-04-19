@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IncomingMessage } from 'http';
 import { axiosWithAuth } from './cli';
 import { api } from './api';
@@ -58,7 +59,29 @@ export const getPurchases = async (req?: IncomingMessage) => {
     throw error;
   }
 };
+export const uploadPurchasesFiles = async (
+  id: string,
+  data: FormData,
+  req?: IncomingMessage
+) => {
+  try {
+    const axiosInstance = axiosWithAuth(req);
 
+    const response = await axiosInstance.put(
+      `/purchases/${id}/upload/file`,
+      data,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 // Get a purchase by ID
 export const getPurchaseById = async (id: string, req?: IncomingMessage) => {
   try {

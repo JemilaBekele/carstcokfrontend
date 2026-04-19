@@ -966,7 +966,8 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                 {sale.items.map((item: ISellItem) => {
                   const isSelected = selectedItems.includes(item.id);
                   const isDelivered = item.itemSaleStatus === ItemSaleStatus.DELIVERED;
-
+   const remainingQty = item.remainingQuantity || item.quantity;
+                          const givenQty = item.givenQuantity || 0;
                   return (
                     <Card
                       key={item.id}
@@ -1023,6 +1024,12 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                             <p className='text-xs text-muted-foreground'>Quantity</p>
                             <p className='text-sm font-medium'>{item.quantity}</p>
                           </div>
+                             <TableCell>
+                                                          <span className='font-medium text-green-600'>{givenQty}</span>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                          <span className='font-medium text-orange-600'>{remainingQty}</span>
+                                                        </TableCell>
                           <div className='space-y-1'>
                             <p className='text-xs text-muted-foreground'>Unit</p>
                             <p className='text-sm font-medium truncate'>
@@ -1097,6 +1104,8 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                           <TableHead className='min-w-24'>Type</TableHead>
                           <TableHead className='min-w-20'>Quantity</TableHead>
                           <TableHead className='min-w-28'>Unit Price</TableHead>
+                              <TableHead className='min-w-28'>Given</TableHead>
+                                                    <TableHead className='min-w-28'>Remaining</TableHead>
                           <TableHead className='min-w-28'>Total Price</TableHead>
                           <TableHead className='min-w-32'>Status</TableHead>
                         </TableRow>

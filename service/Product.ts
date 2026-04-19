@@ -69,6 +69,8 @@ export const ActivegetProducts = async (req?: IncomingMessage) => {
     throw error;
   }
 };
+
+
 interface TopProductsOptions {
   searchTerm?: string;
   categoryName?: string;
@@ -127,7 +129,30 @@ export const getProductById = async (id: string) => {
     throw error;
   }
 };
+export const createProductstock = async (
+  productId: string,
+  data: any | FormData,
+  req?: IncomingMessage
+) => {
+  try {
+    const axiosInstance = axiosWithAuth(req);
 
+    const config =
+      data instanceof FormData
+        ? { headers: { 'Content-Type': 'multipart/form-data' } }
+        : {};
+
+    const response = await axiosInstance.post(
+      `/products/${productId}/stocks`,
+      data,
+      config
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 // Get Product by Code
 export const getProductByCode = async (code: string, req?: IncomingMessage) => {

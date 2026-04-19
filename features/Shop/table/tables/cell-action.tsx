@@ -14,13 +14,14 @@ import {
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
 
-import { IconEdit, IconDotsVertical, IconTrash } from '@tabler/icons-react';
+import { IconEdit, IconDotsVertical, IconTrash, IconWallet } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { deleteSell } from '@/service/Sell';
 import { ISell } from '@/models/Sell';
 import { Edit } from 'lucide-react';
+import { SellPaymentModal } from '../../userbased/tables/SellPaymentModal';
 
 interface SellCellActionProps {
   data: ISell;
@@ -29,6 +30,8 @@ interface SellCellActionProps {
 export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+    const [openPaymentModal, setOpenPaymentModal] = useState(false);
+
   const router = useRouter();
 
   const onConfirm = async () => {
@@ -52,7 +55,6 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
 
 
 
-  // Get count of unchecked corrections
 
 
   return (
@@ -63,6 +65,15 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
         onConfirm={onConfirm}
         loading={loading}
       />
+           {/* Sell Payment Modal */}
+            <SellPaymentModal
+              open={openPaymentModal}
+              onClose={() => setOpenPaymentModal(false)}
+              sellId={data.id}
+              invoiceNo={data.invoiceNo}
+              total={data.grandTotal}
+            />
+      
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant='ghost' className='h-8 w-8 p-0'>
@@ -83,43 +94,18 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
               </DropdownMenuItem>
             </PermissionGuard>
           )}
-          
+            <PermissionGuard requiredPermission={PERMISSIONS.SELL.UPDATE.name}>
+            <DropdownMenuItem onClick={() => setOpenPaymentModal(true)}>
+              <IconWallet className='mr-2 h-4 w-4' /> Add Payment
+            </DropdownMenuItem>
+          </PermissionGuard>
           <DropdownMenuItem
             onClick={() => router.push(`/dashboard/Sell/view?id=${data.id}`)}
           >
             <Edit className='mr-2 h-4 w-4' /> View
           </DropdownMenuItem>
           
-          {/* {data.saleStatus === 'DELIVERED' && (
-            <PermissionGuard requiredPermission={PERMISSIONS.SELL_STOCK_CORRECTION.CREATE.name}>
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(
-                    `/dashboard/Sell/SellCorrectionForm?id=${data.id}`
-                  )
-                }
-              >
-                <Edit className='mr-2 h-4 w-4' /> Return Sell Correction
-              </DropdownMenuItem>
-            </PermissionGuard>
-          )} */}
-
-          {/* Add "Mark Correction as Checked" action */}
-          {/* {hasUncheckedCorrections && (
-            // <PermissionGuard requiredPermission={PERMISSIONS.SELL_STOCK_CORRECTION.MARK_AS_CHECKED.name}>
-              <DropdownMenuItem
-                onClick={handleMarkCorrectionChecked}
-              >
-                <IconCheck className='mr-2 h-4 w-4' />
-                Mark Correction as Checked
-                {uncheckedCorrections.length > 1 && (
-                  <span className="ml-1 text-xs text-muted-foreground">
-                    ({uncheckedCorrections.length} unchecked)
-                  </span>
-                )}
-              </DropdownMenuItem>
-            // </PermissionGuard>
-          )} */}
+      
 
           <PermissionGuard requiredPermission={PERMISSIONS.SELL.DELETE.name}>
             <DropdownMenuItem onClick={() => setOpen(true)}>

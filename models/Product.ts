@@ -51,6 +51,7 @@ export interface IAdditionalPrice {
   id: string;
   label?: string;
   price: number;
+ isBox: boolean; // ✅ Box or Piece
 
   productId: string;
 

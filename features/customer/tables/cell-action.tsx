@@ -18,6 +18,7 @@ import { IconEdit, IconDotsVertical, IconTrash } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { Edit } from 'lucide-react';
 
 interface CustomerCellActionProps {
   data: ICustomer;
@@ -76,7 +77,13 @@ export const CustomerCellAction: React.FC<CustomerCellActionProps> = ({
               <IconEdit className='mr-2 h-4 w-4' /> Update
             </DropdownMenuItem>
           </PermissionGuard>
-
+      <DropdownMenuItem
+            onClick={() =>
+              router.push(`/dashboard/customer/view?id=${data.id}`)
+            }
+          >
+            <Edit className='mr-2 h-4 w-4' /> View
+          </DropdownMenuItem>
           <PermissionGuard
             requiredPermission={PERMISSIONS.CUSTOMER.DELETE.name}
           >

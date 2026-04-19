@@ -22,7 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
-import { IconEdit, IconDotsVertical, IconTrash, IconUpload, IconFile, IconPhoto, IconX } from '@tabler/icons-react';
+import { IconEdit, IconDotsVertical, IconTrash, IconUpload, IconFile, IconPhoto, IconX, IconWallet } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -31,6 +31,7 @@ import { ISell } from '@/models/Sell';
 import { Edit } from 'lucide-react';
 import Image from 'next/image';
 import { normalizeImagePath } from '@/lib/norm';
+import { SellPaymentModal } from './SellPaymentModal';
 
 interface SellCellActionProps {
   data: ISell;
@@ -40,6 +41,7 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [openUploadDialog, setOpenUploadDialog] = useState(false);
+  const [openPaymentModal, setOpenPaymentModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -158,7 +160,7 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
 
       {/* Upload Files Dialog */}
       <Dialog open={openUploadDialog} onOpenChange={setOpenUploadDialog}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-125 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Upload Files</DialogTitle>
             <DialogDescription>
@@ -318,6 +320,15 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
         </DialogContent>
       </Dialog>
 
+      {/* Sell Payment Modal */}
+      <SellPaymentModal
+        open={openPaymentModal}
+        onClose={() => setOpenPaymentModal(false)}
+        sellId={data.id}
+        invoiceNo={data.invoiceNo}
+        total={data.grandTotal}
+      />
+
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant='ghost' className='h-8 w-8 p-0'>
@@ -328,6 +339,13 @@ export const SellCellAction: React.FC<SellCellActionProps> = ({ data }) => {
         <DropdownMenuContent align='end'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           
+          {/* Add Payment Option */}
+          <PermissionGuard requiredPermission={PERMISSIONS.SELL.UPDATE.name}>
+            <DropdownMenuItem onClick={() => setOpenPaymentModal(true)}>
+              <IconWallet className='mr-2 h-4 w-4' /> Add Payment
+            </DropdownMenuItem>
+          </PermissionGuard>
+
           {/* Upload Files Option */}
           <PermissionGuard requiredPermission={PERMISSIONS.SELL.UPDATE.name}>
             <DropdownMenuItem onClick={() => setOpenUploadDialog(true)}>

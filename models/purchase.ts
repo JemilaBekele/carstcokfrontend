@@ -25,6 +25,8 @@ export enum PaymentStatus {
 export interface IPurchase {
   id: string;
   invoiceNo: string;
+   imageUrl      ? : string;
+  documentUrl?  : string;
   supplierId: string;
   storeId?: string;
     shopId?: string;

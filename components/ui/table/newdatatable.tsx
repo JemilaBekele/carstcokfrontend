@@ -43,6 +43,7 @@ interface DataTableProps<TData, TValue> {
   searchValue?: string;
   statusFilter?: string | number;
   employeeFilter?: string | number;
+  paymentStatusFilter?: string | number;
   startDate?: string;
   endDate?: string;
   uncheckedCorrectionsFilter?: boolean;
