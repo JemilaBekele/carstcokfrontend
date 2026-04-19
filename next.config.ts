@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   images: {
     remotePatterns: [
-      { protocol: 'http', hostname: 'store.smartdent.online', port: '4000', pathname: '/**' }
+      { protocol: 'http', hostname: '192.168.1.6', port: '4000', pathname: '/**' }
     ],
     unoptimized: true,
   },
