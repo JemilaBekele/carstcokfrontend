@@ -79,7 +79,6 @@ export const TopProducts = async (options: TopProductsOptions = {}) => {
     if (categoryName?.trim()) params.categoryName = categoryName.trim();
     if (brandName?.trim()) params.brandName = brandName.trim();
 
-    console.log("TopProducts request params:", params);
 
     const response = await axiosInstance.get(
       `/products/get/all/Top/Selling/Products`,
@@ -88,11 +87,7 @@ export const TopProducts = async (options: TopProductsOptions = {}) => {
       },
     );
 
-    console.log("TopProducts response status:", response.status);
-    console.log(
-      "TopProducts response data count:",
-      response.data?.products?.length || 0,
-    );
+ 
 
     // ✅ Extract only the product info from each item
     const products = (response.data?.products || []).map((item: any) => {
@@ -112,6 +107,28 @@ export const TopProducts = async (options: TopProductsOptions = {}) => {
   }
 };
 
+export const createProductstock = async (
+  productId: string,
+  data: any | FormData,
+) => {
+  try {
+
+    const config =
+      data instanceof FormData
+        ? { headers: { 'Content-Type': 'multipart/form-data' } }
+        : {};
+
+    const response = await axiosInstance.post(
+      `/products/${productId}/stocks`,
+      data,
+      config
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 // Get Product by ID /api/
 export const getProductById = async (id: string) => {
   try {

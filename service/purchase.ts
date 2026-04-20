@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { axiosInstance } from "./axiosIntance";
 import { GetParams } from "./roleService";
 import { IPurchase } from "@/models/purchase";
@@ -126,7 +127,27 @@ export const acceptPurchase = async (id: string, paymentStatus: string) => {
     throw error;
   }
 };
+export const uploadPurchasesFiles = async (
+  id: string,
+  data: FormData,
+) => {
+  try {
 
+    const response = await axiosInstance.put(
+      `/purchases/${id}/upload/file`,
+      data,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 // Delete a purchase
 export const deletePurchase = async (id: string) => {
   try {

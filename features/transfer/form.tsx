@@ -216,12 +216,7 @@ export default function TransferForm({
       if (!sourceId) return;
 
       const storeStockData = await getAvailableProductsBySource(sourceType, sourceId);
-      console.log('Fetched store stock data:', storeStockData.map((s: { product: { name: any; hasBox: any; boxSize: any; }; quantity: any; }) => ({
-        productName: s.product.name,
-        quantity: s.quantity,
-        hasBox: s.product.hasBox,
-        boxSize: s.product.boxSize
-      })));
+   
       setStoreStockItems(storeStockData);
     } catch {
       toast.error('Failed to load products from source');
@@ -624,7 +619,6 @@ export default function TransferForm({
                             label: s.product.name,
                           }));
 
-                          console.log(`Item ${index} render:`, { isBox, pieces, boxes, maxQuantity, availableDisplay, hasBox, boxSize });
 
                           return (
                             <div key={index} className='grid grid-cols-6 items-center gap-4'>
@@ -655,7 +649,6 @@ export default function TransferForm({
                                   <Switch
                                     checked={isBox}
                                     onCheckedChange={(checked) => {
-                                      console.log(`Toggling isBox for item ${index} to:`, checked);
                                       const newItems = [...field.value];
                                       newItems[index].isBox = checked;
                                       newItems[index].quantity = 1; // Reset quantity on toggle

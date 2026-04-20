@@ -459,7 +459,7 @@ const CustomerSellDetailPage: React.FC<CustomerSellDetailPageProps> = ({ custome
             
             <div className='space-y-3'>
               {paymentSummary.outstandingInvoices.map((invoice) => (
-                <div key={invoice.invoiceNo} className='flex items-center justify-between p-3 bg-orange-50 rounded-lg'>
+                <div key={invoice.invoiceNo} className='flex items-center justify-between p-3  rounded-lg'>
                   <div>
                     <p className='font-medium text-sm'>{invoice.invoiceNo}</p>
                     <p className='text-muted-foreground text-xs'>{formatDate(invoice.date)}</p>
@@ -548,7 +548,7 @@ const CustomerSellDetailPage: React.FC<CustomerSellDetailPageProps> = ({ custome
               {/* Mobile View - Stacked Cards */}
               <div className='space-y-4 md:hidden'>
                 {sells.map((sell) => (
-                  <div key={sell.id} className='rounded-lg border border-gray-200 p-4'>
+                  <div key={sell.id} className='rounded-lg border  p-4'>
                     <div className='flex justify-between items-start mb-3'>
                       <div>
                         <p className='font-semibold text-sm'>{sell.invoiceNo}</p>
@@ -598,7 +598,7 @@ const CustomerSellDetailPage: React.FC<CustomerSellDetailPageProps> = ({ custome
                           <p className='font-medium text-sm mb-2'>Items:</p>
                           <div className='space-y-2'>
                             {sell.items.map((item) => (
-                              <div key={item.id} className='text-sm p-2 bg-gray-50 rounded'>
+                              <div key={item.id} className='text-sm p-2  rounded'>
                                 <p className='font-medium'>{item.productName}</p>
                                 <div className='flex justify-between text-xs mt-1'>
                                   <span>Qty: {item.quantity}</span>
@@ -680,7 +680,7 @@ const CustomerSellDetailPage: React.FC<CustomerSellDetailPageProps> = ({ custome
                         </TableRow>
                         {selectedSell?.id === sell.id && (
                           <TableRow>
-                            <TableCell colSpan={9} className='bg-gray-50 p-4'>
+                            <TableCell colSpan={9} className=' p-4'>
                               <div className='space-y-4'>
                                 <div>
                                   <h4 className='font-semibold mb-2'>Items</h4>
@@ -805,7 +805,7 @@ const CustomerSellDetailPage: React.FC<CustomerSellDetailPageProps> = ({ custome
           <CardContent className='p-4 pt-0 md:p-6 md:pt-0'>
             <div className='space-y-3'>
               {recentPayments.map((payment) => (
-                <div key={payment.id} className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
+                <div key={payment.id} className='flex items-center justify-between p-3  rounded-lg'>
                   <div>
                     <p className='font-medium text-sm'>{payment.invoiceNo}</p>
                     <p className='text-muted-foreground text-xs'>{formatDate(payment.createdAt)}</p>

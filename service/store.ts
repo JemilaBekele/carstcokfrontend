@@ -44,7 +44,6 @@ export const getStores = async () => {
 export const getStoresall = async () => {
   try {
     const response = await axiosInstance.get(`/stores/get/all`);
-    console.log("store", response.data.stores);
     return response.data.stores as IStore[];
   } catch (error) {
     throw error;

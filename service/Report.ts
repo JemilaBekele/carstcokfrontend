@@ -23,9 +23,8 @@ export const getSellTrendApi = async () => {
     throw error;
   }
 };
-export const getTopProductsReportWithPrediction = async (req?: IncomingMessage) => {
+export const getTopProductsReportWithPrediction = async () => {
   try {
-    const axiosInstance = axiosWithAuth(req);
 
     const response = await axiosInstance.get(
       `/dashboard/top-products-report`
@@ -158,7 +157,7 @@ export const getUserDashboardSummaryApi = async (
     throw error;
   }
 };
-export const getSalesCreatorDashboardSummaryApi = async (params: {} = {}) => {
+export const getSalesCreatorDashboardSummaryApi = async (params: object = {}) => {
   try {
     const response = await axiosInstance.get(
       "/reports/sales/user/creator/dashboard",
@@ -172,7 +171,7 @@ export const getSalesCreatorDashboardSummaryApi = async (params: {} = {}) => {
 /**
  * Fetch Financial Totals for Dashboard
  */
-export const getFinancialTotalsApi = async (params: {} = {}) => {
+export const getFinancialTotalsApi = async (params: object = {}) => {
   try {
     const response = await axiosInstance.get("/dashboard/financial-totals");
     return response.data;
@@ -184,7 +183,7 @@ export const getFinancialTotalsApi = async (params: {} = {}) => {
 /**
  * Fetch Sell Status Pie Chart Data
  */
-export const getSellStatusChartApi = async (params: {} = {}) => {
+export const getSellStatusChartApi = async (params: object = {}) => {
   try {
     const response = await axiosInstance.get("/dashboard/sell-status-chart");
     return response.data;

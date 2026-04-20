@@ -89,21 +89,21 @@ export const BrandCellAction: React.FC<BrandCellActionProps> = ({ data }) => {
         <DropdownMenuContent align='end'>
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-          {/* <PermissionGuard fallback="hide"
+          <PermissionGuard fallback="hide"
             requiredPermission={PERMISSIONS.BRAND.UPDATE.name}
-          > */}
+          >
             <DropdownMenuItem onClick={() => setOpenEditModal(true)}>
               <IconEdit className='w-4 h-4 mr-2' /> Update
             </DropdownMenuItem>
-          {/* </PermissionGuard> */}
+          </PermissionGuard>
 
-          {/* <PermissionGuard fallback="hide"
+          <PermissionGuard fallback="hide"
             requiredPermission={PERMISSIONS.BRAND.DELETE.name}
-          > */}
+          >
             <DropdownMenuItem onClick={() => setOpenDeleteModal(true)}>
               <IconTrash className='w-4 h-4 mr-2' /> Delete
             </DropdownMenuItem>
-          {/* </PermissionGuard> */}
+          </PermissionGuard>
         </DropdownMenuContent>
       </DropdownMenu>
     </>

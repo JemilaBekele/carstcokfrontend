@@ -61,18 +61,7 @@ export const supplierColumns: ColumnDef<ISupplier>[] = [
     ),
     enableColumnFilter: false
   },
-  {
-    accessorKey: 'notes',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Notes' />
-    ),
-    cell: ({ cell }) => (
-      <div className='max-w-50 truncate'>
-        {cell.getValue<ISupplier['notes']>() ?? '-'}
-      </div>
-    ),
-    enableColumnFilter: false
-  },
+
   {
     accessorKey: 'createdAt',
     header: ({ column }) => (

@@ -167,17 +167,17 @@ export default function SignInViewPage() {
 
           <div className="login-hero__quote">
             <blockquote>
-              &ldquo;Streamline your vehicle inventory with precision tracking, real-time analytics,
-              and seamless operations management.&rdquo;
+               &ldquo;Manage your inventory and track your stock easily.&rdquo;
+
             </blockquote>
           </div>
 
           <div className="login-hero__stats">
-            <AnimatedStat value="12K" label="Vehicles Tracked" suffix="+" />
+            {/* <AnimatedStat value="12K" label="Vehicles Tracked" suffix="+" /> */}
             <div className="login-hero__stats-divider" />
-            <AnimatedStat value="98" label="Uptime" suffix="%" />
+            {/* <AnimatedStat value="98" label="Uptime" suffix="%" /> */}
             <div className="login-hero__stats-divider" />
-            <AnimatedStat value="4.9" label="User Rating" suffix="★" />
+            {/* <AnimatedStat value="4.9" label="User Rating" suffix="★" /> */}
           </div>
         </div>
       </div>
@@ -266,9 +266,7 @@ export default function SignInViewPage() {
               <label className="login-checkbox" htmlFor="login-remember">
                 <input type="checkbox" id="login-remember" />
                 <span className="login-checkbox__mark" />
-                <span className="login-checkbox__text">Remember me</span>
               </label>
-              <a href="#" className="login-forgot">Forgot password?</a>
             </div>
 
             {/* Error */}
@@ -326,115 +324,114 @@ export default function SignInViewPage() {
 
         /* ── Theme Tokens ─────────────────────────── */
         :root {
-          --login-bg: #f5f6fa;
-          --login-panel-bg: linear-gradient(145deg, #edeef3 0%, #f5f6fa 50%, #eef0f5 100%);
-          --login-card-bg: linear-gradient(160deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
-          --login-card-border: rgba(0, 0, 0, 0.08);
-          --login-card-shadow: 0 0 0 1px rgba(180,145,30,0.06), 0 20px 60px rgba(0,0,0,0.08), 0 0 80px rgba(180,145,30,0.03);
-          --login-title: #1a1a2e;
-          --login-subtitle: rgba(0, 0, 0, 0.45);
-          --login-label: rgba(0, 0, 0, 0.55);
-          --login-accent: #B8962E;
-          --login-input-bg: rgba(0, 0, 0, 0.03);
-          --login-input-border: rgba(0, 0, 0, 0.1);
-          --login-input-text: #1a1a2e;
-          --login-input-placeholder: rgba(0, 0, 0, 0.3);
-          --login-input-focus-bg: rgba(180, 145, 30, 0.04);
-          --login-input-focus-border: rgba(180, 145, 30, 0.45);
-          --login-input-focus-ring: rgba(180, 145, 30, 0.1);
-          --login-input-focus-glow: rgba(180, 145, 30, 0.06);
-          --login-icon: rgba(0, 0, 0, 0.3);
-          --login-icon-active: rgba(180, 145, 30, 0.75);
-          --login-toggle: rgba(0, 0, 0, 0.3);
-          --login-toggle-hover: rgba(180, 145, 30, 0.8);
-          --login-checkbox-text: rgba(0, 0, 0, 0.5);
-          --login-checkbox-border: rgba(0, 0, 0, 0.18);
-          --login-checkbox-check-bg: #0a0a0f;
-          --login-forgot: #B8962E;
-          --login-btn-bg: linear-gradient(135deg, #C4A030 0%, #A8882A 100%);
-          --login-btn-text: #ffffff;
-          --login-btn-hover-shadow: 0 8px 24px rgba(180,145,30,0.25), 0 0 60px rgba(180,145,30,0.08);
-          --login-btn-disabled-bg: rgba(0, 0, 0, 0.06);
-          --login-btn-disabled-text: rgba(0, 0, 0, 0.3);
-          --login-error-bg: rgba(239, 68, 68, 0.06);
-          --login-error-border: rgba(239, 68, 68, 0.15);
-          --login-error-text: #dc2626;
-          --login-secure: rgba(0, 0, 0, 0.3);
-          --login-secure-icon: rgba(22, 163, 74, 0.7);
-          --login-copyright: rgba(0, 0, 0, 0.25);
-          --login-particle: rgba(180, 145, 30, 0.4);
-          --login-hero-overlay-a: rgba(245, 246, 250, 0.8);
-          --login-hero-overlay-b: rgba(245, 246, 250, 0.5);
-          --login-hero-overlay-c: rgba(245, 246, 250, 0.3);
-          --login-hero-vignette-radial: rgba(180, 145, 30, 0.06);
-          --login-hero-vignette-edge: rgba(245, 246, 250, 0.85);
-          --login-brand-icon: #B8962E;
-          --login-brand-name: #1a1a2e;
-          --login-brand-tagline: rgba(0, 0, 0, 0.45);
-          --login-quote: rgba(0, 0, 0, 0.7);
-          --login-quote-border: rgba(180, 145, 30, 0.45);
-          --login-stat-value: #B8962E;
-          --login-stat-label: rgba(0, 0, 0, 0.4);
-          --login-stat-divider: rgba(0, 0, 0, 0.08);
-          --login-stats-border: rgba(0, 0, 0, 0.06);
-          --login-mobile-brand: #B8962E;
-        }
+  --login-bg: #f5f8ff;
+  --login-panel-bg: linear-gradient(145deg, #eef4ff 0%, #f5f8ff 50%, #edf3ff 100%);
+  --login-card-bg: linear-gradient(160deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
+  --login-card-border: rgba(0, 0, 0, 0.08);
+  --login-card-shadow: 0 0 0 1px rgba(59,130,246,0.06), 0 20px 60px rgba(0,0,0,0.08), 0 0 80px rgba(59,130,246,0.03);
+  --login-title: #1a1a2e;
+  --login-subtitle: rgba(0, 0, 0, 0.45);
+  --login-label: rgba(0, 0, 0, 0.55);
+  --login-accent: #2563eb;
+  --login-input-bg: rgba(0, 0, 0, 0.03);
+  --login-input-border: rgba(0, 0, 0, 0.1);
+  --login-input-text: #1a1a2e;
+  --login-input-placeholder: rgba(0, 0, 0, 0.3);
+  --login-input-focus-bg: rgba(37, 99, 235, 0.04);
+  --login-input-focus-border: rgba(37, 99, 235, 0.45);
+  --login-input-focus-ring: rgba(37, 99, 235, 0.1);
+  --login-input-focus-glow: rgba(37, 99, 235, 0.06);
+  --login-icon: rgba(0, 0, 0, 0.3);
+  --login-icon-active: rgba(37, 99, 235, 0.75);
+  --login-toggle: rgba(0, 0, 0, 0.3);
+  --login-toggle-hover: rgba(37, 99, 235, 0.8);
+  --login-checkbox-text: rgba(0, 0, 0, 0.5);
+  --login-checkbox-border: rgba(0, 0, 0, 0.18);
+  --login-checkbox-check-bg: #0a0a0f;
+  --login-forgot: #2563eb;
+  --login-btn-bg: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  --login-btn-text: #ffffff;
+  --login-btn-hover-shadow: 0 8px 24px rgba(37,99,235,0.25), 0 0 60px rgba(37,99,235,0.08);
+  --login-btn-disabled-bg: rgba(0, 0, 0, 0.06);
+  --login-btn-disabled-text: rgba(0, 0, 0, 0.3);
+  --login-error-bg: rgba(239, 68, 68, 0.06);
+  --login-error-border: rgba(239, 68, 68, 0.15);
+  --login-error-text: #dc2626;
+  --login-secure: rgba(0, 0, 0, 0.3);
+  --login-secure-icon: rgba(22, 163, 74, 0.7);
+  --login-copyright: rgba(0, 0, 0, 0.25);
+  --login-particle: rgba(37, 99, 235, 0.4);
+  --login-hero-overlay-a: rgba(245, 248, 255, 0.8);
+  --login-hero-overlay-b: rgba(245, 248, 255, 0.5);
+  --login-hero-overlay-c: rgba(245, 248, 255, 0.3);
+  --login-hero-vignette-radial: rgba(37, 99, 235, 0.06);
+  --login-hero-vignette-edge: rgba(245, 248, 255, 0.85);
+  --login-brand-icon: #2563eb;
+  --login-brand-name: #1a1a2e;
+  --login-brand-tagline: rgba(0, 0, 0, 0.45);
+  --login-quote: rgba(0, 0, 0, 0.7);
+  --login-quote-border: rgba(37, 99, 235, 0.45);
+  --login-stat-value: #2563eb;
+  --login-stat-label: rgba(0, 0, 0, 0.4);
+  --login-stat-divider: rgba(0, 0, 0, 0.08);
+  --login-stats-border: rgba(0, 0, 0, 0.06);
+  --login-mobile-brand: #2563eb;
+}
 
-        .dark {
-          --login-bg: #0a0a0f;
-          --login-panel-bg: linear-gradient(145deg, #0e0e16 0%, #0a0a0f 50%, #0d0d14 100%);
-          --login-card-bg: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
-          --login-card-border: rgba(255, 255, 255, 0.08);
-          --login-card-shadow: 0 0 0 1px rgba(212,175,55,0.05), 0 20px 60px rgba(0,0,0,0.5), 0 0 80px rgba(212,175,55,0.03);
-          --login-title: #ffffff;
-          --login-subtitle: rgba(255, 255, 255, 0.4);
-          --login-label: rgba(255, 255, 255, 0.55);
-          --login-accent: #D4AF37;
-          --login-input-bg: rgba(255, 255, 255, 0.04);
-          --login-input-border: rgba(255, 255, 255, 0.08);
-          --login-input-text: #ffffff;
-          --login-input-placeholder: rgba(255, 255, 255, 0.2);
-          --login-input-focus-bg: rgba(212, 175, 55, 0.04);
-          --login-input-focus-border: rgba(212, 175, 55, 0.4);
-          --login-input-focus-ring: rgba(212, 175, 55, 0.08);
-          --login-input-focus-glow: rgba(212, 175, 55, 0.05);
-          --login-icon: rgba(255, 255, 255, 0.25);
-          --login-icon-active: rgba(212, 175, 55, 0.7);
-          --login-toggle: rgba(255, 255, 255, 0.3);
-          --login-toggle-hover: rgba(212, 175, 55, 0.8);
-          --login-checkbox-text: rgba(255, 255, 255, 0.45);
-          --login-checkbox-border: rgba(255, 255, 255, 0.15);
-          --login-checkbox-check-bg: #0a0a0f;
-          --login-forgot: #D4AF37;
-          --login-btn-bg: linear-gradient(135deg, #D4AF37 0%, #B8962E 100%);
-          --login-btn-text: #0a0a0f;
-          --login-btn-hover-shadow: 0 8px 24px rgba(212,175,55,0.3), 0 0 60px rgba(212,175,55,0.1);
-          --login-btn-disabled-bg: rgba(255, 255, 255, 0.08);
-          --login-btn-disabled-text: rgba(255, 255, 255, 0.35);
-          --login-error-bg: rgba(239, 68, 68, 0.08);
-          --login-error-border: rgba(239, 68, 68, 0.2);
-          --login-error-text: #f87171;
-          --login-secure: rgba(255, 255, 255, 0.25);
-          --login-secure-icon: rgba(74, 222, 128, 0.6);
-          --login-copyright: rgba(255, 255, 255, 0.2);
-          --login-particle: rgba(212, 175, 55, 0.6);
-          --login-hero-overlay-a: rgba(10, 10, 15, 0.85);
-          --login-hero-overlay-b: rgba(10, 10, 15, 0.55);
-          --login-hero-overlay-c: rgba(10, 10, 15, 0.35);
-          --login-hero-vignette-radial: rgba(212, 175, 55, 0.08);
-          --login-hero-vignette-edge: rgba(10, 10, 15, 0.9);
-          --login-brand-icon: #D4AF37;
-          --login-brand-name: #ffffff;
-          --login-brand-tagline: rgba(255, 255, 255, 0.45);
-          --login-quote: rgba(255, 255, 255, 0.85);
-          --login-quote-border: rgba(212, 175, 55, 0.5);
-          --login-stat-value: #D4AF37;
-          --login-stat-label: rgba(255, 255, 255, 0.4);
-          --login-stat-divider: rgba(255, 255, 255, 0.1);
-          --login-stats-border: rgba(255, 255, 255, 0.08);
-          --login-mobile-brand: #D4AF37;
-        }
-
+.dark {
+  --login-bg: #020617;
+  --login-panel-bg: linear-gradient(145deg, #020617 0%, #020617 50%, #020617 100%);
+  --login-card-bg: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  --login-card-border: rgba(255, 255, 255, 0.08);
+  --login-card-shadow: 0 0 0 1px rgba(59,130,246,0.05), 0 20px 60px rgba(0,0,0,0.5), 0 0 80px rgba(59,130,246,0.03);
+  --login-title: #ffffff;
+  --login-subtitle: rgba(255, 255, 255, 0.4);
+  --login-label: rgba(255, 255, 255, 0.55);
+  --login-accent: #3b82f6;
+  --login-input-bg: rgba(255, 255, 255, 0.04);
+  --login-input-border: rgba(255, 255, 255, 0.08);
+  --login-input-text: #ffffff;
+  --login-input-placeholder: rgba(255, 255, 255, 0.2);
+  --login-input-focus-bg: rgba(59, 130, 246, 0.04);
+  --login-input-focus-border: rgba(59, 130, 246, 0.4);
+  --login-input-focus-ring: rgba(59, 130, 246, 0.08);
+  --login-input-focus-glow: rgba(59, 130, 246, 0.05);
+  --login-icon: rgba(255, 255, 255, 0.25);
+  --login-icon-active: rgba(59, 130, 246, 0.7);
+  --login-toggle: rgba(255, 255, 255, 0.3);
+  --login-toggle-hover: rgba(59, 130, 246, 0.8);
+  --login-checkbox-text: rgba(255, 255, 255, 0.45);
+  --login-checkbox-border: rgba(255, 255, 255, 0.15);
+  --login-checkbox-check-bg: #020617;
+  --login-forgot: #3b82f6;
+  --login-btn-bg: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  --login-btn-text: #ffffff;
+  --login-btn-hover-shadow: 0 8px 24px rgba(59,130,246,0.3), 0 0 60px rgba(59,130,246,0.1);
+  --login-btn-disabled-bg: rgba(255, 255, 255, 0.08);
+  --login-btn-disabled-text: rgba(255, 255, 255, 0.35);
+  --login-error-bg: rgba(239, 68, 68, 0.08);
+  --login-error-border: rgba(239, 68, 68, 0.2);
+  --login-error-text: #f87171;
+  --login-secure: rgba(255, 255, 255, 0.25);
+  --login-secure-icon: rgba(74, 222, 128, 0.6);
+  --login-copyright: rgba(255, 255, 255, 0.2);
+  --login-particle: rgba(59, 130, 246, 0.6);
+  --login-hero-overlay-a: rgba(2, 6, 23, 0.85);
+  --login-hero-overlay-b: rgba(2, 6, 23, 0.55);
+  --login-hero-overlay-c: rgba(2, 6, 23, 0.35);
+  --login-hero-vignette-radial: rgba(59, 130, 246, 0.08);
+  --login-hero-vignette-edge: rgba(2, 6, 23, 0.9);
+  --login-brand-icon: #3b82f6;
+  --login-brand-name: #ffffff;
+  --login-brand-tagline: rgba(255, 255, 255, 0.45);
+  --login-quote: rgba(255, 255, 255, 0.85);
+  --login-quote-border: rgba(59, 130, 246, 0.5);
+  --login-stat-value: #3b82f6;
+  --login-stat-label: rgba(255, 255, 255, 0.4);
+  --login-stat-divider: rgba(255, 255, 255, 0.1);
+  --login-stats-border: rgba(255, 255, 255, 0.08);
+  --login-mobile-brand: #3b82f6;
+}
         .login-root {
           display: flex;
           min-height: 100vh;

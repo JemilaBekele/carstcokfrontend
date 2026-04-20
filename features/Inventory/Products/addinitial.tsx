@@ -177,7 +177,6 @@ const ProductStockForm: React.FC<ProductStockFormProps> = ({ productId: propProd
         notes: stock.notes || undefined
       }));
 
-      console.log('Sending request with:', { productId, stocksData }); // Debug log
       
       await createProductstock(productId, stocksData);
 

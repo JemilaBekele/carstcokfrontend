@@ -89,10 +89,8 @@ export const deleteCustomer = async (id: string | number) => {
 export const getCustomerSells = async (
   customerId: string,
   params?: Record<string, any>,
-  req?: IncomingMessage
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
 
     const response = await axiosInstance.get(
       `/customers/${customerId}/sells`,
@@ -112,10 +110,8 @@ export const getCustomerSells = async (
  */
 export const getCustomerPaymentSummary = async (
   customerId: string,
-  req?: IncomingMessage
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
 
     const response = await axiosInstance.get(
       `/customers/${customerId}/payment-summary`
@@ -130,10 +126,8 @@ export const getCustomerPaymentSummary = async (
 export const getSupplierPurchases = async (
   supplierId: string,
   params?: Record<string, any>,
-  req?: IncomingMessage
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
 
     const response = await axiosInstance.get(
       `/suppliers/${supplierId}/purchases`,

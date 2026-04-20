@@ -45,7 +45,6 @@ export default function UncheckedCorrectionsFilter({
     }
     
     const newUrl = `?${urlParams.toString()}`;
-    console.log('Navigating to:', newUrl);
     
     router.push(newUrl);
     router.refresh(); // Force a refresh to update server component

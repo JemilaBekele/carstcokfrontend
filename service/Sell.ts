@@ -190,10 +190,8 @@ export const updateSell = async (id: string, data: any) => {
 export const uploadSellFiles = async (
   id: string,
   data: FormData,
-  req?: IncomingMessage
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
 
     const response = await axiosInstance.put(
       `/sell/${id}/upload/file`,
@@ -328,10 +326,8 @@ export const addSellPayment = async (
     amount: number;
     notes?: string;
   },
-  req?: IncomingMessage
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
     const response = await axiosInstance.post(
       `/sells/${sellId}/payments`,
       paymentData
@@ -346,10 +342,8 @@ export const addSellPayment = async (
 
 export const getSellPaymentHistory = async (
   sellId: string,
-  req?: IncomingMessage
 ) => {
   try {
-    const axiosInstance = axiosWithAuth(req);
     const response = await axiosInstance.get(
       `/sells/${sellId}/payments`
     );

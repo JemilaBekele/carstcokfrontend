@@ -426,7 +426,7 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
               <Button
                 variant='ghost'
                 onClick={() => setShowAttachedFiles(!showAttachedFiles)}
-                className='flex w-full items-center justify-between p-4 hover:bg-gray-50'
+                className='flex w-full items-center justify-between p-4 '
               >
                 <div className='flex items-center gap-2'>
                   <Eye className='text-primary h-5 w-5' />
@@ -454,7 +454,7 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className='pt-0'>
-                        <div className='relative h-48 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50'>
+                        <div className='relative h-48 w-full rounded-lg overflow-hidden border'>
                           <Image
                             src={normalizedImageUrl}
                             alt={`Purchase ${purchase.invoiceNo} image`}
@@ -489,7 +489,7 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className='pt-0'>
-                        <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border'>
+                        <div className='flex items-center justify-between p-3 rounded-lg border'>
                           <div className='flex items-center gap-2'>
                             <FileText className='h-8 w-8 text-blue-500' />
                             <div>
@@ -527,7 +527,7 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
                 {purchase.items.map((item: PurchaseItem, index) => (
                   <div 
                     key={item.id || item.productId || index} 
-                    className='rounded-lg border border-gray-200 p-4 dark:border-gray-700'
+                    className='rounded-lg border p-4 dark:border-gray-700'
                   >
                     <div className='space-y-3'>
                       {/* Product Info */}

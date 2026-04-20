@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { axiosInstance } from "./axiosIntance";
 import { IBranch } from "@/models/Branch";
 import { GetParams } from "./roleService";

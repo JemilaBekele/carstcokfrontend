@@ -390,7 +390,7 @@ const SupplierPurchaseDetailPage: React.FC<SupplierPurchaseDetailPageProps> = ({
             {/* Filters */}
             <div className='flex gap-2'>
               <select
-                className='rounded-md border border-gray-300 px-3 py-1 text-sm'
+                className='rounded-md border px-3 py-1 text-sm'
                 value={filterPaymentStatus}
                 onChange={(e) => {
                   setFilterPaymentStatus(e.target.value);
@@ -420,7 +420,7 @@ const SupplierPurchaseDetailPage: React.FC<SupplierPurchaseDetailPageProps> = ({
               {/* Mobile View - Stacked Cards */}
               <div className='space-y-4 md:hidden'>
                 {purchases.map((purchase) => (
-                  <div key={purchase.id} className='rounded-lg border border-gray-200 p-4'>
+                  <div key={purchase.id} className='rounded-lg border  p-4'>
                     <div className='flex justify-between items-start mb-3'>
                       <div>
                         <p className='font-semibold text-sm'>{purchase.invoiceNo}</p>
@@ -464,7 +464,7 @@ const SupplierPurchaseDetailPage: React.FC<SupplierPurchaseDetailPageProps> = ({
                           <p className='font-medium text-sm mb-2'>Items:</p>
                           <div className='space-y-2'>
                             {purchase.items.map((item) => (
-                              <div key={item.id} className='text-sm p-2 bg-gray-50 rounded'>
+                              <div key={item.id} className='text-sm p-2  rounded'>
                                 <p className='font-medium'>{item.productName}</p>
                                 <div className='flex justify-between text-xs mt-1'>
                                   <span>Qty: {item.quantity}</span>
@@ -545,7 +545,7 @@ const SupplierPurchaseDetailPage: React.FC<SupplierPurchaseDetailPageProps> = ({
                         </TableRow>
                         {selectedPurchase?.id === purchase.id && (
                           <TableRow>
-                            <TableCell colSpan={8} className='bg-gray-50 p-4'>
+                            <TableCell colSpan={8} className=' p-4'>
                               <div className='space-y-4'>
                                 <div>
                                   <h4 className='font-semibold mb-2'>Items</h4>
@@ -651,7 +651,7 @@ const SupplierPurchaseDetailPage: React.FC<SupplierPurchaseDetailPageProps> = ({
           <CardContent className='p-4 pt-0 md:p-6 md:pt-0'>
             <div className='space-y-3'>
               {recentPurchases.map((purchase) => (
-                <div key={purchase.id} className='flex items-center justify-between p-3 bg-gray-50 rounded-lg'>
+                <div key={purchase.id} className='flex items-center justify-between p-3 rounded-lg'>
                   <div>
                     <p className='font-medium text-sm'>{purchase.invoiceNo}</p>
                     <p className='text-muted-foreground text-xs'>{formatDate(purchase.purchaseDate)}</p>

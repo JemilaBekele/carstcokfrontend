@@ -283,9 +283,7 @@ export default function PurchaseForm({
     }
 
     // Debug: Log the form data before sending
-    console.log('=== SUBMITTING PURCHASE ===');
-    console.log('Form Data:', JSON.stringify(data, null, 2));
-    console.log('Items with isBox:');
+    
     data.items.forEach((item, index) => {
       console.log(`Item ${index + 1}:`, {
         productId: item.productId,
@@ -315,14 +313,12 @@ export default function PurchaseForm({
         }))
       };
 
-      console.log('Final Payload:', JSON.stringify(payload, null, 2));
 
       if (isEdit && initialData?.id) {
         await updatePurchase(initialData.id, payload);
         toast.success('Purchase updated successfully');
       } else {
         const response = await createPurchase(payload);
-        console.log('Create Purchase Response:', response);
         toast.success('Purchase created successfully');
       }
       router.push('/dashboard/purchase');
@@ -612,8 +608,7 @@ export default function PurchaseForm({
                       </FormControl>
                       <SelectContent>
                         <SelectItem value='PENDING'>Pending</SelectItem>
-                        <SelectItem value='PAID'>Paid</SelectItem>
-                        <SelectItem value='PARTIAL'>Partial</SelectItem>
+                   
                       </SelectContent>
                     </ShadcnSelect>
                     <FormMessage />

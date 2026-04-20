@@ -104,8 +104,7 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
           });
           setUserShopsMap(shopsMap);
           
-          console.log('User shops loaded:', shops);
-          console.log('User shops map:', Array.from(shopsMap.keys()));
+         
         }
       } catch (error) {
         console.error('Failed to fetch user shops:', error);
@@ -123,7 +122,6 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
       try {
         const saleData = await getSellId(id);
         setSale(saleData);
-        console.log('Sale data loaded:', saleData);
       } catch {
         toast.error('Failed to fetch sale details');
       } finally {
@@ -194,7 +192,6 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
       shop.name.toLowerCase() === shopName?.toLowerCase()
     );
     
-    console.log(`Shop access check: ID=${shopId}, Name=${shopName}, HasAccess=${hasAccess}`);
     return hasAccess;
   };
 
