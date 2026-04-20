@@ -110,6 +110,7 @@ axiosInstance.interceptors.response.use(
 
       return axiosInstance(originalRequest);
     } catch (refreshError) {
+      //TODO: can be commented out
       useAuthStore.getState().clearAuth();
       redirectToLogin();
       return Promise.reject(refreshError);

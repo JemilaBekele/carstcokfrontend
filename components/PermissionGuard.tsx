@@ -1,11 +1,11 @@
 // components/PermissionGuard.tsx
 // Unified permission guard — replaces PagePermissionGuard + old PermissionGuard + checker.ts
-'use client';
+"use client";
 
-import { ReactNode } from 'react';
-import { useAuthStore } from '@/stores/auth.store';
-import { IconShieldLock, IconArrowLeft } from '@tabler/icons-react';
-import Link from 'next/link';
+import { ReactNode } from "react";
+import { useAuthStore } from "@/stores/auth.store";
+import { IconShieldLock, IconArrowLeft } from "@tabler/icons-react";
+import Link from "next/link";
 
 interface PermissionGuardProps {
   children: ReactNode;
@@ -14,22 +14,22 @@ interface PermissionGuardProps {
   /** Multiple permissions to check */
   requiredPermissions?: string[];
   /** How to evaluate multiple permissions */
-  mode?: 'all' | 'any';
+  mode?: "all" | "any";
   /**
    * What to show when access is denied:
    * - 'deny-page': Full access-denied card (use for page-level guards)
    * - 'hide': Render nothing (use for inline elements like buttons)
    * @default 'deny-page'
    */
-  fallback?: 'deny-page' | 'hide';
+  fallback?: "deny-page" | "hide";
 }
 
 export function PermissionGuard({
   children,
   requiredPermission,
   requiredPermissions,
-  mode = 'any',
-  fallback = 'deny-page',
+  mode = "any",
+  fallback = "deny-page",
 }: PermissionGuardProps) {
   const user = useAuthStore((s) => s.user);
   const hydrated = useAuthStore((s) => s._hydrated);
@@ -37,11 +37,12 @@ export function PermissionGuard({
   const hasAnyPermission = useAuthStore((s) => s.hasAnyPermission);
   const hasAllPermissions = useAuthStore((s) => s.hasAllPermissions);
 
-  const isLoading = !hydrated || (hydrated && !user && useAuthStore.getState().isAuthenticated);
+  const isLoading =
+    !hydrated || (hydrated && !user && useAuthStore.getState().isAuthenticated);
 
   // Still loading — show skeleton for page guards, hide for inline
   if (isLoading) {
-    if (fallback === 'hide') return null;
+    if (fallback === "hide") return null;
     return (
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="flex flex-col items-center gap-3">
@@ -66,7 +67,7 @@ export function PermissionGuard({
     hasAccess = hasPermission(requiredPermission);
   } else if (requiredPermissions) {
     hasAccess =
-      mode === 'all'
+      mode === "all"
         ? hasAllPermissions(requiredPermissions)
         : hasAnyPermission(requiredPermissions);
   }
@@ -76,7 +77,7 @@ export function PermissionGuard({
   }
 
   // Access denied
-  if (fallback === 'hide') return null;
+  if (fallback === "hide") return null;
 
   return (
     <div className="flex flex-1 items-center justify-center p-8">
@@ -92,11 +93,11 @@ export function PermissionGuard({
           </p>
         </div>
         <Link
-          href="/dashboard/overview"
+          href="/dashboard/profile"
           className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           <IconArrowLeft className="h-4 w-4" />
-          Back to Dashboard
+          Back to Profile
         </Link>
       </div>
     </div>
@@ -107,7 +108,7 @@ export function PermissionGuard({
 PermissionGuard.check = (
   requiredPermission?: string,
   requiredPermissions?: string[],
-  mode: 'all' | 'any' = 'any'
+  mode: "all" | "any" = "any",
 ): boolean => {
   const { hasPermission, hasAnyPermission, hasAllPermissions } =
     useAuthStore.getState();
@@ -119,7 +120,7 @@ PermissionGuard.check = (
   }
 
   if (requiredPermissions) {
-    return mode === 'all'
+    return mode === "all"
       ? hasAllPermissions(requiredPermissions)
       : hasAnyPermission(requiredPermissions);
   }
