@@ -16,14 +16,37 @@ export enum ItemSaleStatus {
   PENDING = 'PENDING',
   DELIVERED = 'DELIVERED'
 }
+export enum SellPaymentStatus {
+  PENDING = "PENDING",
+  PARTIAL = "PARTIAL",
+  PAID = "PAID",
+  CANCELLED = "CANCELLED",
+}
+export interface ISellPayment {
+  id: string;
 
+  sellId: string;
+
+  amount: number;
+
+  createdById?: string;
+  createdBy?: IEmployee;
+
+  createdAt: string;
+  updatedAt: string;
+}
 // ✅ Sell Model Interface
 export interface ISell {
   id: string; // UUID
   invoiceNo: string;
+  imageUrl      ? : string;
+  documentUrl?  : string;
   locked: boolean;
   saleStatus: SaleStatus; // Matches enum
+  paymentStatus: SellPaymentStatus;
 
+  balance: number;
+  totalPaid: number;
   branchId?: string;
   branch?: IBranch;
 
@@ -70,6 +93,9 @@ export interface ISellItem {
   itemSaleStatus: ItemSaleStatus;
 
   quantity: number;
+
+  givenQuantity?:  number;
+  remainingQuantity ? :  number;       
   unitPrice: number;
   totalPrice: number;
 

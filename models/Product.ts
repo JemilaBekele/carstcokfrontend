@@ -4,11 +4,16 @@ import { IBrand } from './brand';
 
 export interface IProduct {
   id: string;
-
+  viscosity?: string;      // 0W-20, 5W-30
+  oilType?: string;        // Fully Synthetic, Semi Synthetic
+  additiveType?: string; 
+    warningQuantity?: number;
   productCode: string;
   name: string;
   generic?: string;
   description?: string;
+  // ✅ Oil Fields
+
 
   imageUrl?: string;
 
@@ -46,6 +51,7 @@ export interface IAdditionalPrice {
   id: string;
   label?: string;
   price: number;
+ isBox: boolean; // ✅ Box or Piece
 
   productId: string;
 

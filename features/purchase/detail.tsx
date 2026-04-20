@@ -26,7 +26,12 @@ import {
   AlertTriangle,
   RefreshCw,
   Box,
-  PackageOpen
+  PackageOpen,
+  Eye,
+  ChevronDown,
+  ChevronUp,
+  ImageIcon,
+  CreditCard
 } from 'lucide-react';
 import { IPurchase, PaymentStatus, PurchaseItem } from '@/models/purchase';
 import {
@@ -46,6 +51,8 @@ import { IStockCorrection } from '@/models/StockCorrection';
 import Link from 'next/link';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { PERMISSIONS } from '@/stores/permissions';
+import Image from 'next/image';
+import { normalizeImagePath } from '@/lib/norm';
 
 type PurchaseViewProps = {
   id?: string;
@@ -61,6 +68,14 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
   const [updating, setUpdating] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<PaymentStatus>();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [imageError, setImageError] = useState(false);
+  const [showAttachedFiles, setShowAttachedFiles] = useState(false);
+
+  // Normalize image and document URLs
+  const normalizedImageUrl = normalizeImagePath(purchase?.imageUrl);
+  const normalizedDocumentUrl = normalizeImagePath(purchase?.documentUrl);
+
+  const hasAttachedFiles = !!(normalizedImageUrl || normalizedDocumentUrl);
 
   useEffect(() => {
     const fetchPurchaseData = async () => {
@@ -69,6 +84,12 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
           const purchaseData = await getPurchaseId(id);
           setPurchase(purchaseData);
           setSelectedStatus(purchaseData.paymentStatus);
+          setImageError(false);
+          
+          // Auto-expand if there are attached files
+          if (purchaseData?.imageUrl || purchaseData?.documentUrl) {
+            setShowAttachedFiles(false);
+          }
 
           // Fetch stock corrections for this purchase
           await fetchStockCorrections(id);
@@ -315,6 +336,17 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
                     </div>
                   </div>
                 )}
+                    {purchase.shop && (
+                  <div className='flex items-center gap-2'>
+                    <User className='text-muted-foreground h-4 w-4 shrink-0' />
+                    <div>
+                      <p className='font-medium text-sm'>Shop:</p>
+                      <p className='text-muted-foreground text-sm'>
+                        {purchase.shop.name ?? 'Unknown Store'}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 
                 {purchase.createdBy && (
                   <div className='flex items-center gap-2'>
@@ -354,7 +386,7 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
             {/* Financial and Date Details */}
             <div className='space-y-3 md:space-y-4'>
               <h3 className='flex items-center gap-2 text-base font-semibold md:text-lg'>
-                <Calendar className='text-primary h-4 w-4 md:h-5 md:w-5' />
+                <CreditCard className='text-primary h-4 w-4 md:h-5 md:w-5' />
                 Financial Details
               </h3>
               <div className='space-y-2'>
@@ -387,6 +419,103 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
               </div>
             </div>
           </div>
+
+          {/* Attached Files Section - Collapsible */}
+          {hasAttachedFiles && (
+            <div className='space-y-4'>
+              <Button
+                variant='ghost'
+                onClick={() => setShowAttachedFiles(!showAttachedFiles)}
+                className='flex w-full items-center justify-between p-4 hover:bg-gray-50'
+              >
+                <div className='flex items-center gap-2'>
+                  <Eye className='text-primary h-5 w-5' />
+                  <h3 className='text-base font-semibold'>Attached Files</h3>
+                  <Badge variant='secondary' className='ml-2'>
+                    {normalizedImageUrl && normalizedDocumentUrl ? '2' : '1'} file(s)
+                  </Badge>
+                </div>
+                {showAttachedFiles ? (
+                  <ChevronUp className='h-5 w-5' />
+                ) : (
+                  <ChevronDown className='h-5 w-5' />
+                )}
+              </Button>
+
+              {showAttachedFiles && (
+                <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+                  {/* Image Display */}
+                  {normalizedImageUrl && (
+                    <Card className='overflow-hidden'>
+                      <CardHeader className='pb-2'>
+                        <CardTitle className='flex items-center gap-2 text-sm font-medium'>
+                          <ImageIcon className='h-4 w-4' />
+                          Purchase Image
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className='pt-0'>
+                        <div className='relative h-48 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50'>
+                          <Image
+                            src={normalizedImageUrl}
+                            alt={`Purchase ${purchase.invoiceNo} image`}
+                            fill
+                            className='object-contain'
+                            onError={(e) => {
+                              console.error('Failed to load image:', normalizedImageUrl);
+                              setImageError(true);
+                            }}
+                          />
+                        </div>
+                        <a
+                          href={normalizedImageUrl}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='mt-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:underline'
+                        >
+                          <Eye className='h-3 w-3' />
+                          View full size
+                        </a>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Document Display */}
+                  {normalizedDocumentUrl && (
+                    <Card>
+                      <CardHeader className='pb-2'>
+                        <CardTitle className='flex items-center gap-2 text-sm font-medium'>
+                          <FileText className='h-4 w-4' />
+                          Purchase Document
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className='pt-0'>
+                        <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border'>
+                          <div className='flex items-center gap-2'>
+                            <FileText className='h-8 w-8 text-blue-500' />
+                            <div>
+                              <p className='text-sm font-medium'>Supporting Document</p>
+                              <p className='text-xs text-muted-foreground'>
+                                Click to view or download
+                              </p>
+                            </div>
+                          </div>
+                          <a
+                            href={normalizedDocumentUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90'
+                          >
+                            <Eye className='h-3 w-3' />
+                            View
+                          </a>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Purchased Items Table Section */}
           {purchase.items?.length > 0 && (
@@ -464,7 +593,7 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
                   <div className='flex justify-between text-sm font-semibold'>
                     <span>Grand Total</span>
                     <span className='text-primary'>
-                      ${purchase.items.reduce((sum, item) => sum + (item.totalPrice || 0), 0).toFixed(2)}
+                      {purchase.items.reduce((sum, item) => sum + (item.totalPrice || 0), 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -523,7 +652,7 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
                       </TableRow>
                     ))}
                     
-                    {/* Total Row on Desktop */}
+                    {/* Total Row on Desktop
                     <TableRow className='bg-gray-50 dark:bg-gray-800'>
                       <TableCell colSpan={4} className='text-right text-sm font-semibold'>
                         Grand Total
@@ -533,7 +662,7 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
                           ${purchase.items.reduce((sum, item) => sum + (item.totalPrice || 0), 0).toFixed(2)}
                         </div>
                       </TableCell>
-                    </TableRow>
+                    </TableRow> */}
                   </TableBody>
                 </Table>
               </div>
@@ -665,151 +794,151 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
                       </div>
                     )}
 
-                <div className='mt-4'>
-  <h5 className='mb-2 text-sm font-medium md:text-base'>Correction Items:</h5>
-  
-  {/* Mobile View - Stacked Cards */}
-  <div className='space-y-3 md:hidden'>
-    {correction.items && correction.items.map((item, index) => (
-      <div key={index} className='rounded-lg border border-gray-200 p-3 dark:border-gray-700'>
-        <div className='space-y-2'>
-          <div className='flex justify-between'>
-            <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>Product:</span>
-            <span className='text-right text-sm'>
-              {item.product?.name || 'Unknown Product'}
-            </span>
-          </div>
-          
-          <div className='flex justify-between'>
-            <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>Type:</span>
-            <Badge variant={item.isBox ? 'default' : 'secondary'} className='text-xs'>
-              {item.isBox ? (
-                <>
-                  <Box className='mr-1 h-3 w-3' />
-                  Box
-                </>
-              ) : (
-                <>
-                  <PackageOpen className='mr-1 h-3 w-3' />
-                  Piece
-                </>
-              )}
-            </Badge>
-          </div>
-          
-          <div className='flex justify-between'>
-            <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>Quantity:</span>
-            <span className={`
-              text-right text-sm font-medium
-              ${item.quantity > 0 
-                ? 'text-green-600 dark:text-green-400' 
-                : item.quantity < 0 
-                  ? 'text-red-600 dark:text-red-400'
-                  : ''
-              }
-            `}>
-              {item.quantity > 0 ? '+' : ''}
-              {item.quantity}
-              {item.isBox && item.quantity !== 0 && (
-                <span className='text-xs text-gray-500 ml-1'>
-                  ({Math.abs(item.quantity) * (item.product?.boxSize || 1)} pieces)
-                </span>
-              )}
-            </span>
-          </div>
-          
-          {item.isBox && item.product?.boxSize && (
-            <div className='flex justify-between'>
-              <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>Box Size:</span>
-              <span className='text-right text-xs text-gray-600 dark:text-gray-400'>
-                {item.product.boxSize} pieces/box
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-    ))}
-  </div>
-  
-  {/* Desktop View - Table */}
-  <div className='hidden overflow-x-auto md:block'>
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className='whitespace-nowrap text-xs md:text-sm'>Product</TableHead>
-          <TableHead className='whitespace-nowrap text-xs md:text-sm'>Type</TableHead>
-          <TableHead className='whitespace-nowrap text-xs md:text-sm'>Quantity</TableHead>
-          <TableHead className='whitespace-nowrap text-xs md:text-sm'>Pieces Equivalent</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {correction.items &&
-          correction.items.map((item, index) => (
-            <TableRow key={index}>
-              <TableCell className='whitespace-nowrap text-xs md:text-sm'>
-                <div className='font-medium'>
-                  {item.product?.name || 'Unknown Product'}
-                </div>
-              </TableCell>
-              <TableCell className='whitespace-nowrap text-xs md:text-sm'>
-                <Badge variant={item.isBox ? 'default' : 'secondary'} className='text-xs'>
-                  {item.isBox ? (
-                    <>
-                      <Box className='mr-1 h-3 w-3' />
-                      Box
-                    </>
-                  ) : (
-                    <>
-                      <PackageOpen className='mr-1 h-3 w-3' />
-                      Piece
-                    </>
-                  )}
-                </Badge>
-                {item.isBox && item.product?.boxSize && (
-                  <div className='text-xs text-gray-500 mt-1'>
-                    {item.product.boxSize} pieces/box
-                  </div>
-                )}
-              </TableCell>
-              <TableCell className='whitespace-nowrap text-xs md:text-sm'>
-                <div className={`
-                  font-medium
-                  ${item.quantity > 0 
-                    ? 'text-green-600 dark:text-green-400' 
-                    : item.quantity < 0 
-                      ? 'text-red-600 dark:text-red-400'
-                      : ''
-                  }
-                `}>
-                  {item.quantity > 0 ? '+' : ''}
-                  {item.quantity}
-                  {item.isBox && <span className='text-xs text-gray-500 ml-1'>(box{Math.abs(item.quantity) !== 1 ? 'es' : ''})</span>}
-                  {!item.isBox && <span className='text-xs text-gray-500 ml-1'>(piece{Math.abs(item.quantity) !== 1 ? 's' : ''})</span>}
-                </div>
-              </TableCell>
-              <TableCell className='whitespace-nowrap text-xs md:text-sm'>
-                <div className={`
-                  font-medium
-                  ${item.quantity > 0 
-                    ? 'text-green-600 dark:text-green-400' 
-                    : item.quantity < 0 
-                      ? 'text-red-600 dark:text-red-400'
-                      : ''
-                  }
-                `}>
-                  {item.quantity > 0 ? '+' : ''}
-                  {item.isBox 
-                    ? Math.abs(item.quantity) * (item.product?.boxSize || 1)
-                    : Math.abs(item.quantity)
-                  } pieces
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-      </TableBody>
-    </Table>
-  </div>
-</div>
+                    <div className='mt-4'>
+                      <h5 className='mb-2 text-sm font-medium md:text-base'>Correction Items:</h5>
+                      
+                      {/* Mobile View - Stacked Cards */}
+                      <div className='space-y-3 md:hidden'>
+                        {correction.items && correction.items.map((item, index) => (
+                          <div key={index} className='rounded-lg border border-gray-200 p-3 dark:border-gray-700'>
+                            <div className='space-y-2'>
+                              <div className='flex justify-between'>
+                                <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>Product:</span>
+                                <span className='text-right text-sm'>
+                                  {item.product?.name || 'Unknown Product'}
+                                </span>
+                              </div>
+                              
+                              <div className='flex justify-between'>
+                                <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>Type:</span>
+                                <Badge variant={item.isBox ? 'default' : 'secondary'} className='text-xs'>
+                                  {item.isBox ? (
+                                    <>
+                                      <Box className='mr-1 h-3 w-3' />
+                                      Box
+                                    </>
+                                  ) : (
+                                    <>
+                                      <PackageOpen className='mr-1 h-3 w-3' />
+                                      Piece
+                                    </>
+                                  )}
+                                </Badge>
+                              </div>
+                              
+                              <div className='flex justify-between'>
+                                <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>Quantity:</span>
+                                <span className={`
+                                  text-right text-sm font-medium
+                                  ${item.quantity > 0 
+                                    ? 'text-green-600 dark:text-green-400' 
+                                    : item.quantity < 0 
+                                      ? 'text-red-600 dark:text-red-400'
+                                      : ''
+                                  }
+                                `}>
+                                  {item.quantity > 0 ? '+' : ''}
+                                  {item.quantity}
+                                  {item.isBox && item.quantity !== 0 && (
+                                    <span className='text-xs text-gray-500 ml-1'>
+                                      ({Math.abs(item.quantity) * (item.product?.boxSize || 1)} pieces)
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                              
+                              {item.isBox && item.product?.boxSize && (
+                                <div className='flex justify-between'>
+                                  <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>Box Size:</span>
+                                  <span className='text-right text-xs text-gray-600 dark:text-gray-400'>
+                                    {item.product.boxSize} pieces/box
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Desktop View - Table */}
+                      <div className='hidden overflow-x-auto md:block'>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className='whitespace-nowrap text-xs md:text-sm'>Product</TableHead>
+                              <TableHead className='whitespace-nowrap text-xs md:text-sm'>Type</TableHead>
+                              <TableHead className='whitespace-nowrap text-xs md:text-sm'>Quantity</TableHead>
+                              <TableHead className='whitespace-nowrap text-xs md:text-sm'>Pieces Equivalent</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {correction.items &&
+                              correction.items.map((item, index) => (
+                                <TableRow key={index}>
+                                  <TableCell className='whitespace-nowrap text-xs md:text-sm'>
+                                    <div className='font-medium'>
+                                      {item.product?.name || 'Unknown Product'}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className='whitespace-nowrap text-xs md:text-sm'>
+                                    <Badge variant={item.isBox ? 'default' : 'secondary'} className='text-xs'>
+                                      {item.isBox ? (
+                                        <>
+                                          <Box className='mr-1 h-3 w-3' />
+                                          Box
+                                        </>
+                                      ) : (
+                                        <>
+                                          <PackageOpen className='mr-1 h-3 w-3' />
+                                          Piece
+                                        </>
+                                      )}
+                                    </Badge>
+                                    {item.isBox && item.product?.boxSize && (
+                                      <div className='text-xs text-gray-500 mt-1'>
+                                        {item.product.boxSize} pieces/box
+                                      </div>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className='whitespace-nowrap text-xs md:text-sm'>
+                                    <div className={`
+                                      font-medium
+                                      ${item.quantity > 0 
+                                        ? 'text-green-600 dark:text-green-400' 
+                                        : item.quantity < 0 
+                                          ? 'text-red-600 dark:text-red-400'
+                                          : ''
+                                      }
+                                    `}>
+                                      {item.quantity > 0 ? '+' : ''}
+                                      {item.quantity}
+                                      {item.isBox && <span className='text-xs text-gray-500 ml-1'>(box{Math.abs(item.quantity) !== 1 ? 'es' : ''})</span>}
+                                      {!item.isBox && <span className='text-xs text-gray-500 ml-1'>(piece{Math.abs(item.quantity) !== 1 ? 's' : ''})</span>}
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className='whitespace-nowrap text-xs md:text-sm'>
+                                    <div className={`
+                                      font-medium
+                                      ${item.quantity > 0 
+                                        ? 'text-green-600 dark:text-green-400' 
+                                        : item.quantity < 0 
+                                          ? 'text-red-600 dark:text-red-400'
+                                          : ''
+                                      }
+                                    `}>
+                                      {item.quantity > 0 ? '+' : ''}
+                                      {item.isBox 
+                                        ? Math.abs(item.quantity) * (item.product?.boxSize || 1)
+                                        : Math.abs(item.quantity)
+                                      } pieces
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}

@@ -186,6 +186,30 @@ export const updateSell = async (id: string, data: any) => {
     throw error;
   }
 };
+// service/Sell.ts
+export const uploadSellFiles = async (
+  id: string,
+  data: FormData,
+  req?: IncomingMessage
+) => {
+  try {
+    const axiosInstance = axiosWithAuth(req);
+
+    const response = await axiosInstance.put(
+      `/sell/${id}/upload/file`,
+      data,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 // ✅ Delete a sell
 export const deleteSell = async (id: string) => {
@@ -250,6 +274,8 @@ export interface DeliveryData {
 
 export interface DeliveryItem {
   itemId: string;
+  givenQuantity?: number;
+
 }
 
 export interface BatchAssignment {
@@ -288,6 +314,46 @@ export const updatePaymentStatus = async (
 export const cancelSale = async (id: string) => {
   try {
     const response = await axiosInstance.patch(`/sells/${id}/cancel`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+
+export const addSellPayment = async (
+  sellId: string,
+  paymentData: {
+    amount: number;
+    notes?: string;
+  },
+  req?: IncomingMessage
+) => {
+  try {
+    const axiosInstance = axiosWithAuth(req);
+    const response = await axiosInstance.post(
+      `/sells/${sellId}/payments`,
+      paymentData
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+export const getSellPaymentHistory = async (
+  sellId: string,
+  req?: IncomingMessage
+) => {
+  try {
+    const axiosInstance = axiosWithAuth(req);
+    const response = await axiosInstance.get(
+      `/sells/${sellId}/payments`
+    );
+
     return response.data;
   } catch (error) {
     throw error;

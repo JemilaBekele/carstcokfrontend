@@ -24,6 +24,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { IPurchase } from '@/models/purchase';
 import { IProduct } from '@/models/Product';
 import { getStores } from '@/service/store';
@@ -31,6 +32,8 @@ import { getProducts } from '@/service/Product';
 import { createPurchase, updatePurchase } from '@/service/purchase';
 import { ISupplier } from '@/models/supplier';
 import { getSupplier } from '@/service/supplier';
+import { getShops } from '@/service/shop';
+import { IShop } from '@/models/shop';
 import { useEffect, useState } from 'react';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 import { Modal } from '@/components/ui/modal';
@@ -50,6 +53,8 @@ interface FormValues {
   invoiceNo: string;
   supplierId: string;
   storeId: string;
+  shopId: string;
+  locationType: 'store' | 'shop'; // New field to track selection
   purchaseDate: string;
   paymentStatus: string;
   notes?: string;
@@ -68,16 +73,26 @@ export default function PurchaseForm({
   const [isLoading, setIsLoading] = useState(false);
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [stores, setStores] = useState<any[]>([]);
+  const [shops, setShops] = useState<IShop[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const router = useRouter();
+
+  // Determine initial location type
+  const getInitialLocationType = (): 'store' | 'shop' => {
+    if (initialData?.storeId) return 'store';
+    if (initialData?.shopId) return 'shop';
+    return 'store'; // Default to store
+  };
 
   const form = useForm<FormValues>({
     defaultValues: {
       invoiceNo: initialData?.invoiceNo || '',
       supplierId: initialData?.supplierId?.toString() || '',
       storeId: initialData?.storeId?.toString() || '',
+      shopId: initialData?.shopId?.toString() || '',
+      locationType: getInitialLocationType(),
       purchaseDate: initialData?.purchaseDate
         ? new Date(initialData.purchaseDate).toISOString().split('T')[0]
         : format(new Date(), 'yyyy-MM-dd'),
@@ -94,6 +109,9 @@ export default function PurchaseForm({
     }
   });
 
+  // Watch location type to conditionally render selects
+  const locationType = form.watch('locationType');
+
   // Calculate totals
   const items = form.watch('items');
   const grandTotal = items.reduce(
@@ -106,20 +124,22 @@ export default function PurchaseForm({
     setIsMounted(true);
   }, []);
 
-  // Fetch suppliers, stores, products
+  // Fetch suppliers, stores, shops, products
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [suppliersData, storesData, productsData] = await Promise.all([
+        const [suppliersData, storesData, shopsData, productsData] = await Promise.all([
           getSupplier(),
           getStores(),
+          getShops(),
           getProducts()
         ]);
         setSuppliers(suppliersData);
         setStores(storesData);
+        setShops(shopsData);
         setProducts(productsData);
       } catch {
-        toast.error('Failed to load suppliers, stores, or products');
+        toast.error('Failed to load suppliers, stores, shops, or products');
       }
     };
     fetchData();
@@ -163,12 +183,35 @@ export default function PurchaseForm({
       isValid = false;
     }
 
-    if (!data.storeId || data.storeId.trim() === '') {
-      form.setError('storeId', {
-        type: 'manual',
-        message: 'Store is required'
-      });
-      isValid = false;
+    // Validate based on location type
+    if (data.locationType === 'store') {
+      if (!data.storeId || data.storeId.trim() === '') {
+        form.setError('storeId', {
+          type: 'manual',
+          message: 'Store is required'
+        });
+        isValid = false;
+      } else {
+        form.clearErrors('storeId');
+      }
+      // Clear shop value if store is selected
+      if (data.shopId) {
+        form.setValue('shopId', '');
+      }
+    } else if (data.locationType === 'shop') {
+      if (!data.shopId || data.shopId.trim() === '') {
+        form.setError('shopId', {
+          type: 'manual',
+          message: 'Shop is required'
+        });
+        isValid = false;
+      } else {
+        form.clearErrors('shopId');
+      }
+      // Clear store value if shop is selected
+      if (data.storeId) {
+        form.setValue('storeId', '');
+      }
     }
 
     if (!data.purchaseDate || data.purchaseDate.trim() === '') {
@@ -232,64 +275,69 @@ export default function PurchaseForm({
     return isValid;
   };
 
+  const onSubmit = async (data: FormValues) => {
+    form.clearErrors();
 
-const onSubmit = async (data: FormValues) => {
-  form.clearErrors();
-
-  if (!validateForm(data)) {
-    return;
-  }
-
-  // Debug: Log the form data before sending
-  console.log('=== SUBMITTING PURCHASE ===');
-  console.log('Form Data:', JSON.stringify(data, null, 2));
-  console.log('Items with isBox:');
-  data.items.forEach((item, index) => {
-    console.log(`Item ${index + 1}:`, {
-      productId: item.productId,
-      isBox: item.isBox,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      totalPrice: item.totalPrice
-    });
-  });
-
-  setIsLoading(true);
-  try {
-    const payload = {
-      ...data,
-      items: data.items.map((item) => ({
-        productId: item.productId,
-        isBox: item.isBox === true, // Ensure it's a boolean
-        quantity: Number(item.quantity),
-        unitPrice: Number(item.unitPrice),
-        totalPrice: Number(item.totalPrice)
-      }))
-    };
-
-    console.log('Final Payload:', JSON.stringify(payload, null, 2));
-
-    if (isEdit && initialData?.id) {
-      await updatePurchase(initialData.id, payload);
-      toast.success('Purchase updated successfully');
-    } else {
-      const response = await createPurchase(payload);
-      console.log('Create Purchase Response:', response);
-      toast.success('Purchase created successfully');
+    if (!validateForm(data)) {
+      return;
     }
-    router.push('/dashboard/purchase');
-    router.refresh();
-  } catch (error: any) {
-    console.error('Error saving purchase:', error);
-    console.error('Error response:', error?.response?.data);
-    const message =
-      error?.response?.data?.message ||
-      'An error occurred while saving purchase.';
-    toast.error(message);
-  } finally {
-    setIsLoading(false);
-  }
-};
+
+    // Debug: Log the form data before sending
+    console.log('=== SUBMITTING PURCHASE ===');
+    console.log('Form Data:', JSON.stringify(data, null, 2));
+    console.log('Items with isBox:');
+    data.items.forEach((item, index) => {
+      console.log(`Item ${index + 1}:`, {
+        productId: item.productId,
+        isBox: item.isBox,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice
+      });
+    });
+
+    setIsLoading(true);
+    try {
+      const payload = {
+        invoiceNo: data.invoiceNo,
+        supplierId: data.supplierId,
+        storeId: data.locationType === 'store' ? data.storeId : null,
+        shopId: data.locationType === 'shop' ? data.shopId : null,
+        purchaseDate: data.purchaseDate,
+        paymentStatus: data.paymentStatus,
+        notes: data.notes,
+        items: data.items.map((item) => ({
+          productId: item.productId,
+          isBox: item.isBox === true,
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.unitPrice),
+          totalPrice: Number(item.totalPrice)
+        }))
+      };
+
+      console.log('Final Payload:', JSON.stringify(payload, null, 2));
+
+      if (isEdit && initialData?.id) {
+        await updatePurchase(initialData.id, payload);
+        toast.success('Purchase updated successfully');
+      } else {
+        const response = await createPurchase(payload);
+        console.log('Create Purchase Response:', response);
+        toast.success('Purchase created successfully');
+      }
+      router.push('/dashboard/purchase');
+      router.refresh();
+    } catch (error: any) {
+      console.error('Error saving purchase:', error);
+      console.error('Error response:', error?.response?.data);
+      const message =
+        error?.response?.data?.message ||
+        'An error occurred while saving purchase.';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const [isDark, setIsDark] = useState(false);
 
@@ -422,36 +470,115 @@ const onSubmit = async (data: FormValues) => {
                   )}
                 />
 
+                {/* Location Type Radio Group */}
                 <FormField
                   control={form.control}
-                  name='storeId'
+                  name='locationType'
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Store</FormLabel>
-                      <ShadcnSelect
-                        value={field.value}
-                        onValueChange={(value: string) => field.onChange(value)}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder='Select a store' />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {stores.map((store) => (
-                            <SelectItem
-                              key={store.id}
-                              value={store.id.toString()}
-                            >
-                              {store.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </ShadcnSelect>
+                    <FormItem className='col-span-full'>
+                      <FormLabel>Select Location Type</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={(value: 'store' | 'shop') => {
+                            field.onChange(value);
+                            // Clear the opposite field when switching
+                            if (value === 'store') {
+                              form.setValue('shopId', '');
+                              form.clearErrors('shopId');
+                            } else {
+                              form.setValue('storeId', '');
+                              form.clearErrors('storeId');
+                            }
+                          }}
+                          value={field.value}
+                          className='flex space-x-4'
+                        >
+                          <div className='flex items-center space-x-2'>
+                            <RadioGroupItem value='store' id='store' />
+                            <label htmlFor='store' className='cursor-pointer'>
+                              Store
+                            </label>
+                          </div>
+                          <div className='flex items-center space-x-2'>
+                            <RadioGroupItem value='shop' id='shop' />
+                            <label htmlFor='shop' className='cursor-pointer'>
+                              Shop
+                            </label>
+                          </div>
+                        </RadioGroup>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {/* Conditional Store Field */}
+                {locationType === 'store' && (
+                  <FormField
+                    control={form.control}
+                    name='storeId'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Store</FormLabel>
+                        <ShadcnSelect
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select a store' />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {stores.map((store) => (
+                              <SelectItem
+                                key={store.id}
+                                value={store.id.toString()}
+                              >
+                                {store.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </ShadcnSelect>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {/* Conditional Shop Field */}
+                {locationType === 'shop' && (
+                  <FormField
+                    control={form.control}
+                    name='shopId'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Shop</FormLabel>
+                        <ShadcnSelect
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select a shop' />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {shops.map((shop) => (
+                              <SelectItem
+                                key={shop.id}
+                                value={shop.id.toString()}
+                              >
+                                {shop.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </ShadcnSelect>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}
@@ -467,6 +594,32 @@ const onSubmit = async (data: FormValues) => {
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name='paymentStatus'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payment Status</FormLabel>
+                    <ShadcnSelect
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select payment status' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value='PENDING'>Pending</SelectItem>
+                        <SelectItem value='PAID'>Paid</SelectItem>
+                        <SelectItem value='PARTIAL'>Partial</SelectItem>
+                      </SelectContent>
+                    </ShadcnSelect>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}

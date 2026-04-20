@@ -23,6 +23,19 @@ export const getSellTrendApi = async () => {
     throw error;
   }
 };
+export const getTopProductsReportWithPrediction = async (req?: IncomingMessage) => {
+  try {
+    const axiosInstance = axiosWithAuth(req);
+
+    const response = await axiosInstance.get(
+      `/dashboard/top-products-report`
+    );
+
+    return response.data.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 // ========================= TOTAL SOLD ========================= //
 

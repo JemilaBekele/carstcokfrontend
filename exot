@@ -1,0 +1,285 @@
+[33mcommit dbec1aa27df35ba6455a20ea8d7f3fbc3722b4b3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/fix/auth-improvement[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Amdebirhan Asmamaw <amdebrhanasmamaw93@gmail.com>
+Date:   Wed Apr 15 10:28:45 2026 +0300
+
+    feat: enhance authentication system and sidebar behavior
+    
+    - Improve RBAC implementation and permission handling
+    - Update sidebar to not collapse by default
+    - Refactor authentication flow and sign-in component
+    - Enhance dashboard and app layout structure
+    - Add production hardening for auth system
+    - Update type definitions
+
+[33mcommit 0d3413139e3793ed1d43cfa2140456a7d1a13cdc[m
+Author: Amdebirhan Asmamaw <amdebrhanasmamaw93@gmail.com>
+Date:   Tue Apr 14 20:19:21 2026 +0300
+
+    refactor: updated session expiration to 8 hours, removed unused SessionPermissionSync component, and optimized sign-in flow by eliminating unnecessary session checks
+
+[33mcommit b5661bc76f93f9962b0db97a1ef5a79e4fc4c5ba[m
+Author: Amdebirhan Asmamaw <amdebrhanasmamaw93@gmail.com>
+Date:   Tue Apr 14 12:39:20 2026 +0300
+
+    refactor: Refactored authentication flow: streamlined permission handling, enhanced session management, and improved error handling in sign-in process.
+
+[33mcommit e0e71fb3b27b5ed70b4723dd83e8c4f58f7a9f93[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Mon Apr 13 19:52:45 2026 +0300
+
+    Update system: removed unused modules and improved features
+
+[33mcommit c0338ce483419e982f89bba3c1c823ea2139deb7[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Mon Apr 13 17:41:32 2026 +0300
+
+    add backend and frontend
+
+[33mcommit 094d879b3df8be83c7f1cf7dd490b781ff615017[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Mon Apr 13 17:41:19 2026 +0300
+
+    first commit
+
+[33mcommit ed825915ec91fbfd8dabee0e3eb60f6005840fe7[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Sun Mar 1 23:34:16 2026 +0300
+
+    pass
+
+[33mcommit 00ad6176e1710c2f43f5cc9a6a5352eee0c11d20[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Sun Mar 1 20:31:53 2026 +0300
+
+    pass
+
+[33mcommit 078bdc3ba0248fbc06782b143e192afa3acde8c2[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Sun Mar 1 00:13:47 2026 +0300
+
+    pass
+
+[33mcommit 619064660206100e2a36d0402732841c28f1889c[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Sat Feb 28 07:18:26 2026 +0300
+
+    as
+
+[33mcommit c81aee0c0f2afcc915a9a2e8daff053d35abccf1[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Sat Jan 10 17:54:03 2026 +0300
+
+    oass
+
+[33mcommit af7e50af5fa74ef3a9792a7f8f45e517350692cb[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Sat Jan 10 15:18:40 2026 +0300
+
+    pass
+
+[33mcommit 41bafab6978040eb7d6ec5308636122b272186dc[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Sat Jan 10 09:21:19 2026 +0300
+
+    pass
+
+[33mcommit 78c0dbf6368cc9c998239e461c585f1ae829749f[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Fri Jan 9 23:44:43 2026 +0300
+
+    pass
+
+[33mcommit 7e39e0a4a297d2711677dfd2ed6bf8e9449f366e[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Fri Jan 9 23:31:21 2026 +0300
+
+    pass
+
+[33mcommit b5472d17de083764ea85c3a15184c44eda9f6352[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Fri Jan 9 23:03:53 2026 +0300
+
+    pass change
+
+[33mcommit b1bb470b8b6302f7bfc218ba0de126fbfa3be851[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Fri Jan 9 14:42:07 2026 +0300
+
+    pass
+
+[33mcommit 9dd0088aca6c8f83f7136081164039273f13db7b[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Fri Jan 9 10:25:59 2026 +0300
+
+    pass
+
+[33mcommit c8f460119f891c017c9e361c757b7a925944b861[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Fri Jan 9 10:13:38 2026 +0300
+
+    pass
+
+[33mcommit 12511f1f37b8c78a12c890bc125f1ef96d8b85a6[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Tue Jan 6 22:19:49 2026 +0300
+
+    pass
+
+[33mcommit f59da3938c60471e75251e160907ba95cca2c6c8[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Tue Jan 6 22:15:51 2026 +0300
+
+    as
+
+[33mcommit c619f8a08f5b66374aa3ed53fd8d3a97b5f26ba6[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Tue Jan 6 22:04:53 2026 +0300
+
+    pass
+
+[33mcommit 71ab9cbafe0debf0b56db5ae72a7f1548aa8daa5[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Fri Jan 2 11:23:10 2026 +0300
+
+    pass
+
+[33mcommit ab714bef2260575a457a9e9e3311462b6e71ef14[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Fri Jan 2 10:59:13 2026 +0300
+
+    pass
+
+[33mcommit 8f60f8ee5773a15a5ccef1b28c8426400ac53e17[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Fri Jan 2 10:48:17 2026 +0300
+
+    pass
+
+[33mcommit ebcc2282fa2c8434d9294f3f30505426fd972a3a[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Jan 1 08:00:15 2026 +0300
+
+    pass
+
+[33mcommit fa6fbdb7e68f79fcd00165a36a6a2d2f7cd036b8[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Jan 1 07:57:13 2026 +0300
+
+    pass
+
+[33mcommit 6fa30e682e796fd86e67efff70fe2c09c1aa5eaa[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Jan 1 07:35:07 2026 +0300
+
+    pass change
+
+[33mcommit 82646db5aceeadedf78e00f95d1765fef1900a5c[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Sun Dec 28 21:21:53 2025 +0300
+
+    pass
+
+[33mcommit b0d342e39c7075a5593db492b2c943e5c7f39cb3[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Sun Dec 28 21:10:32 2025 +0300
+
+    pass
+
+[33mcommit 08adf39297ce44f1512734645d946022de1a77d8[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Sun Dec 28 20:40:15 2025 +0300
+
+    pass
+
+[33mcommit ea36bf8baa9b8a94ff3a5d1089b1cd1ef7fa9336[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Fri Dec 26 23:34:30 2025 +0300
+
+    pass
+
+[33mcommit 791147c6d210da340e33cc4a5f0c780d3dc30f61[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Fri Dec 26 23:00:57 2025 +0300
+
+    pass change
+
+[33mcommit 837667ae87a82e5ab42c15abaa1b2f0c646bae7f[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Fri Dec 26 22:37:07 2025 +0300
+
+    paa schage
+
+[33mcommit 99a504989b34a1b858d7225efb983df450e73e47[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Fri Dec 26 22:28:53 2025 +0300
+
+    pass
+
+[33mcommit ecd1cfa200eea7a10915d7f312675faafe52acf1[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Dec 25 17:27:54 2025 +0300
+
+    pass change
+
+[33mcommit 2dbf00496b7ab1d1425536119717b16979b2e3d1[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Dec 25 17:20:27 2025 +0300
+
+    pass change
+
+[33mcommit 3502b1081379cbf779f17bdae3987629d432bcc3[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Dec 25 17:00:51 2025 +0300
+
+    pass change
+
+[33mcommit d042b379780d40ffccc0854c74b3f16775629c57[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Dec 25 16:38:57 2025 +0300
+
+    pass
+
+[33mcommit 8bd79ebf4dbc8e265085e3f708138e34446b0258[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Dec 25 16:37:36 2025 +0300
+
+    pass
+
+[33mcommit 7b429083006c2605955eb1f1bda9367e2c1d540a[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Dec 25 16:31:16 2025 +0300
+
+    pass change
+
+[33mcommit 0cca5b0b57ccb71749d830336004aa7656a92ecc[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Dec 25 15:37:31 2025 +0300
+
+    pass change
+
+[33mcommit 7af8d70bc659cea83d071f1f65619e35eac9c104[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Dec 25 15:26:50 2025 +0300
+
+    pass change
+
+[33mcommit 7272e14b09dbfd3b39ec582d0df1d4718bdc6d16[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Dec 25 15:19:43 2025 +0300
+
+    PASS CHANGE
+
+[33mcommit 0645e3cf42f333ce7d168eb6617bfe99609426a3[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Dec 25 15:05:53 2025 +0300
+
+    pass change
+
+[33mcommit 969acad30b91c24ced8e0edbdb33039c763b87de[m
+Author: Jemila Bekele <jemilabekele17@gmail.com>
+Date:   Thu Dec 25 14:51:17 2025 +0300
+
+    passs
+
+[33mcommit e50eeec20b662ccd6d9f4c98b1069c35723ca51a[m
+Author: Jemi

@@ -11,13 +11,6 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { Modal } from '@/components/ui/modal';
@@ -42,11 +35,15 @@ import { getProductByShops } from '@/service/Product';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import SelectReac from 'react-select';
-import { Package, PackageOpen, Info } from 'lucide-react';
+import { Package, PackageOpen, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { IBrand } from '@/models/brand';
-
-const BACKEND_URL = 'http://192.168.1.4:5000';
+import { 
+  viscosityOptions, 
+  oilTypeOptions, 
+  additiveTypeOptions 
+} from '@/models/Branch'
+const BACKEND_URL = 'http://192.168.1.6:5000';
 
 // Helper functions
 const normalizeImagePath = (path?: string | File) => {
@@ -112,30 +109,23 @@ export interface IProductShopAvailability {
   };
 }
 
-// ProductCard Component - Updated with UnitOfMeasure and Description
 const ProductCard = ({ product, onSelectProduct }: ProductCardProps) => {
-  const actualProduct = product;
-
   const [imageError, setImageError] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false); // Add modal state
 
-  // Get all image URLs
   const getImageUrls = (): string[] => {
-    if (!actualProduct.imageUrl) return ['/placeholder-image.jpg'];
-
-    if (Array.isArray(actualProduct.imageUrl)) {
-      return actualProduct.imageUrl.map((url) => normalizeImagePath(url));
+    if (!product.imageUrl) return ['/placeholder-image.jpg'];
+    if (Array.isArray(product.imageUrl)) {
+      return product.imageUrl.map((url) => normalizeImagePath(url));
     }
-
-    return [normalizeImagePath(actualProduct.imageUrl)];
+    return [normalizeImagePath(product.imageUrl)];
   };
 
   const imageUrls = getImageUrls();
-  const currentImageUrl = imageError
-    ? '/placeholder-image.jpg'
-    : imageUrls[currentImageIndex];
+  const currentImageUrl = imageError ? '/placeholder-image.jpg' : imageUrls[currentImageIndex];
   const hasMultipleImages = imageUrls.length > 1;
-  const formattedPrice = formatPrice(actualProduct.sellPrice);
+  const formattedPrice = formatPrice(product.sellPrice);
 
   const handleNextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -144,51 +134,57 @@ const ProductCard = ({ product, onSelectProduct }: ProductCardProps) => {
 
   const handlePrevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentImageIndex(
-      (prev) => (prev - 1 + imageUrls.length) % imageUrls.length
-    );
+    setCurrentImageIndex((prev) => (prev - 1 + imageUrls.length) % imageUrls.length);
+  };
+
+  const handleViewImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsModalOpen(true);
   };
 
   return (
+  <>
     <Card
-      className='w-62.5 cursor-pointer overflow-hidden transition-shadow hover:shadow-lg'
-      onClick={() => onSelectProduct(actualProduct)}
+      className="group flex h-full w-full flex-col cursor-pointer overflow-hidden rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+      onClick={() => onSelectProduct(product)}
     >
-      <CardHeader className='relative p-0'>
-        <div className='relative h-37.5 w-full'>
+      <CardHeader className="relative p-0">
+        <div className="relative aspect-video w-full overflow-hidden bg-gray-50 dark:bg-gray-800">
           <Image
             src={currentImageUrl}
-            alt={actualProduct.name}
+            alt={product.name}
             fill
-            className='object-cover'
-            sizes='(max-width: 768px) 100vw, 300px'
-            priority={false}
+            className="object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             onError={() => setImageError(true)}
           />
 
           {hasMultipleImages && (
             <>
-              <button
-                className='bg-opacity-50 absolute top-1/2 left-2 -translate-y-1/2 transform rounded-full bg-black p-1 text-white'
-                onClick={handlePrevImage}
-              >
-                ‹
-              </button>
-              <button
-                className='bg-opacity-50 absolute top-1/2 right-2 -translate-y-1/2 transform rounded-full bg-black p-1 text-white'
-                onClick={handleNextImage}
-              >
-                ›
-              </button>
+              <div className="absolute inset-0 flex items-center justify-between px-2 opacity-0 transition-opacity group-hover:opacity-100">
+                <button
+                  className="rounded-full bg-white/80 dark:bg-gray-900/80 p-1 shadow-sm backdrop-blur-sm transition hover:bg-white dark:hover:bg-gray-800"
+                  onClick={handlePrevImage}
+                >
+                  <ChevronLeft className="h-4 w-4 text-gray-800 dark:text-gray-200" />
+                </button>
 
-              <div className='absolute bottom-2 left-1/2 flex -translate-x-1/2 transform space-x-1'>
+                <button
+                  className="rounded-full bg-white/80 dark:bg-gray-900/80 p-1 shadow-sm backdrop-blur-sm transition hover:bg-white dark:hover:bg-gray-800"
+                  onClick={handleNextImage}
+                >
+                  <ChevronRight className="h-4 w-4 text-gray-800 dark:text-gray-200" />
+                </button>
+              </div>
+
+              <div className="absolute bottom-1.5 left-1/2 flex -translate-x-1/2 gap-1">
                 {imageUrls.map((_, index) => (
                   <div
                     key={index}
-                    className={`h-2 w-2 rounded-full ${
+                    className={`h-1 transition-all duration-300 rounded-full ${
                       index === currentImageIndex
-                        ? 'bg-white'
-                        : 'bg-opacity-50 bg-white'
+                        ? 'w-3 bg-white dark:bg-gray-200'
+                        : 'w-1 bg-white/60 dark:bg-gray-500'
                     }`}
                   />
                 ))}
@@ -197,40 +193,147 @@ const ProductCard = ({ product, onSelectProduct }: ProductCardProps) => {
           )}
         </div>
       </CardHeader>
-      <CardContent className='space-y-2'>
-        <h3 className='truncate text-lg font-semibold'>{actualProduct.name}</h3>
-        <p className='text-sm text-gray-600'>{actualProduct.productCode}</p>
-        
-        {/* Unit of Measure */}
-        {actualProduct.UnitOfMeasure && (
-          <div className='flex items-center gap-1 text-xs text-gray-500'>
-            <Package className='h-3 w-3' />
-            <span>Unit: {actualProduct.UnitOfMeasure}</span>
-          </div>
-        )}
-        
+
+      <CardContent className="flex-1 p-3 pb-1">
+        {/* Brand & Name Section */}
+        <div className="flex flex-col mb-1">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+            {product?.brand?.name || 'Brand'}
+          </span>
+
+          <h3 className="line-clamp-1 text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+            {product.name}
+          </h3>
+
+          {/* Product specs */}
+          {(product.viscosity || product.additiveType || product.oilType || product.generic) && (
+            <p className="mb-2 line-clamp-2 text-[12px] leading-relaxed text-gray-700 dark:text-gray-300">
+              {[product.viscosity, product.additiveType, product.oilType]
+                .filter(Boolean)
+                .join(' • ')}
+              {product.generic && (
+                <span className="italic text-gray-600 dark:text-gray-400">
+                  {` • ${product.generic}`}
+                </span>
+              )}
+            </p>
+          )}
+        </div>
+
         {/* Description */}
-        {actualProduct.description && (
-          <p className='line-clamp-2 text-xs text-gray-500'>
-            {actualProduct.description}
+        {product.description && (
+          <p className="mb-2 line-clamp-2 text-[11px] leading-relaxed text-gray-600 dark:text-gray-400">
+            {product.description}
           </p>
         )}
-        
-        {/* Box Support Badge */}
-        {actualProduct.hasBox && actualProduct.boxSize && (
-          <div className='flex items-center gap-1 text-xs text-blue-600'>
-            <Package className='h-3 w-3' />
-            <span>Box: {actualProduct.boxSize} pcs/box</span>
-          </div>
-        )}
+
+        {/* Category & Unit */}
+        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <span className="rounded-md bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[12px] font-medium text-gray-900 dark:text-gray-100">
+            {product?.category?.name || 'Category'}
+          </span>
+
+          {product.UnitOfMeasure && (
+            <div className="flex items-center gap-1 border-l border-gray-300 dark:border-gray-700 pl-2">
+              <Package className="h-3 w-3 text-gray-700 dark:text-gray-300" />
+              <span className="text-[12px] text-gray-700 dark:text-gray-300">
+                {product.UnitOfMeasure}
+              </span>
+            </div>
+          )}
+        </div>
       </CardContent>
-      <CardFooter>
-        <p className='text-primary text-xl font-bold'>{formattedPrice}</p>
+
+      <CardFooter className="flex items-center justify-between p-3 pt-2">
+        <span className="text-lg font-extrabold text-gray-900 dark:text-gray-100">
+          {formattedPrice}
+        </span>
+
+        <button
+          className="rounded-lg bg-[#0f172a] dark:bg-blue-600 px-4 py-1.5 text-[13px] font-medium text-white transition-colors hover:bg-gray-800 dark:hover:bg-blue-500"
+          onClick={handleViewImage}
+        >
+          View
+        </button>
       </CardFooter>
     </Card>
-  );
-};
 
+    {/* Modal */}
+    {isModalOpen && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 dark:bg-black/90 backdrop-blur-sm"
+        onClick={() => setIsModalOpen(false)}
+      >
+        <div
+          className="relative max-w-4xl max-h-[90vh] w-full mx-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors"
+            onClick={() => setIsModalOpen(false)}
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div className="relative bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
+            <div className="relative aspect-video w-full bg-gray-900 dark:bg-black">
+              <Image
+                src={currentImageUrl}
+                alt={product.name}
+                fill
+                className="object-contain"
+                sizes="90vw"
+              />
+
+              {hasMultipleImages && (
+                <>
+                  <button
+                    className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 dark:bg-gray-900/80 p-2 shadow-sm backdrop-blur-sm transition hover:bg-white dark:hover:bg-gray-800"
+                    onClick={handlePrevImage}
+                  >
+                    <ChevronLeft className="h-6 w-6 text-gray-800 dark:text-gray-200" />
+                  </button>
+
+                  <button
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 dark:bg-gray-900/80 p-2 shadow-sm backdrop-blur-sm transition hover:bg-white dark:hover:bg-gray-800"
+                    onClick={handleNextImage}
+                  >
+                    <ChevronRight className="h-6 w-6 text-gray-800 dark:text-gray-200" />
+                  </button>
+
+                  <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+                    {imageUrls.map((_, index) => (
+                      <div
+                        key={index}
+                        className={`h-1.5 transition-all duration-300 rounded-full ${
+                          index === currentImageIndex
+                            ? 'w-4 bg-white dark:bg-gray-200'
+                            : 'w-1.5 bg-white/60 dark:bg-gray-500'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="p-4 bg-white dark:bg-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {product.name}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {formattedPrice}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
+);
+};
 interface ShopBatchModalProps {
   product: IProduct | null;
   isOpen: boolean;
@@ -379,23 +482,61 @@ const ShopBatchModal = ({
     return shopStock?.additionalPrices || [];
   };
 
-  const getUnitPrice = (): number => {
-    if (!product) return 0;
+  // Filter additional prices based on isBox toggle
+  const getFilteredAdditionalPrices = (): IAdditionalPrice[] => {
+    const allPrices = getAdditionalPricesForSelectedShop();
+    
+    // Filter prices that match the current isBox state
+    return allPrices.filter(price => price.isBox === isBox);
+  };
+
+  const getUnitPrice = (): number | null => {
+    if (!product) return null;
 
     if (selectedPriceOption === 'custom') {
-      return parseFloat(customPrice) || 0;
+      // Return null for empty string to indicate no price set
+      if (customPrice === '') {
+        return null;
+      }
+      const price = parseFloat(customPrice);
+      return isNaN(price) ? null : price;
     } else {
-      const additionalPrice = getAdditionalPricesForSelectedShop().find(
+      const filteredPrices = getFilteredAdditionalPrices();
+      const additionalPrice = filteredPrices.find(
         (option) => option.id === selectedPriceOption
       );
-      return additionalPrice?.price || 0;
+      return additionalPrice?.price || null;
     }
+  };
+
+  const handlePriceChange = (value: string) => {
+    setSelectedPriceOption('custom');
+    setCustomPrice(value);
+  };
+
+  const handleSuggestedPriceClick = (option: IAdditionalPrice) => {
+    // Allow using any price regardless of isBox type, just show a warning
+    if (option.isBox !== isBox) {
+      const priceType = option.isBox ? 'box' : 'piece';
+      const currentType = isBox ? 'box' : 'piece';
+      toast.warning(`Using ${priceType} price for ${currentType} sales. You can still edit the price.`);
+    }
+    
+    setSelectedPriceOption(option.id);
+    setCustomPrice(option.price.toString());
   };
 
   const handleAddToCart = () => {
     if (!product || !selectedShop) return;
 
     const unitPrice = getUnitPrice();
+    
+    // Only check if price is valid (greater than 0 and not null)
+    if (!unitPrice || unitPrice <= 0) {
+      toast.error('Please enter a valid price greater than 0');
+      return;
+    }
+    
     const availableQuantity = getMaxAvailableQuantity();
 
     // Validate stock based on isBox flag
@@ -405,7 +546,9 @@ const ShopBatchModal = ({
     }
 
     // Calculate total pieces for display and validation in the backend
-    const totalPieces = isBox && product.boxSize ? quantity * product.boxSize : quantity;
+    const totalPieces = isBox && product.boxSize 
+      ? quantity * product.boxSize 
+      : quantity;
 
     const cartItem: CartItem = {
       id: `temp-${Date.now()}`,
@@ -450,6 +593,8 @@ const ShopBatchModal = ({
     setSelectedShop(shop);
     setQuantity(1);
     setIsBox(false);
+    setSelectedPriceOption('custom');
+    setCustomPrice('');
   };
 
   const handleQuantityChange = (value: string) => {
@@ -471,17 +616,19 @@ const ShopBatchModal = ({
   const totalPieces = (isBox && product?.hasBox && product?.boxSize) 
     ? quantity * product.boxSize 
     : quantity;
-  const totalPrice = unitPrice * totalPieces;
+  const totalPrice = unitPrice && unitPrice > 0 ? unitPrice * totalPieces : 0;
   
-  const additionalPrices = getAdditionalPricesForSelectedShop();
+  const allAdditionalPrices = getAdditionalPricesForSelectedShop();
+  const filteredAdditionalPrices = getFilteredAdditionalPrices();
   const canShowBoxes = product?.hasBox && product?.boxSize && product.boxSize > 0;
 
+  // Reset price when isBox toggles
   useEffect(() => {
     if (selectedShop) {
-      setCustomPrice('');
       setSelectedPriceOption('custom');
+      setCustomPrice('');
     }
-  }, [selectedShop]);
+  }, [isBox, selectedShop]);
 
   return (
     <Modal
@@ -638,7 +785,7 @@ const ShopBatchModal = ({
           </div>
         )}
 
-        {/* Price Selection */}
+        {/* Price Selection - Fully Editable, No Default */}
         <div className='space-y-4 border-t border-gray-200 pt-4'>
           <div className='space-y-2'>
             <Label
@@ -658,20 +805,22 @@ const ShopBatchModal = ({
               min='0'
               step='0.01'
               value={customPrice}
-              onChange={(e) => {
-                setSelectedPriceOption('custom');
-                setCustomPrice(e.target.value);
-              }}
+              onChange={(e) => handlePriceChange(e.target.value)}
               placeholder={`Enter price per ${isBox ? 'box' : 'piece'}`}
               className='w-full'
               disabled={!selectedShop}
             />
+        
           </div>
 
-          {selectedShop && additionalPrices.length > 0 && (
+          {/* Display filtered additional prices based on isBox - Optional suggestions */}
+          {selectedShop && filteredAdditionalPrices.length > 0 && (
             <div className='space-y-2'>
+              <Label className='text-sm font-medium'>
+                Suggested Prices 
+              </Label>
               <div className='flex flex-wrap gap-2'>
-                {additionalPrices.map((option) => (
+                {filteredAdditionalPrices.map((option) => (
                   <Button
                     key={option.id}
                     type='button'
@@ -679,16 +828,24 @@ const ShopBatchModal = ({
                       selectedPriceOption === option.id ? 'default' : 'outline'
                     }
                     size='sm'
-                    onClick={() => {
-                      setSelectedPriceOption(option.id);
-                      setCustomPrice(option.price.toString());
-                    }}
+                    onClick={() => handleSuggestedPriceClick(option)}
                     className='text-xs'
                   >
-                    {option.label}: {formatPrice(option.price)} per piece
+                    {option.label || 'Price'}: {formatPrice(option.price)} per {isBox ? 'box' : 'piece'}
                   </Button>
                 ))}
               </div>
+           
+            </div>
+          )}
+
+          {/* Informational message when no additional prices */}
+          {selectedShop && allAdditionalPrices.length > 0 && filteredAdditionalPrices.length === 0 && (
+            <div className='rounded-md bg-blue-50 p-3 text-sm text-blue-800'>
+              <p className='font-medium'>No suggested prices for {isBox ? 'box' : 'piece'} sales</p>
+              <p className='text-xs mt-1'>
+                Please enter a custom price in the field above.
+              </p>
             </div>
           )}
         </div>
@@ -758,8 +915,8 @@ const ShopBatchModal = ({
                   <span className='font-medium text-gray-700'>
                     Unit Price (per {isBox ? 'box' : 'piece'}):
                   </span>
-                  <span className='font-bold text-green-600'>
-                    {formatPrice(unitPrice)}
+                  <span className={`font-bold ${unitPrice && unitPrice > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                    {unitPrice && unitPrice > 0 ? formatPrice(unitPrice) : 'Not set'}
                   </span>
                 </div>
 
@@ -783,7 +940,7 @@ const ShopBatchModal = ({
                   <div className='flex items-center justify-between text-sm font-bold'>
                     <span>Total:</span>
                     <span className='text-blue-600'>
-                      {quantity > 0 ? formatPrice(totalPrice) : '--'}
+                      {quantity > 0 && unitPrice && unitPrice > 0 ? formatPrice(totalPrice) : '--'}
                     </span>
                   </div>
                 </div>
@@ -817,7 +974,9 @@ const ShopBatchModal = ({
               loading ||
               quantity > availableStock ||
               quantity <= 0 ||
-              availableStock === 0
+              availableStock === 0 ||
+              !unitPrice ||
+              unitPrice <= 0
             }
             className='w-full sm:w-auto'
           >
@@ -1609,7 +1768,17 @@ interface SearchFilters {
   category: string;
   brand: string; // Changed from subCategory to brand
   productName: string;
+  viscosity: string;
+    oilType: string;
+
+      additiveType: string;
+
+        generic: string;
+
 }
+
+
+
 
 export const ProductSearch = ({
   products,
@@ -1617,22 +1786,58 @@ export const ProductSearch = ({
   brands,
   initialSearchTerm = '',
   initialCategoryName = 'all',
-  initialBrandName = 'all' // Changed from initialSubCategoryName
+  initialBrandName = 'all'
 }: ProductSearchProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Convert options for react-select format
+  const categorySelectOptions = [
+    { value: 'all', label: 'All Categories' },
+    ...categories.map(category => ({ value: category.name, label: category.name }))
+  ];
+
+  const brandSelectOptions = [
+    { value: 'all', label: 'All Brands' },
+    ...brands.map(brand => ({ value: brand.name, label: brand.name }))
+  ];
+
+  const viscositySelectOptions = [
+    { value: 'all', label: 'All Viscosities' },
+    ...viscosityOptions
+  ];
+
+  const oilTypeSelectOptions = [
+    { value: 'all', label: 'All Oil Types' },
+    ...oilTypeOptions
+  ];
+
+  const additiveTypeSelectOptions = [
+    { value: 'all', label: 'All Additive Types' },
+    ...additiveTypeOptions
+  ];
+
+
 
   // Initialize state with props directly
   const [searchFilters, setSearchFilters] = useState<SearchFilters>(() => {
     // Use URL params first, then fall back to initial props
     const urlCategory = searchParams.get('categoryName') || searchParams.get('categoryId');
-    const urlBrand = searchParams.get('brandName') || searchParams.get('brandId'); // Add brand URL param
+    const urlBrand = searchParams.get('brandName') || searchParams.get('brandId');
     const urlSearchTerm = searchParams.get('searchTerm');
+    const urlViscosity = searchParams.get('viscosity');
+    const urlOilType = searchParams.get('oilType');
+    const urlAdditiveType = searchParams.get('additiveType');
+    const urlGeneric = searchParams.get('generic');
     
     return {
       category: urlCategory || initialCategoryName || 'all',
-      brand: urlBrand || initialBrandName || 'all', // Add brand filter
-      productName: urlSearchTerm || initialSearchTerm || ''
+      brand: urlBrand || initialBrandName || 'all',
+      productName: urlSearchTerm || initialSearchTerm || '',
+      viscosity: urlViscosity || 'all',
+      oilType: urlOilType || 'all',
+      additiveType: urlAdditiveType || 'all',
+      generic: urlGeneric || 'all'
     };
   });
 
@@ -1656,6 +1861,34 @@ export const ProductSearch = ({
       });
     }
 
+    // Filter by viscosity
+    if (searchFilters.viscosity !== 'all') {
+      filtered = filtered.filter((product) => {
+        return product.viscosity === searchFilters.viscosity;
+      });
+    }
+
+    // Filter by oil type
+    if (searchFilters.oilType !== 'all') {
+      filtered = filtered.filter((product) => {
+        return product.oilType === searchFilters.oilType;
+      });
+    }
+
+    // Filter by additive type
+    if (searchFilters.additiveType !== 'all') {
+      filtered = filtered.filter((product) => {
+        return product.additiveType === searchFilters.additiveType;
+      });
+    }
+
+    // Filter by generic (ACEA standards)
+    if (searchFilters.generic !== 'all') {
+      filtered = filtered.filter((product) => {
+        return product.generic === searchFilters.generic;
+      });
+    }
+
     // Filter by product name or generic name
     if (searchFilters.productName) {
       filtered = filtered.filter((product) => {
@@ -1664,7 +1897,13 @@ export const ProductSearch = ({
           product.name.toLowerCase().includes(searchTerm) ||
           product.productCode.toLowerCase().includes(searchTerm) ||
           (product.generic &&
-            product.generic.toLowerCase().includes(searchTerm))
+            product.generic.toLowerCase().includes(searchTerm)) ||
+          (product.viscosity &&
+            product.viscosity.toLowerCase().includes(searchTerm)) ||
+          (product.oilType &&
+            product.oilType.toLowerCase().includes(searchTerm)) ||
+          (product.additiveType &&
+            product.additiveType.toLowerCase().includes(searchTerm))
         );
       });
     }
@@ -1698,6 +1937,30 @@ export const ProductSearch = ({
       params.set('brandName', searchFilters.brand);
     } else {
       params.delete('brandName');
+    }
+
+    if (searchFilters.viscosity !== 'all') {
+      params.set('viscosity', searchFilters.viscosity);
+    } else {
+      params.delete('viscosity');
+    }
+
+    if (searchFilters.oilType !== 'all') {
+      params.set('oilType', searchFilters.oilType);
+    } else {
+      params.delete('oilType');
+    }
+
+    if (searchFilters.additiveType !== 'all') {
+      params.set('additiveType', searchFilters.additiveType);
+    } else {
+      params.delete('additiveType');
+    }
+
+    if (searchFilters.generic !== 'all') {
+      params.set('generic', searchFilters.generic);
+    } else {
+      params.delete('generic');
     }
 
     // Update URL without page refresh using Next.js router
@@ -1735,7 +1998,11 @@ export const ProductSearch = ({
     setSearchFilters({
       category: 'all',
       brand: 'all',
-      productName: ''
+      productName: '',
+      viscosity: 'all',
+      oilType: 'all',
+      additiveType: 'all',
+      generic: 'all'
     });
     setCurrentPage(1);
     // Also clear URL parameters
@@ -1804,6 +2071,28 @@ export const ProductSearch = ({
     setCartItems([]);
   };
 
+  // Get selected values for react-select
+  const getSelectedCategory = () => {
+    return categorySelectOptions.find(option => option.value === searchFilters.category);
+  };
+
+  const getSelectedBrand = () => {
+    return brandSelectOptions.find(option => option.value === searchFilters.brand);
+  };
+
+  const getSelectedViscosity = () => {
+    return viscositySelectOptions.find(option => option.value === searchFilters.viscosity);
+  };
+
+  const getSelectedOilType = () => {
+    return oilTypeSelectOptions.find(option => option.value === searchFilters.oilType);
+  };
+
+  const getSelectedAdditiveType = () => {
+    return additiveTypeSelectOptions.find(option => option.value === searchFilters.additiveType);
+  };
+
+
   return (
     <div className='flex flex-col space-y-6 lg:flex-row lg:space-y-0 lg:space-x-6'>
       <div className='flex-1 space-y-4 sm:space-y-6'>
@@ -1813,64 +2102,88 @@ export const ProductSearch = ({
             Search Products
           </h2>
 
-          <div className='mb-3 grid grid-cols-1 gap-3 sm:mb-4 sm:grid-cols-3'>
-            {/* Category Select */}
+          <div className='mb-3 grid grid-cols-1 gap-3 sm:mb-4 sm:grid-cols-2 lg:grid-cols-3'>
+            {/* Category Select with Search */}
             <div>
               <label className='mb-1 block text-xs font-medium sm:mb-2 sm:text-sm'>
                 Category
               </label>
-              <Select
-                value={searchFilters.category}
-                onValueChange={(value) => handleFilterChange('category', value)}
-              >
-                <SelectTrigger className='w-full text-xs sm:text-sm'>
-                  <SelectValue placeholder='Select category' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all' className='text-xs sm:text-sm'>
-                    All Categories
-                  </SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem
-                      key={category.id}
-                      value={category.name}
-                      className='text-xs sm:text-sm'
-                    >
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SelectReac
+                value={getSelectedCategory()}
+                onChange={(option) => handleFilterChange('category', option?.value || 'all')}
+                options={categorySelectOptions}
+                isSearchable={true}
+                placeholder="Search category..."
+                className="text-xs sm:text-sm"
+                classNamePrefix="react-select"
+              />
             </div>
 
-            {/* Brand Select */}
+            {/* Brand Select with Search */}
             <div>
               <label className='mb-1 block text-xs font-medium sm:mb-2 sm:text-sm'>
                 Brand
               </label>
-              <Select
-                value={searchFilters.brand}
-                onValueChange={(value) => handleFilterChange('brand', value)}
-              >
-                <SelectTrigger className='w-full text-xs sm:text-sm'>
-                  <SelectValue placeholder='Select brand' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='all' className='text-xs sm:text-sm'>
-                    All Brands
-                  </SelectItem>
-                  {brands.map((brand) => (
-                    <SelectItem
-                      key={brand.id}
-                      value={brand.name}
-                      className='text-xs sm:text-sm'
-                    >
-                      {brand.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SelectReac
+                value={getSelectedBrand()}
+                onChange={(option) => handleFilterChange('brand', option?.value || 'all')}
+                options={brandSelectOptions}
+                isSearchable={true}
+                placeholder="Search brand..."
+                className="text-xs sm:text-sm"
+                classNamePrefix="react-select"
+              />
             </div>
+
+            {/* Viscosity Select with Search */}
+            <div>
+              <label className='mb-1 block text-xs font-medium sm:mb-2 sm:text-sm'>
+                Viscosity
+              </label>
+              <SelectReac
+                value={getSelectedViscosity()}
+                onChange={(option) => handleFilterChange('viscosity', option?.value || 'all')}
+                options={viscositySelectOptions}
+                isSearchable={true}
+                placeholder="Search viscosity..."
+                className="text-xs sm:text-sm"
+                classNamePrefix="react-select"
+              />
+            </div>
+
+            {/* Oil Type Select with Search */}
+            <div>
+              <label className='mb-1 block text-xs font-medium sm:mb-2 sm:text-sm'>
+                Oil Type
+              </label>
+              <SelectReac
+                value={getSelectedOilType()}
+                onChange={(option) => handleFilterChange('oilType', option?.value || 'all')}
+                options={oilTypeSelectOptions}
+                isSearchable={true}
+                placeholder="Search oil type..."
+                className="text-xs sm:text-sm"
+                classNamePrefix="react-select"
+              />
+            </div>
+
+            {/* Additive Type Select with Search */}
+            <div>
+              <label className='mb-1 block text-xs font-medium sm:mb-2 sm:text-sm'>
+                Additive Type
+              </label>
+              <SelectReac
+                value={getSelectedAdditiveType()}
+                onChange={(option) => handleFilterChange('additiveType', option?.value || 'all')}
+                options={additiveTypeSelectOptions}
+                isSearchable={true}
+                placeholder="Search additive type..."
+                className="text-xs sm:text-sm"
+                classNamePrefix="react-select"
+              />
+            </div>
+
+       
 
             {/* Product Name Search */}
             <div>
@@ -1991,5 +2304,4 @@ export const ProductSearch = ({
     </div>
   );
 };
-
 export default ProductSearch;

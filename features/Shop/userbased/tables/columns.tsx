@@ -25,6 +25,19 @@ const getSaleStatusColor = (status: SaleStatus) => {
   }
 };
 
+// Add payment status colors
+const getPaymentStatusColor = (status: string) => {
+  switch (status) {
+    case 'PAID':
+      return 'bg-green-600 text-white';
+    case 'PARTIAL':
+      return 'bg-yellow-500 text-white';
+    case 'PENDING':
+      return 'bg-red-400 text-white';
+    default:
+      return 'bg-gray-400 text-white';
+  }
+};
 export const sellColumns: ColumnDef<ISell>[] = [
   {
     accessorKey: 'saleDate',
@@ -126,6 +139,21 @@ export const sellColumns: ColumnDef<ISell>[] = [
       const status = cell.getValue<SaleStatus>();
       return (
         <Badge className={`${getSaleStatusColor(status)}`}>{status}</Badge>
+      );
+    },
+    enableColumnFilter: true
+  },
+    {
+    accessorKey: 'paymentStatus',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Payment Status' />
+    ),
+    cell: ({ cell }) => {
+      const status = cell.getValue<string>();
+      return (
+        <Badge className={`${getPaymentStatusColor(status)} px-2 py-1`}>
+          {status || 'PENDING'}
+        </Badge>
       );
     },
     enableColumnFilter: true

@@ -18,15 +18,18 @@ import {
   ShoppingCart,
   Truck,
   CreditCard,
-  AlertTriangle,
   Printer,
   DollarSign,
   Tag,
   Scale,
-  Plus,
-  Minus,
+
   Box,
-  PackageOpen
+  PackageOpen,
+  Eye,
+  FileText,
+  ChevronUp,
+  ChevronDown,
+  ImageIcon
 } from 'lucide-react';
 import {
   Table,
@@ -64,6 +67,8 @@ import {
   DialogHeader,
   DialogTitle
 } from '@/components/ui/dialog';
+import { normalizeImagePath } from '@/lib/norm';
+import Image from 'next/image';
 
 type SaleViewProps = {
   id?: string;
@@ -101,6 +106,14 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
   const [priceAnalysisModalOpen, setPriceAnalysisModalOpen] = useState(false);
   const [priceAnalysis, setPriceAnalysis] = useState<PriceAnalysis[]>([]);
   const [loadingPriceAnalysis, setLoadingPriceAnalysis] = useState(false);
+  const [, setImageError] = useState(false);
+
+    const [showAttachedFiles, setShowAttachedFiles] = useState(false);
+      // Normalize image and document URLs
+      const normalizedImageUrl = normalizeImagePath(sale?.imageUrl);
+      const normalizedDocumentUrl = normalizeImagePath(sale?.documentUrl);
+    
+    const hasAttachedFiles = !!(normalizedImageUrl || normalizedDocumentUrl);
 
   const analyzePrices = async () => {
     if (!sale || !sale.items) return;
@@ -163,6 +176,11 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
       try {
         const saleData = await getSellId(id);
         setSale(saleData);
+        setImageError(false);
+
+         if (saleData?.imageUrl || saleData?.documentUrl) {
+          setShowAttachedFiles(false);
+        }
       } catch {
         toast.error('Failed to fetch sale details');
       } finally {
@@ -827,6 +845,102 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
             </div>
           </div>
 
+      {/* Attached Files Section - Collapsible */}
+          {hasAttachedFiles && (
+            <div className='space-y-4'>
+              <Button
+                variant='ghost'
+                onClick={() => setShowAttachedFiles(!showAttachedFiles)}
+                className='flex w-full items-center justify-between p-4 hover:bg-gray-50'
+              >
+                <div className='flex items-center gap-2'>
+                  <Eye className='text-primary h-5 w-5' />
+                  <h3 className='text-base font-semibold'>Attached Files</h3>
+                  <Badge variant='secondary' className='ml-2'>
+                    {normalizedImageUrl && normalizedDocumentUrl ? '2' : '1'} file(s)
+                  </Badge>
+                </div>
+                {showAttachedFiles ? (
+                  <ChevronUp className='h-5 w-5' />
+                ) : (
+                  <ChevronDown className='h-5 w-5' />
+                )}
+              </Button>
+
+              {showAttachedFiles && (
+                <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+                  {/* Image Display */}
+                  {normalizedImageUrl && (
+                    <Card className='overflow-hidden'>
+                      <CardHeader className='pb-2'>
+                        <CardTitle className='flex items-center gap-2 text-sm font-medium'>
+                          <ImageIcon className='h-4 w-4' />
+                          Invoice Image
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className='pt-0'>
+                        <div className='relative h-48 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-50'>
+                          <Image
+                            src={normalizedImageUrl}
+                            alt={`Invoice ${sale.invoiceNo} image`}
+                            fill
+                            className='object-contain'
+                            onError={(e) => {
+                              console.error('Failed to load image:', normalizedImageUrl);
+                              setImageError(true);
+                            }}
+                          />
+                        </div>
+                        <a
+                          href={normalizedImageUrl}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='mt-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:underline'
+                        >
+                          <Eye className='h-3 w-3' />
+                          View full size
+                        </a>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Document Display */}
+                  {normalizedDocumentUrl && (
+                    <Card>
+                      <CardHeader className='pb-2'>
+                        <CardTitle className='flex items-center gap-2 text-sm font-medium'>
+                          <FileText className='h-4 w-4' />
+                          Invoice Document
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className='pt-0'>
+                        <div className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border'>
+                          <div className='flex items-center gap-2'>
+                            <FileText className='h-8 w-8 text-blue-500' />
+                            <div>
+                              <p className='text-sm font-medium'>Supporting Document</p>
+                              <p className='text-xs text-muted-foreground'>
+                                Click to view or download
+                              </p>
+                            </div>
+                          </div>
+                          <a
+                            href={normalizedDocumentUrl}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90'
+                          >
+                            <Eye className='h-3 w-3' />
+                            View
+                          </a>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           {/* Sale Items Table */}
           {sale.items && sale.items.length > 0 ? (
             <div className='space-y-4'>
@@ -852,7 +966,8 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                 {sale.items.map((item: ISellItem) => {
                   const isSelected = selectedItems.includes(item.id);
                   const isDelivered = item.itemSaleStatus === ItemSaleStatus.DELIVERED;
-
+   const remainingQty = item.remainingQuantity || item.quantity;
+                          const givenQty = item.givenQuantity || 0;
                   return (
                     <Card
                       key={item.id}
@@ -909,6 +1024,12 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                             <p className='text-xs text-muted-foreground'>Quantity</p>
                             <p className='text-sm font-medium'>{item.quantity}</p>
                           </div>
+                             <TableCell>
+                                                          <span className='font-medium text-green-600'>{givenQty}</span>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                          <span className='font-medium text-orange-600'>{remainingQty}</span>
+                                                        </TableCell>
                           <div className='space-y-1'>
                             <p className='text-xs text-muted-foreground'>Unit</p>
                             <p className='text-sm font-medium truncate'>
@@ -983,6 +1104,8 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                           <TableHead className='min-w-24'>Type</TableHead>
                           <TableHead className='min-w-20'>Quantity</TableHead>
                           <TableHead className='min-w-28'>Unit Price</TableHead>
+                              <TableHead className='min-w-28'>Given</TableHead>
+                                                    <TableHead className='min-w-28'>Remaining</TableHead>
                           <TableHead className='min-w-28'>Total Price</TableHead>
                           <TableHead className='min-w-32'>Status</TableHead>
                         </TableRow>
