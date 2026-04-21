@@ -44,6 +44,13 @@ export const navItems: NavItem[] = [
         icon: 'list',
         shortcut: ['ps', 'ps'],
         permission: 'VIEW_SALES_RANK'
+      },
+         {
+        title: 'Top Product Report',
+        url: '/dashboard/TopProductsReport',
+        // icon: 'userPen', 
+        shortcut: ['ps', 'ps'],
+        permission: 'VIEW_SALES_RANK'
       }
     ]
   },
