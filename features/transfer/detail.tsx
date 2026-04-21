@@ -478,9 +478,11 @@ const TransferDetailPage: React.FC<TransferViewProps> = ({ id }) => {
                             )}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          {item.product?.UnitOfMeasure || 'N/A'}
-                        </TableCell>
+                                   <TableCell className='whitespace-nowrap text-xs md:text-sm'>
+                                     <div className='text-sm text-muted-foreground'>
+                                       {item.product.unitOfMeasure?.symbol || ''}
+                                     </div>
+                                   </TableCell>
                         <TableCell>{item.quantity}</TableCell>
                       </TableRow>
                     ))}
@@ -523,7 +525,7 @@ const TransferDetailPage: React.FC<TransferViewProps> = ({ id }) => {
                         </div>
                         <div>
                           <p className='text-sm font-medium text-gray-500'>Unit</p>
-                          <p>{item.product?.UnitOfMeasure || 'N/A'}</p>
+                                       {item.product.unitOfMeasure?.symbol || ''}
                         </div>
                       </div>
                     </div>

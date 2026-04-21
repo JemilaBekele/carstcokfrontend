@@ -18,7 +18,6 @@ import {
   AlertTriangle,
   Store,
   ShoppingBag,
-  Calendar,
   User,
   Tag,
   Filter,
@@ -26,7 +25,6 @@ import {
   PackageOpen
 } from 'lucide-react';
 import { deleteStockLedgerByIds } from '@/service/MissingStockLedger';
-import { Trash2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -53,6 +51,7 @@ interface ProductDetails {
     id: string;
     productCode: string;
     name: string;
+    numberunitOfMeasure: number | null
     generic: string | null;
     description: string | null;
     viscosity?: string;      // 0W-20, 5W-30
@@ -63,7 +62,10 @@ interface ProductDetails {
     imageUrl: string | null;
     hasBox: boolean;
     boxSize: number | null;
-    UnitOfMeasure: string | null;
+    unitOfMeasure: {
+      id: string;
+      symbol: string;
+    } | null;
     category: {
       id: string;
       name: string;
@@ -217,7 +219,7 @@ const ProductDetailsPage: React.FC<ProductDetailsProps> = ({ productId }) => {
       }
       return `${boxes} box(es) + ${remaining} pieces`;
     }
-    return `${pieces} ${productDetails?.product.UnitOfMeasure || 'pieces'}`;
+    return `${pieces} ${productDetails?.product.unitOfMeasure?.symbol || 'pieces'}`;
   };
 
   useEffect(() => {
@@ -293,7 +295,7 @@ const ProductDetailsPage: React.FC<ProductDetailsProps> = ({ productId }) => {
       }
 
       const { product, stockLedgers: allLedgers } = productDetails;
-      const unitSymbol = product.UnitOfMeasure || 'unit';
+      const unitSymbol = product.unitOfMeasure?.symbol || 'unit';
 
       const sortedLedgers = [...filteredStockLedgers].sort(
         (a, b) =>
@@ -367,22 +369,7 @@ const ProductDetailsPage: React.FC<ProductDetailsProps> = ({ productId }) => {
     }
   };
 
-  const handleDeleteStockLedger = async (ledgerId: string) => {
-    if (confirm('Are you sure you want to delete this stock ledger entry?')) {
-      try {
-        await deleteStockLedgerByIds(ledgerId);
-        toast.success('Stock ledger entry deleted successfully');
-        
-        if (productId) {
-          const updatedDetails = await getProductdetailaById(productId);
-          setProductDetails(updatedDetails);
-        }
-      } catch (error) {
-        console.error('Delete error:', error);
-        toast.error('Failed to delete stock ledger entry');
-      }
-    }
-  };
+
 
   if (loading) {
     return (
@@ -408,7 +395,7 @@ const ProductDetailsPage: React.FC<ProductDetailsProps> = ({ productId }) => {
   }
 
   const { product, locationStocks, summary } = productDetails;
-  const unitSymbol = product.UnitOfMeasure || 'unit';
+  const unitSymbol = product?.unitOfMeasure?.symbol || 'unit';
   const canShowBoxes = product.hasBox && product.boxSize && product.boxSize > 0;
 
   return (
@@ -594,8 +581,9 @@ const ProductDetailsPage: React.FC<ProductDetailsProps> = ({ productId }) => {
 
     <div>
       <p className='font-medium'>Unit of Measure</p>
-      <p className='text-muted-foreground'>
-        {product.UnitOfMeasure || 'N/A'}
+      <p className='text-muted-foreground'> 
+               {product.numberunitOfMeasure || ''}
+ {product.unitOfMeasure?.symbol || ''}
       </p>
     </div>
 
@@ -620,21 +608,21 @@ const ProductDetailsPage: React.FC<ProductDetailsProps> = ({ productId }) => {
 <div>
   <p className='font-medium'>Viscosity</p>
   <p className='text-muted-foreground'>
-    {product.viscosity || 'N/A'}
+    {product.viscosity || ''}
   </p>
 </div>
 
 <div>
   <p className='font-medium'>Oil Type</p>
   <p className='text-muted-foreground'>
-    {product.oilType || 'N/A'}
+    {product.oilType || ''}
   </p>
 </div>
 
 <div>
   <p className='font-medium'>Additive Type</p>
   <p className='text-muted-foreground'>
-    {product.additiveType || 'N/A'}
+    {product.additiveType || ''}
   </p>
 </div>
 

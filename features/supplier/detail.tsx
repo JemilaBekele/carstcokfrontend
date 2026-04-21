@@ -434,7 +434,7 @@ const SupplierPurchaseDetailPage: React.FC<SupplierPurchaseDetailPageProps> = ({
                     <div className='space-y-2 mb-3'>
                       <div className='flex justify-between text-sm'>
                         <span className='text-muted-foreground'>Total:</span>
-                        <span className='font-semibold'>${purchase.grandTotal.toFixed(2)}</span>
+                        <span className='font-semibold'>{purchase.grandTotal.toFixed(2)}</span>
                       </div>
                       <div className='flex justify-between text-sm'>
                         <span className='text-muted-foreground'>Items:</span>
@@ -468,8 +468,8 @@ const SupplierPurchaseDetailPage: React.FC<SupplierPurchaseDetailPageProps> = ({
                                 <p className='font-medium'>{item.productName}</p>
                                 <div className='flex justify-between text-xs mt-1'>
                                   <span>Qty: {item.quantity}</span>
-                                  <span>${item.unitPrice.toFixed(2)}/ea</span>
-                                  <span className='font-semibold'>${item.totalPrice.toFixed(2)}</span>
+                                  <span>{item.unitPrice.toFixed(2)}/ea</span>
+                                  <span className='font-semibold'>{item.totalPrice.toFixed(2)}</span>
                                 </div>
                               </div>
                             ))}

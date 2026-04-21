@@ -133,92 +133,628 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
     }, 100);
   };
 
-  const generatePrintHTML = (data: PrintableSaleData) => {
-    const { sale, printedAt } = data;
+const generatePrintHTML = (data: PrintableSaleData) => {
+  const { sale, printedAt } = data;
 
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Sale Invoice - ${sale.invoiceNo}</title>
-          <style>
-            @media print {
-              @page { margin: 0.5in; size: letter; }
-              body { font-family: 'Arial', sans-serif; font-size: 12px; line-height: 1.4; color: #000; margin: 0; padding: 0; }
-              .print-container { max-width: 100%; margin: 0 auto; }
-              .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-              .invoice-title { font-size: 24px; font-weight: bold; margin: 10px 0; }
-              .section { margin-bottom: 20px; page-break-inside: avoid; }
-              .section-title { font-size: 16px; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
-              .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
-              table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-              th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; }
-              th { background-color: #f0f0f0; font-weight: bold; }
-              .text-right { text-align: right; }
-              .text-center { text-align: center; }
-              .bold { font-weight: bold; }
-              .footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #000; text-align: center; font-size: 10px; color: #666; }
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Sale Invoice - ${sale.invoiceNo}</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          @media print {
+            @page { 
+              margin: 0.3in; 
+              size: letter;
             }
-          </style>
-        </head>
-        <body>
-          <div class="print-container">
-            <div class="header">
-              <div class="invoice-title">SALE INVOICE</div>
-              <div class="grid-2">
-                <div><strong>Invoice No:</strong> ${sale.invoiceNo}</div>
-                <div><strong>Date:</strong> ${formatDate(sale.saleDate || sale.createdAt)}</div>
-                <div><strong>Customer:</strong> ${sale.customer?.name || 'N/A'}</div>
-                <div><strong>Status:</strong> ${sale.saleStatus}</div>
-              </div>
+            body { 
+              font-family: 'Arial', sans-serif; 
+              font-size: 12px; 
+              line-height: 1.3; 
+              color: #000; 
+              margin: 0; 
+              padding: 0;
+            }
+            .print-container { 
+              max-width: 100%; 
+              margin: 0; 
+              padding: 0;
+            }
+            .header { 
+              text-align: center; 
+              border-bottom: 2px solid #000; 
+              padding-bottom: 8px; 
+              margin-bottom: 15px; 
+            }
+            .invoice-title { 
+              font-size: 22px; 
+              font-weight: bold; 
+              margin: 5px 0; 
+            }
+            .section { 
+              margin-bottom: 15px; 
+              page-break-inside: avoid; 
+            }
+            .section-title { 
+              font-size: 14px; 
+              font-weight: bold; 
+              border-bottom: 1px solid #000; 
+              padding-bottom: 4px; 
+              margin-bottom: 8px; 
+            }
+            .grid-2 { 
+              display: grid; 
+              grid-template-columns: 1fr 1fr; 
+              gap: 15px; 
+              margin-bottom: 10px; 
+            }
+            .grid-3 { 
+              display: grid; 
+              grid-template-columns: repeat(3, 1fr); 
+              gap: 15px; 
+              margin-bottom: 10px; 
+            }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin: 5px 0; 
+            }
+            th, td { 
+              border: 1px solid #000; 
+              padding: 5px 6px; 
+              text-align: left; 
+            }
+            th { 
+              background-color: #f0f0f0; 
+              font-weight: bold; 
+              font-size: 11px;
+            }
+            td {
+              font-size: 11px;
+            }
+            .text-right { 
+              text-align: right; 
+            }
+            .text-center { 
+              text-align: center; 
+            }
+            .bold { 
+              font-weight: bold; 
+            }
+            .footer { 
+              margin-top: 20px; 
+              padding-top: 8px; 
+              border-top: 1px solid #000; 
+              text-align: center; 
+              font-size: 9px; 
+              color: #666; 
+            }
+            p {
+              margin: 3px 0;
+            }
+            .compact {
+              margin: 0;
+              padding: 0;
+            }
+            .customer-info {
+              background-color: #f9f9f9;
+              padding: 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              margin-bottom: 10px;
+            }
+          }
+          
+          /* Prevent page breaks inside rows */
+          tr {
+            page-break-inside: avoid;
+            page-break-after: avoid;
+          }
+          
+          /* Ensure table doesn't break awkwardly */
+          table {
+            page-break-inside: avoid;
+          }
+          
+          /* Compact spacing for product code */
+          .product-code {
+            font-size: 10px;
+            color: #666;
+            margin-top: 2px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-container">
+          <div class="header">
+            <div class="invoice-title">SALE INVOICE</div>
+            <div class="grid-2">
+              <div><strong>Invoice No:</strong> ${sale.invoiceNo}</div>
+              <div><strong>Date:</strong> ${formatDate(sale.saleDate || sale.createdAt)}</div>
+              <div><strong>Status:</strong> ${sale.saleStatus}</div>
             </div>
+          </div>
 
-            <div class="section">
-              <div class="section-title">Sale Items</div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Shop</th>
-                    <th class="text-right">Quantity</th>
-                    <th class="text-right">Unit Price</th>
-                    <th class="text-right">Total Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${sale.items?.map((item) => `
-                    <tr>
-                      <td>${item.product?.name || 'Unknown Product'}</td>
-                      <td>${item.shop?.name || 'N/A'}</td>
-                      <td class="text-right">${item.quantity}</td>
-                      <td class="text-right">${item.unitPrice.toFixed(2)}</td>
-                      <td class="text-right">${item.totalPrice.toFixed(2)}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-
-            <div class="section">
+          <!-- Customer Information Section -->
+          <div class="section">
+            <div class="section-title">Customer Information</div>
+            <div class="customer-info">
               <div class="grid-2">
                 <div>
-                  <p><strong>Sub Total:</strong> ${(sale.subTotal || 0).toFixed(2)}</p>
-                  ${sale.discount > 0 ? `<p><strong>Discount:</strong> -${sale.discount.toFixed(2)}</p>` : ''}
-                  ${sale.vat > 0 ? `<p><strong>VAT:</strong> ${sale.vat.toFixed(2)}</p>` : ''}
-                  <p><strong>Grand Total:</strong> ${(sale.grandTotal || 0).toFixed(2)}</p>
+                  <p><strong>Customer Name:</strong> ${sale.customer?.name || 'Walk-in Customer'}</p>
+                  ${sale.customer?.tinNumber ? `<p><strong>TIN Number:</strong> ${sale.customer.tinNumber}</p>` : ''}
+              
+                </div>
+                <div>
+                  ${sale.customer?.address ? `<p><strong>Address:</strong> ${sale.customer.address}</p>` : ''}
+                  ${sale.createdBy ? `<p><strong>Processed By:</strong> ${sale.createdBy.name || 'N/A'}</p>` : ''}
                 </div>
               </div>
             </div>
+          </div>
 
-            <div class="footer">
-              <p>Printed on: ${printedAt}</p>
+          <div class="section">
+            <div class="section-title">Sale Items</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Shop</th>
+                  <th>Type</th>
+                  <th>Unit</th>
+                  <th class="text-right">Qty</th>
+                  <th class="text-right">Unit Price</th>
+                  <th class="text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sale.items?.map((item) => {
+                  const unitMeasure = `${item.product?.numberunitOfMeasure || ''} ${item.product?.unitOfMeasure?.symbol || ''}`.trim();
+                  const itemType = item.isBox ? 'Box' : 'Pc';
+                  
+                  return `
+                  <tr>
+                    <td>
+                      ${item.product?.name || 'Unknown Product'}
+                      ${item.product?.productCode ? `<div class="product-code">${item.product.productCode}</div>` : ''}
+                    </td>
+                    <td>${item.shop?.name || 'N/A'}</td>
+                    <td class="text-center">${itemType}</td>
+                    <td class="text-center">${unitMeasure || '-'}</td>
+                    <td class="text-right">${item.quantity}</td>
+                    <td class="text-right">${item.unitPrice.toFixed(2)}</td>
+                    <td class="text-right">${item.totalPrice.toFixed(2)}</td>
+                  </tr>
+                `}).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section">
+            <div class="grid-2">
+              <div>
+                <p><strong>Sub Total:</strong> ${(sale.subTotal || 0).toFixed(2)}</p>
+                ${sale.discount > 0 ? `<p><strong>Discount:</strong> -${sale.discount.toFixed(2)}</p>` : ''}
+                ${sale.vat > 0 ? `<p><strong>VAT:</strong> ${sale.vat.toFixed(2)}</p>` : ''}
+                <p><strong>Grand Total:</strong> ${(sale.grandTotal || 0).toFixed(2)}</p>
+              </div>
+              <div>
+                ${sale.notes ? `<p><strong>Notes:</strong> ${sale.notes}</p>` : ''}
+              </div>
             </div>
           </div>
-        </body>
-      </html>
+
+          <div class="footer">
+            <p>Printed on: ${printedAt}</p>
+            <p>Thank you for your business!</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+};
+   const handleProrma= () => {
+    if (!sale) return;
+
+    const printableData: PrintableSaleData = {
+      sale,
+      printedAt: new Date().toLocaleString()
+    };
+
+    const printHTML = generatePerformaHTML(printableData);
+
+    const printContainer = document.createElement('div');
+    printContainer.id = 'print-container-temp';
+    printContainer.innerHTML = printHTML;
+
+    document.body.appendChild(printContainer);
+
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #print-container-temp, #print-container-temp * {
+          visibility: visible;
+        }
+        #print-container-temp {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+        }
+      }
     `;
+    document.head.appendChild(style);
+
+    window.print();
+
+    setTimeout(() => {
+      if (document.body.contains(printContainer)) {
+        document.body.removeChild(printContainer);
+      }
+      document.head.removeChild(style);
+    }, 100);
+  };
+  const generatePerformaHTML = (data: any) => {
+  const { sale, printedAt } = data;
+
+  const formatDate = (dateString: any) => {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    return d.toLocaleDateString('en-GB'); 
   };
 
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Proforma - ${sale.invoiceNo || ''}</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          @media print {
+            @page { 
+              margin: 0.3in; /* Reduced margin */
+              size: auto; /* Prevents forcing a second blank page */
+            }
+            body { 
+              font-family: 'Times New Roman', serif; 
+              font-size: 13px; 
+              line-height: 1.4; 
+              color: #000; 
+              margin: 0; 
+              padding: 0;
+            }
+            .print-container { 
+              max-width: 100%; 
+              margin: 0 auto;
+              page-break-inside: avoid; /* Keeps content together */
+            }
+            
+            /* Header Section */
+            .header-main {
+              text-align: center;
+              margin-bottom: 20px;
+            }
+            .company-am, .company-en {
+              font-weight: bold;
+              font-size: 16px;
+            }
+            .company-tel {
+              font-weight: bold;
+              font-size: 14px;
+            }
+
+            /* Meta Info Section */
+            .meta-section {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 10px;
+              position: relative;
+            }
+            .meta-left div, .meta-right div {
+              margin-bottom: 3px;
+            }
+            .proforma-title {
+              text-align: center;
+              position: absolute;
+              width: 100%;
+              top: 30px;
+              z-index: -1;
+            }
+            .proforma-am {
+              font-weight: bold;
+              font-size: 15px;
+            }
+            .proforma-en {
+              font-weight: bold;
+              font-size: 18px;
+              text-decoration: underline;
+            }
+            
+            /* Buyer Section */
+            .buyer-section {
+              margin-top: 40px;
+              margin-bottom: 15px;
+            }
+            .input-line {
+              border-bottom: 1px solid #000;
+              display: inline-block;
+              min-width: 250px;
+              padding: 0 5px;
+            }
+            
+            /* Table Section */
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin-bottom: 10px; 
+              page-break-inside: auto;
+            }
+            tr {
+              page-break-inside: avoid;
+              page-break-after: auto;
+            }
+            th, td { 
+              border: 1px solid #000; 
+              padding: 6px; 
+            }
+            th { 
+              text-align: center;
+              font-weight: normal;
+              font-size: 12px;
+            }
+            .th-am {
+              font-weight: bold;
+            }
+            td {
+              font-size: 13px;
+            }
+            .col-no { width: 5%; text-align: center; }
+            .col-desc { width: 45%; }
+            .col-unit { width: 8%; text-align: center; }
+            .col-qty { width: 8%; text-align: center; }
+            .col-price { width: 15%; text-align: right; }
+            .col-total { width: 19%; text-align: right; }
+
+            /* Table Footer (Totals) */
+            .totals-row td {
+              border-top: none;
+              border-bottom: none;
+            }
+            .totals-label {
+              text-align: right;
+              font-size: 12px;
+              border: 1px solid #000;
+              padding-right: 5px;
+            }
+            .totals-value {
+              text-align: right;
+              border: 1px solid #000;
+            }
+
+            /* Bottom Signatures & Details */
+            .bottom-details {
+              margin-top: 20px;
+              font-size: 13px;
+            }
+            .bottom-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 15px;
+            }
+            .bottom-row > div {
+              width: 48%;
+            }
+            .inline-label {
+              display: flex;
+              align-items: flex-end;
+            }
+            .inline-label .line {
+              flex-grow: 1;
+              border-bottom: 1px solid #000;
+              margin-left: 10px;
+              min-height: 18px;
+            }
+            .watermark {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%) rotate(-30deg);
+              font-size: 40px;
+              color: rgba(0, 0, 100, 0.1);
+              white-space: nowrap;
+              z-index: -1;
+              pointer-events: none;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-container">
+          
+          <div class="header-main">
+            <div class="company-am">ኤም ኤም የሞተር ዘይት እና ቅባቶች አስመጪ እና ጅምላከፋፋይ</div>
+            <div class="company-en">M M Engine Oils and lubricants Import and Wholesale</div>
+            <div class="company-tel">Tel - 0911224507/0922174869</div>
+          </div>
+
+          <div class="meta-section">
+            <div class="meta-left">
+              <div>
+                <span style="font-weight: bold;">የታክስ ከፋይ መ.ቁ:</span> 0088411751<br>
+                <span style="font-size: 11px;">Supplier's TIN No.</span>
+              </div>
+              <div style="margin-top: 8px;">
+                <span style="font-weight: bold;">የተ.እ.ታ ቁጥር:</span> 27523540819<br>
+                <span style="font-size: 11px;">Supplier's VAT Reg. No</span>
+              </div>
+            </div>
+
+            <div class="proforma-title">
+              <div class="proforma-am">የዋጋ ማቅረቢያ</div>
+              <div class="proforma-en">PROFORMA</div>
+            </div>
+
+            <div class="meta-right">
+              <div>
+                <span style="font-weight: bold;">ቀን</span><br>
+                <strong>Date</strong> <span class="input-line" style="min-width: 100px; text-align: center;">${formatDate(sale.saleDate || sale.createdAt)}</span>
+              </div>
+              <div style="margin-top: 8px;">
+                <strong><span style="text-decoration: underline;">No.</span> <span style="font-size: 16px;">${sale.invoiceNo || '________'}</span></strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="buyer-section">
+            <div style="margin-bottom: 8px;">
+              <span style="font-weight: bold;">ለ/To</span> 
+              <span class="input-line">${sale.customer?.name || ''}</span>
+            </div>
+            <div>
+              <span style="font-weight: bold;">የታክስ ከፋይ መ.ቁ:</span><br>
+              <span style="font-size: 11px;">Buyers TIN No.</span> 
+              <span class="input-line">${sale.customer?.tinNumber || ''}</span>
+            </div>
+          </div>
+
+          ${sale.vat > 0 ? '<div class="watermark">Price Includes VAT</div>' : ''}
+
+          <table>
+            <thead>
+              <tr>
+                <th class="col-no">
+                  <div class="th-am">ተ.ቁ</div>
+                  <div>No</div>
+                </th>
+                <th class="col-desc">
+                  <div class="th-am">የእቃው አይነት</div>
+                  <div>Description</div>
+                </th>
+                <th class="col-unit">
+                  <div class="th-am">መስፈሪያ</div>
+                  <div>Unit</div>
+                </th>
+                <th class="col-qty">
+                  <div class="th-am">ብዛት</div>
+                  <div>Qty</div>
+                </th>
+                <th class="col-price">
+                  <div class="th-am">ያንዱ ዋጋ</div>
+                  <div>Unit Price</div>
+                </th>
+                <th class="col-total">
+                  <div class="th-am">ጠቅላላ ዋጋ</div>
+                  <div>Total Amount</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sale.items?.map((item: any, index: any) => {
+                // Safe fallback to prevent TypeScript / undefined errors
+                const product = item?.product || {};
+                const unitMeasure = product?.unitOfMeasure?.symbol || (item?.isBox ? 'Box' : 'Pc');
+                const price = item?.unitPrice || 0;
+                const total = item?.totalPrice || 0;
+                
+                return `
+                <tr>
+                  <td class="col-no">${String(index + 1).padStart(2, '0')}</td>
+                  <td class="col-desc">${product.name || ''} </td>
+                  <td class="col-unit">${unitMeasure}</td>
+                  <td class="col-qty">${item?.quantity || 0}</td>
+                  <td class="col-price">${price.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                  <td class="col-total">${total.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                </tr>
+                `;
+              }).join('') || '<tr><td colspan="6" style="text-align: center;">No items</td></tr>'}
+              
+              <tr>
+                <td colspan="4" style="border: none; border-right: 1px solid #000;"></td>
+                <td class="totals-label">
+                  <div class="th-am">ጠቅላላ ድምር / Total</div>
+                </td>
+                <td class="totals-value">${(sale.subTotal || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+              </tr>
+              <tr>
+                <td colspan="4" style="border: none; border-right: 1px solid #000;"></td>
+                <td class="totals-label">
+                  <div class="th-am">ተ.እ.ታ / VAT (15%)</div>
+                </td>
+                <td class="totals-value">${(sale.vat || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+              </tr>
+              <tr>
+                <td colspan="4" style="border: none; border-right: 1px solid #000;"></td>
+                <td class="totals-label">
+                  <div class="th-am" style="font-size: 10px;">በ/ዋጋ ተ.እ.ታ ጨምሮ/ Total (Incl. VAT)</div>
+                </td>
+                <td class="totals-value" style="font-weight: bold;">${(sale.grandTotal || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="bottom-details">
+            <div class="inline-label" style="margin-bottom: 20px;">
+              <div>
+                <span style="font-weight: bold;">በፊደል</span><br>
+                <strong>In Words</strong>
+              </div>
+              <div class="line"></div>
+            </div>
+
+            <div class="bottom-row">
+              <div class="inline-label">
+                <div>
+                  <span style="font-weight: bold;">የማስረከቢያ ቀን</span><br>
+                  <strong>Delivery Date</strong>
+                </div>
+                <div class="line"></div>
+              </div>
+              <div class="inline-label">
+                <div>
+                  <span style="font-weight: bold;">የሚቆይበት ጊዜ</span><br>
+                  <strong>Validity Date</strong>
+                </div>
+                <div class="line"></div>
+              </div>
+            </div>
+
+            <div class="bottom-row">
+              <div class="inline-label">
+                <div>
+                  <span style="font-weight: bold;">የአከፋፈል ሁኔታ</span><br>
+                  <strong>Terms Of Payment</strong>
+                </div>
+                <div class="line"></div>
+              </div>
+              <div class="inline-label">
+                <div>
+                  <span style="font-weight: bold;">ያዘጋጀው ስምና ፊርማ</span><br>
+                  <strong>Prepared by Name & Sig</strong>
+                </div>
+                <div class="line"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </body>
+    </html>
+  `;
+};
   const handleItemSelection = (itemId: string) => {
     setSelectedItems((prev) =>
       prev.includes(itemId)
@@ -284,9 +820,10 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
 
   const grandTotal = sale.grandTotal || 0;
 
-  return (
+return (
     <div className='container mx-auto space-y-6 p-4 md:p-8'>
       <div className='flex justify-end gap-2'>
+      
         <Button
           onClick={handlePrint}
           variant='outline'
@@ -294,6 +831,14 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
         >
           <Printer className='h-4 w-4' />
           Print Invoice
+        </Button>
+             <Button
+          onClick={handleProrma}
+          variant='outline'
+          className='flex items-center gap-2'
+        >
+          <Printer className='h-4 w-4' />
+          Print PROFORMA
         </Button>
       </div>
 
@@ -549,7 +1094,7 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
               )}
             </div>
           )}
-
+          
           {/* Sale Items Table */}
           {sale.items && sale.items.length > 0 ? (
             <div className='space-y-4'>
@@ -575,8 +1120,10 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                 {sale.items.map((item: ISellItem) => {
                   const isSelected = selectedItems.includes(item.id);
                   const isDelivered = item.itemSaleStatus === ItemSaleStatus.DELIVERED;
-     const remainingQty = item.remainingQuantity || item.quantity;
-                          const givenQty = item.givenQuantity || 0;
+                  const remainingQty = item.remainingQuantity || item.quantity;
+                  const givenQty = item.givenQuantity || 0;
+                  const unitMeasure = `${item.product?.numberunitOfMeasure || ''} ${item.product?.unitOfMeasure?.symbol || ''}`.trim();
+                  
                   return (
                     <Card
                       key={item.id}
@@ -606,44 +1153,54 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                           )}
                         </div>
 
-                        <div className='mt-3 grid grid-cols-2 gap-2'>
-                          <div className='space-y-1'>
-                            <p className='text-xs text-muted-foreground'>Shop</p>
-                            <p className='text-sm font-medium truncate'>
-                              {item.shop?.name || 'Unknown'}
-                            </p>
+                        <div className='mt-3 space-y-2'>
+                          {/* Row 1: Shop and Type/Unit combined */}
+                          <div className='grid grid-cols-2 gap-2'>
+                            <div className='space-y-1'>
+                              <p className='text-xs text-muted-foreground'>Shop</p>
+                              <p className='text-sm font-medium truncate'>
+                                {item.shop?.name || 'Unknown'}
+                              </p>
+                            </div>
+                            <div className='space-y-1'>
+                              <p className='text-xs text-muted-foreground'>Type / Unit</p>
+                              <div className='flex flex-col gap-1'>
+                                <Badge variant={item.isBox ? 'default' : 'secondary'} className='text-xs w-fit'>
+                                  {item.isBox ? (
+                                    <>
+                                      <Box className='mr-1 h-3 w-3' />
+                                      Box
+                                    </>
+                                  ) : (
+                                    <>
+                                      <PackageOpen className='mr-1 h-3 w-3' />
+                                      Piece
+                                    </>
+                                  )}
+                                </Badge>
+                                {unitMeasure && (
+                                  <p className='text-sm font-medium text-muted-foreground'>
+                                    {unitMeasure}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          <div className='space-y-1'>
-                            <p className='text-xs text-muted-foreground'>Type</p>
-                            <Badge variant={item.isBox ? 'default' : 'secondary'} className='text-xs'>
-                              {item.isBox ? (
-                                <>
-                                  <Box className='mr-1 h-3 w-3' />
-                                  Box
-                                </>
-                              ) : (
-                                <>
-                                  <PackageOpen className='mr-1 h-3 w-3' />
-                                  Piece
-                                </>
-                              )}
-                            </Badge>
-                          </div>
-                          <div className='space-y-1'>
-                            <p className='text-xs text-muted-foreground'>Quantity</p>
-                            <p className='text-sm font-medium'>{item.quantity}</p>
-                          </div>
-                             <TableCell>
-                                                          <span className='font-medium text-green-600'>{givenQty}</span>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                          <span className='font-medium text-orange-600'>{remainingQty}</span>
-                                                        </TableCell>
-                          <div className='space-y-1'>
-                            <p className='text-xs text-muted-foreground'>Unit</p>
-                            <p className='text-sm font-medium truncate'>
-                              {item.product?.UnitOfMeasure || 'N/A'}
-                            </p>
+
+                          {/* Row 2: Quantity, Given, Remaining */}
+                          <div className='grid grid-cols-3 gap-2'>
+                            <div className='space-y-1'>
+                              <p className='text-xs text-muted-foreground'>Quantity</p>
+                              <p className='text-sm font-medium'>{item.quantity}</p>
+                            </div>
+                            <div className='space-y-1'>
+                              <p className='text-xs text-muted-foreground'>Given</p>
+                              <p className='text-sm font-medium text-green-600'>{givenQty}</p>
+                            </div>
+                            <div className='space-y-1'>
+                              <p className='text-xs text-muted-foreground'>Remaining</p>
+                              <p className='text-sm font-medium text-orange-600'>{remainingQty}</p>
+                            </div>
                           </div>
                         </div>
 
@@ -711,11 +1268,11 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                           <TableHead className='min-w-40'>Product</TableHead>
                           <TableHead className='min-w-28'>Shop</TableHead>
                           <TableHead className='min-w-24'>Type</TableHead>
+                          <TableHead className='min-w-24'>Unit</TableHead>
                           <TableHead className='min-w-20'>Quantity</TableHead>
-                                    <TableHead className='min-w-28'>Given</TableHead>
-                                                    <TableHead className='min-w-28'>Remaining</TableHead>
+                          <TableHead className='min-w-28'>Given</TableHead>
+                          <TableHead className='min-w-28'>Remaining</TableHead>
                           <TableHead className='min-w-28'>Unit Price</TableHead>
-                    
                           <TableHead className='min-w-28'>Total Price</TableHead>
                           <TableHead className='min-w-32'>Status</TableHead>
                         </TableRow>
@@ -723,6 +1280,9 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                       <TableBody>
                         {sale.items.map((item: ISellItem) => {
                           const isDelivered = item.itemSaleStatus === ItemSaleStatus.DELIVERED;
+                          const remainingQty = item.remainingQuantity || item.quantity;
+                          const givenQty = item.givenQuantity || 0;
+                          const unitMeasure = `${item.product?.numberunitOfMeasure || ''} ${item.product?.unitOfMeasure?.symbol || ''}`.trim();
 
                           return (
                             <TableRow
@@ -777,7 +1337,18 @@ const SaleDetailPage: React.FC<SaleViewProps> = ({ id }) => {
                                 </Badge>
                               </TableCell>
                               <TableCell>
+                                <span className='text-sm text-muted-foreground'>
+                                  {unitMeasure || 'N/A'}
+                                </span>
+                              </TableCell>
+                              <TableCell>
                                 <span className='font-medium'>{item.quantity}</span>
+                              </TableCell>
+                              <TableCell>
+                                <span className='font-medium text-green-600'>{givenQty}</span>
+                              </TableCell>
+                              <TableCell>
+                                <span className='font-medium text-orange-600'>{remainingQty}</span>
                               </TableCell>
                               <TableCell>
                                 <span className='font-medium'>{item.unitPrice.toFixed(2)}</span>

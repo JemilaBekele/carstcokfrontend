@@ -119,6 +119,13 @@ export const navItems: NavItem[] = [
         shortcut: ['b', 'b'],
         permission: 'VIEW_ALL_BRANDS'
       },
+   {
+        title: 'Unit OfMeasure',
+        url: '/dashboard/UnitOfMeasure', // Update to your actual subcategory page route UnitOfMeasure ProductUnit
+        icon: 'ruler',
+        shortcut: ['u', 'u'],
+        permission: 'VIEW_ALL_UNIT_OF_MEASURE'
+      },
       {
         title: 'Products',
         url: '/dashboard/Products',

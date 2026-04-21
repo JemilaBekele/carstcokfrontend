@@ -606,6 +606,8 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
                     <TableRow>
                       <TableHead className='whitespace-nowrap text-xs md:text-sm'>Product</TableHead>
                       <TableHead className='whitespace-nowrap text-xs md:text-sm'>Type</TableHead>
+                              <TableHead className='whitespace-nowrap text-xs md:text-sm'>Unit</TableHead>
+
                       <TableHead className='whitespace-nowrap text-xs md:text-sm'>Quantity</TableHead>
                       <TableHead className='whitespace-nowrap text-xs md:text-sm'>Unit Price</TableHead>
                       <TableHead className='whitespace-nowrap text-xs md:text-sm'>Total</TableHead>
@@ -634,6 +636,11 @@ const PurchasedetailPage: React.FC<PurchaseViewProps> = ({ id }) => {
                             )}
                           </Badge>
                         </TableCell>
+                            <TableCell className='whitespace-nowrap text-xs md:text-sm'>
+              <div className='text-sm text-muted-foreground'>
+                {item.product.unitOfMeasure?.symbol || ''}
+              </div>
+            </TableCell>
                         <TableCell className='whitespace-nowrap text-xs md:text-sm'>
                           <div className='font-medium'>
                             {item.quantity}

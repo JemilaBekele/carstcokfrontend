@@ -1,77 +1,49 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { DataTable } from "@/components/ui/table/data-table";
-import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
-import { useTableQueryParams } from "@/hooks/use-table-query-params";
-import type { ICategory } from "@/models/Category";
-import { getAllCategories } from "@/service/Category";
-import { categoryColumns } from "./tables/columns";
+import { searchParamsCache } from '@/lib/searchparams';
+import { getAllCategories } from '@/service/Category';
+import { categoryColumns } from './tables/columns';
+import { DataTable } from '@/components/ui/table/data-table';
 
 type CategoriesListingPageProps = object;
 
-export default function CategoriesListingPage({}: CategoriesListingPageProps) {
-  const { page, search, limit } = useTableQueryParams();
-  const [categories, setCategories] = useState<ICategory[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default async function CategoriesListingPage({}: CategoriesListingPageProps) {
+  // ────────────────────────────────────────────────────────────────
+  // Query-string inputs
+  // ────────────────────────────────────────────────────────────────
+  const page = searchParamsCache.get('page') || 1;
+  const search = searchParamsCache.get('q') || '';
+  const limit = searchParamsCache.get('limit') || 10;
 
-  useEffect(() => {
-    let cancelled = false;
+  try {
+    // Fetch data from API
+    const { categories, totalCount } = await getAllCategories({ page, limit });
 
-    const loadCategories = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    // ────────────────────────────────────────────────────────────────
+    // Client-side search filter
+    // ────────────────────────────────────────────────────────────────
+    const filteredData = categories.filter((item) =>
+      item.name?.toLowerCase().includes(search.toLowerCase())
+    );
 
-        const response = await getAllCategories({ page, limit });
+    // ────────────────────────────────────────────────────────────────
+    // Client-side pagination
+    // ────────────────────────────────────────────────────────────────
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedData = filteredData.slice(startIndex, endIndex);
 
-        if (cancelled) {
-          return;
-        }
-
-        setCategories(response.categories || []);
-        setTotalCount(response.totalCount || 0);
-      } catch {
-        if (!cancelled) {
-          setError("Error loading categories. Please try again later.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadCategories();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [limit, page]);
-
-  if (loading) {
-    return <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />;
+    return (
+      // eslint-disable-next-line react-hooks/error-boundaries
+      <DataTable
+        data={paginatedData}
+        totalItems={totalCount}
+        columns={categoryColumns}
+      />
+    );
+  } catch  {
+    return (
+      <div className='p-4 text-red-500'>
+        Error loading categories. Please try again later.
+      </div>
+    );
   }
-
-  if (error) {
-    return <div className="p-4 text-red-500">{error}</div>;
-  }
-
-  const filteredData = categories.filter((item) =>
-    item.name?.toLowerCase().includes(search.toLowerCase()),
-  );
-
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedData = filteredData.slice(startIndex, endIndex);
-
-  return (
-    <DataTable
-      data={paginatedData}
-      totalItems={totalCount}
-      columns={categoryColumns}
-    />
-  );
 }

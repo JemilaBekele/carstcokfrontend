@@ -419,7 +419,7 @@ const handleApprove = async () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className='whitespace-nowrap text-xs md:text-sm'>Product</TableHead>
-                  <TableHead className='whitespace-nowrap text-xs md:text-sm'>Batch</TableHead>
+                  <TableHead className='whitespace-nowrap text-xs md:text-sm'>Type</TableHead>
                   <TableHead className='whitespace-nowrap text-xs md:text-sm'>Unit</TableHead>
                   <TableHead className='whitespace-nowrap text-xs md:text-sm'>Quantity</TableHead>
                 </TableRow>
@@ -434,6 +434,11 @@ const handleApprove = async () => {
                     <TableCell className='whitespace-nowrap text-xs md:text-sm'>
                       {item.isBox ? 'Box' : 'piece'}
                     </TableCell>
+                            <TableCell className='whitespace-nowrap text-xs md:text-sm'>
+                                  <div className='text-sm text-muted-foreground'>
+                                    {item?.product?.unitOfMeasure?.symbol || ''}
+                                  </div>
+                                </TableCell>
                     <TableCell className='whitespace-nowrap text-xs md:text-sm'>
                       <div className='flex items-center'>{item.quantity}</div>
                     </TableCell>

@@ -54,6 +54,7 @@ import {
   IconAdjustmentsAlt,
   IconArrowsRightLeft,
   IconBuildingEstate,
+  IconRuler,
 } from '@tabler/icons-react';
 
 export type Icon = React.ComponentType<IconProps>;
@@ -94,6 +95,7 @@ export const Icons = {
   bed: IconBed,
   home: IconHome,
   bath: IconBath,
+  ruler: IconRuler,
   alertCircle: IconAlertCircle,
   
   // New icons for sidebar

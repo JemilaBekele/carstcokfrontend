@@ -233,11 +233,12 @@ const ProductCard = ({ product, onSelectProduct }: ProductCardProps) => {
             {product?.category?.name || 'Category'}
           </span>
 
-          {product.UnitOfMeasure && (
+          {product.unitOfMeasure?.name && (
             <div className="flex items-center gap-1 border-l border-gray-300 dark:border-gray-700 pl-2">
               <Package className="h-3 w-3 text-gray-700 dark:text-gray-300" />
               <span className="text-[12px] text-gray-700 dark:text-gray-300">
-                {product.UnitOfMeasure}
+                                {product.numberunitOfMeasure}
+{product.unitOfMeasure?.symbol}
               </span>
             </div>
           )}

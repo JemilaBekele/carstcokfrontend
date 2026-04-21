@@ -136,7 +136,7 @@ export function SellStatusChart() {
   }
 
   return (
-    <Card className='flex flex-col h-full border-border/40 shadow-sm flex flex-col transition-all duration-300'>
+    <Card className='flex-col h-full border-border/40 shadow-sm flex transition-all duration-300'>
       <CardHeader className='items-center pb-3 pt-4 border-b border-border/40'>
         <CardTitle className='text-lg'>Sales Distribution</CardTitle>
         <CardDescription className="text-xs">Breakdown by order status</CardDescription>
@@ -154,7 +154,7 @@ export function SellStatusChart() {
                   hideLabel
                   className="shadow-md border-border/50 text-xs"
                   formatter={(value, name) => [
-                    `$${Number(value).toLocaleString()}`,
+                    `${Number(value).toLocaleString()}`,
                     chartConfig[name as keyof ChartConfig]?.label || name
                   ]}
                 />
@@ -185,7 +185,7 @@ export function SellStatusChart() {
         {/* Center label for the donut chart */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none -mt-4">
           <span className="text-2xl font-bold tracking-tighter">
-            ${(totalAmount >= 1000 ? (totalAmount / 1000).toFixed(1) + 'k' : totalAmount)}
+            {(totalAmount >= 1000 ? (totalAmount / 1000).toFixed(1) + 'k' : totalAmount)}
           </span>
           <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider">Total</span>
         </div>
@@ -193,7 +193,7 @@ export function SellStatusChart() {
       <CardFooter className='flex-col gap-3 text-sm mt-4 bg-muted/10 py-4 px-5 border-t border-border/20'>
         <div className='flex items-center gap-1.5 font-medium text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full'>
           <TrendingUp className='h-3.5 w-3.5' />
-          <span>${totalAmount.toLocaleString()} Total Sales</span>
+          <span>{totalAmount.toLocaleString()} Total Sales</span>
         </div>
         <div className='text-muted-foreground text-center text-[10px]'>
           {totalTransactions} transactions across{' '}
@@ -214,7 +214,7 @@ export function SellStatusChart() {
                     className='h-2.5 w-2.5 rounded-full shadow-sm'
                     style={{ backgroundColor: item.fill }}
                   />
-                  <span className='font-medium text-foreground truncate max-w-[70px] text-[11px]'>{item.label}</span>
+                  <span className='font-medium text-foreground truncate max-w-17.5 text-[11px]'>{item.label}</span>
                 </div>
                 <span className='text-muted-foreground font-mono bg-muted px-1 py-0.5 rounded text-[10px]'>
                   {item.count}

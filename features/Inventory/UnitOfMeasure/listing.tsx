@@ -1,12 +1,12 @@
-/* eslint-disable react-hooks/error-boundaries */
 import { searchParamsCache } from '@/lib/searchparams';
-import { getAllBrands } from '@/service/brand';
-import { brandColumns } from './tables/columns';
+import { getAllUnitsOfMeasure } from '@/service/UnitOfMeasure';
+import { unitOfMeasureColumns } from './tables/columns';
 import { DataTable } from '@/components/ui/table/data-table';
+import { IUnitOfMeasure } from '@/models/UnitOfMeasure';
 
-type BrandsListingPageProps = object;
+type UnitsListingPageProps = object;
 
-export default async function BrandsListingPage({}: BrandsListingPageProps) {
+export default async function UnitsListingPage({}: UnitsListingPageProps) {
   // ────────────────────────────────────────────────────────────────
   // Query-string inputs
   // ────────────────────────────────────────────────────────────────
@@ -16,12 +16,12 @@ export default async function BrandsListingPage({}: BrandsListingPageProps) {
 
   try {
     // Fetch data from API
-    const { brands, totalCount } = await getAllBrands({ page, limit });
+    const { units, totalCount } = await getAllUnitsOfMeasure({ page, limit });
 
     // ────────────────────────────────────────────────────────────────
     // Client-side search filter
     // ────────────────────────────────────────────────────────────────
-    const filteredData = brands.filter((item) =>
+    const filteredData = units.filter((item: IUnitOfMeasure) =>
       item.name?.toLowerCase().includes(search.toLowerCase())
     );
 
@@ -33,17 +33,20 @@ export default async function BrandsListingPage({}: BrandsListingPageProps) {
     const paginatedData = filteredData.slice(startIndex, endIndex);
 
     return (
+      // eslint-disable-next-line react-hooks/error-boundaries
       <DataTable
         data={paginatedData}
         totalItems={totalCount}
-        columns={brandColumns}
+        columns={unitOfMeasureColumns}
       />
     );
-  } catch {
-    return (
-      <div className='p-4 text-red-500'>
-        Error loading brands. Please try again later.
-      </div>
-    );
-  }
+  } catch (error) {
+  console.error('UnitsListingPage error:', error);
+
+  return (
+    <div className='p-4 text-red-500'>
+      Error loading units of measure. Please try again later.
+    </div>
+  );
+}
 }

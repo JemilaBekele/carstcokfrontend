@@ -1,6 +1,7 @@
 import { ICategory } from './Category';
 import { IShop } from './shop';
 import { IBrand } from './brand';
+import { IUnitOfMeasure } from './UnitOfMeasure';
 
 export interface IProduct {
   id: string;
@@ -25,12 +26,14 @@ export interface IProduct {
   brandId?: string;
   brand?: IBrand;
 
-  // ✅ Box Support
+  unitOfMeasureId: string; // foreign key
+  unitOfMeasure?: IUnitOfMeasure;
+  numberunitOfMeasure?: number;
+// ✅ Box Support
   hasBox: boolean;
   boxSize?: number;
 
   // ✅ Unit
-  UnitOfMeasure?: string;
 
   isActive: boolean;
 

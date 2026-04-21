@@ -1,5 +1,5 @@
 import { axiosInstance } from "./axiosIntance";
-import { ICategory, ISubCategory } from "@/models/Category";
+import { ICategory } from "@/models/Category";
 
 // Generic Pagination Params
 export interface GetParams {
