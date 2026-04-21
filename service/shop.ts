@@ -16,7 +16,7 @@ export const getAllshop = async ({ page = 1, limit = 10 }: GetParams = {}) => {
       limit: limit.toString(),
     });
 
-    const url = `shops?${query}`;
+    const url = `shops/get/all?${query}`;
 
     const response = await axiosInstance.get<locationResponse>(url);
     const shops = response.data.shops;

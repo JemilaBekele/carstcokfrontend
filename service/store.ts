@@ -18,7 +18,7 @@ export const getAllstore = async ({ page = 1, limit = 10 }: GetParams = {}) => {
       limit: limit.toString(),
     });
 
-    const url = `stores?${query}`;
+    const url = `stores/get/all?${query}`;
 
     const response = await axiosInstance.get<storeResponse>(url);
     const stores = response.data.stores;

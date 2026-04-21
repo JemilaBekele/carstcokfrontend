@@ -1,76 +1,36 @@
-"use client";
+import { searchParamsCache } from '@/lib/searchparams';
+import { getAllRoles } from '@/service/roleService';
+import { DataTable } from '@/components/ui/table/data-table';
+import { roleColumns } from './tables/columns'; // Adjust to your actual path
 
-import { useEffect, useState } from "react";
-import { DataTable } from "@/components/ui/table/data-table";
-import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
-import { useTableQueryParams } from "@/hooks/use-table-query-params";
-import { getAllRoles, type IRole } from "@/service/roleService";
-import { roleColumns } from "./tables/columns";
+export default async function RoleListingPage() {
+  const page = Number(searchParamsCache.get('page')) || 1;
+  const search = searchParamsCache.get('q') || '';
+  const limit = Number(searchParamsCache.get('limit')) || 10;
 
-export default function RoleListingPage() {
-  const { page, search, limit } = useTableQueryParams();
-  const [roles, setRoles] = useState<IRole[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  try {
+    const { roles, totalCount } = await getAllRoles({ page, limit });
 
-  useEffect(() => {
-    let cancelled = false;
+    // Optional client-side filtering (by name or description)
+    const filteredData = roles.filter((role) =>
+      `${role.name} ${role.description ?? ''}`
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    );
 
-    const loadRoles = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedData = filteredData.slice(startIndex, endIndex);
 
-        const response = await getAllRoles({ page, limit });
-
-        if (cancelled) {
-          return;
-        }
-
-        setRoles(response.roles || []);
-        setTotalCount(response.totalCount || 0);
-      } catch {
-        if (!cancelled) {
-          setError("Error loading role list.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadRoles();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [limit, page]);
-
-  if (loading) {
-    return <DataTableSkeleton columnCount={4} rowCount={8} filterCount={2} />;
+    return (
+      // eslint-disable-next-line react-hooks/error-boundaries
+      <DataTable
+        data={paginatedData}
+        totalItems={totalCount}
+        columns={roleColumns}
+      />
+    );
+  } catch (error) {
+    return <div className='text-red-500'>Error loading role list.</div>;
   }
-
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
-  }
-
-  const filteredData = roles.filter((role) =>
-    `${role.name} ${role.description ?? ""}`
-      .toLowerCase()
-      .includes(search.toLowerCase()),
-  );
-
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedData = filteredData.slice(startIndex, endIndex);
-
-  return (
-    <DataTable
-      data={paginatedData}
-      totalItems={totalCount}
-      columns={roleColumns}
-    />
-  );
 }

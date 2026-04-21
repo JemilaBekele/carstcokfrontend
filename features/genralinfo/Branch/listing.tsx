@@ -1,77 +1,42 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { DataTable } from "@/components/ui/table/data-table";
-import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
-import { useTableQueryParams } from "@/hooks/use-table-query-params";
-import type { IBranch } from "@/models/Branch";
-import { getAllbranches } from "@/service/branch";
-import { branchColumns } from "./tables/columns";
+import { searchParamsCache } from '@/lib/searchparams';
+import { getAllbranches } from '@/service/branch';
+import { DataTable } from '@/components/ui/table/data-table';
+import { branchColumns } from './tables/columns'; // Adjust path to your branch columns
 
 type BranchListingPageProps = object;
 
-export default function BranchListingPage({}: BranchListingPageProps) {
-  const { page, search, limit } = useTableQueryParams();
-  const [branches, setBranches] = useState<IBranch[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default async function BranchListingPage({}: BranchListingPageProps) {
+  const page = searchParamsCache.get('page') || 1;
+  const search = searchParamsCache.get('q') || '';
+  const limit = searchParamsCache.get('limit') || 10;
 
-  useEffect(() => {
-    let cancelled = false;
 
-    const loadBranches = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    // Fetch branches from API
+    const { branches, totalCount } = await getAllbranches({
+      page,
+      limit
+    });
 
-        const response = await getAllbranches({ page, limit });
+    // ─────────────────────────────────────────────
+    // Client-side search filtering by name
+    // ─────────────────────────────────────────────
+    const filteredData = branches.filter((branch) =>
+      branch.name.toLowerCase().includes(search.toLowerCase())
+    );
 
-        if (cancelled) {
-          return;
-        }
+    // ─────────────────────────────────────────────
+    // Pagination
+    // ─────────────────────────────────────────────
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedData = filteredData.slice(startIndex, endIndex);
 
-        setBranches(response.branches || []);
-        setTotalCount(response.totalCount || 0);
-      } catch {
-        if (!cancelled) {
-          setError("Error loading branches. Please try again later.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadBranches();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [limit, page]);
-
-  if (loading) {
-    return <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />;
-  }
-
-  if (error) {
-    return <div className="p-4 text-red-500">{error}</div>;
-  }
-
-  const filteredData = branches.filter((branch) =>
-    branch.name.toLowerCase().includes(search.toLowerCase()),
-  );
-
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedData = filteredData.slice(startIndex, endIndex);
-
-  return (
-    <DataTable
-      data={paginatedData}
-      totalItems={totalCount}
-      columns={branchColumns}
-    />
-  );
+    return (
+      <DataTable
+        data={paginatedData}
+        totalItems={totalCount}
+        columns={branchColumns}
+      />
+    );
+ 
 }

@@ -1,77 +1,42 @@
-"use client";
+import { searchParamsCache } from '@/lib/searchparams';
+import { DataTable } from '@/components/ui/table/data-table';
+import { storeColumns } from './tables/columns'; // Make sure you have columns defined for Shop
+import { getAllstore } from '@/service/store';
 
-import { useEffect, useState } from "react";
-import { DataTable } from "@/components/ui/table/data-table";
-import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
-import { useTableQueryParams } from "@/hooks/use-table-query-params";
-import type { IStore } from "@/models/store";
-import { getAllstore } from "@/service/store";
-import { storeColumns } from "./tables/columns";
+type ShopListingPageProps = object;
 
-type StoreListingPageProps = object;
+export default async function StoreListingPage({}: ShopListingPageProps) {
+  const page = searchParamsCache.get('page') || 1;
+  const search = searchParamsCache.get('q') || '';
+  const limit = searchParamsCache.get('limit') || 10;
 
-export default function StoreListingPage({}: StoreListingPageProps) {
-  const { page, search, limit } = useTableQueryParams();
-  const [stores, setStores] = useState<IStore[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  try {
+    // Fetch shops from API
+    const { stores, totalCount } = await getAllstore({ page });
 
-  useEffect(() => {
-    let cancelled = false;
+    // ─────────────────────────────────────────────
+    // Client‑side search filtering by name or branch/location
+    // ─────────────────────────────────────────────
+    const filteredData = stores.filter((shop) =>
+      `${shop.name} `.toLowerCase().includes(search.toLowerCase())
+    );
 
-    const loadStores = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    // ─────────────────────────────────────────────
+    // Pagination
+    // ─────────────────────────────────────────────
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedData = filteredData.slice(startIndex, endIndex);
 
-        const response = await getAllstore({ page, limit });
-
-        if (cancelled) {
-          return;
-        }
-
-        setStores(response.stores || []);
-        setTotalCount(response.totalCount || 0);
-      } catch {
-        if (!cancelled) {
-          setError("Error loading stores list.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadStores();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [limit, page]);
-
-  if (loading) {
-    return <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />;
+    return (
+      // eslint-disable-next-line react-hooks/error-boundaries
+      <DataTable
+        data={paginatedData}
+        totalItems={totalCount}
+        columns={storeColumns}
+      />
+    );
+  } catch  {
+    return <div>Error loading shops list.</div>;
   }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
-
-  const filteredData = stores.filter((store) =>
-    `${store.name} `.toLowerCase().includes(search.toLowerCase()),
-  );
-
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedData = filteredData.slice(startIndex, endIndex);
-
-  return (
-    <DataTable
-      data={paginatedData}
-      totalItems={totalCount}
-      columns={storeColumns}
-    />
-  );
 }

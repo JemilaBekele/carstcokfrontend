@@ -15,9 +15,9 @@ import { useRouter } from 'next/navigation';
 interface EmployeeFilterProps {
   employees: IEmployee[];
   currentEmployeeFilter: string;
-  statusFilter: string;
-  uncheckedCorrectionsFilter?: boolean; // Add this line
-
+  saleStatusFilter: string;
+  paymentStatusFilter: string;
+  uncheckedCorrectionsFilter?: boolean;
   search?: string;
   limit?: number | string;
   startDate?: string;
@@ -27,9 +27,9 @@ interface EmployeeFilterProps {
 export default function EmployeeFilter({
   employees,
   currentEmployeeFilter,
-  statusFilter,
-    uncheckedCorrectionsFilter, // Add this to destructuring
-
+  saleStatusFilter,
+  paymentStatusFilter,
+  uncheckedCorrectionsFilter,
   search,
   limit = 10,
   startDate,
@@ -37,24 +37,25 @@ export default function EmployeeFilter({
 }: EmployeeFilterProps) {
   const router = useRouter();
 
-const buildEmployeeFilterUrl = (employeeId: string) => {
-  const params = new URLSearchParams();
+  const buildEmployeeFilterUrl = (employeeId: string) => {
+    const params = new URLSearchParams();
 
-  if (search) params.set('q', search);
-  params.set('page', '1');
-  params.set('limit', limit.toString());
-  if (startDate) params.set('startDate', startDate);
-  if (endDate) params.set('endDate', endDate);
-  params.set('status', statusFilter);
-  params.set('employee', employeeId);
-  
-  // Add the uncheckedCorrectionsFilter if provided
-  if (uncheckedCorrectionsFilter !== undefined) {
-    params.set('uncheckedCorrections', uncheckedCorrectionsFilter.toString());
-  }
+    if (search) params.set('q', search);
+    params.set('page', '1');
+    params.set('limit', limit.toString());
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    params.set('saleStatus', saleStatusFilter);
+    params.set('paymentStatus', paymentStatusFilter);
+    params.set('employee', employeeId);
+    
+    // Add the uncheckedCorrectionsFilter if provided
+    if (uncheckedCorrectionsFilter !== undefined) {
+      params.set('uncheckedCorrections', uncheckedCorrectionsFilter.toString());
+    }
 
-  return `?${params.toString()}`;
-};
+    return `?${params.toString()}`;
+  };
 
   const handleValueChange = (value: string) => {
     const url = buildEmployeeFilterUrl(value);

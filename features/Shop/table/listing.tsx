@@ -3,15 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CreditCard } from "lucide-react";
 import ExportButtons from "@/components/ExportButtonsd";
 import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/table/newdatatable";
 import { DataTableSkeleton } from "@/components/ui/table/data-table-skeleton";
 import { RadioGroup } from "@/components/ui/radio-group";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTableQueryParams } from "@/hooks/use-table-query-params";
 import type { IEmployee } from "@/models/employee";
 import type { ISell, SaleStatus } from "@/models/Sell";
+import { SellPaymentStatus } from "@/models/Sell";
 import { getAllEmployapi } from "@/service/employee";
 import { getAllSells } from "@/service/Sell";
 import EmployeeFilter from "./employee";
@@ -23,9 +25,11 @@ type SellListingPageProps = object;
 export default function SellListingPage({}: SellListingPageProps) {
   const { page, search, limit, startDate, endDate } = useTableQueryParams();
   const searchParams = useSearchParams();
-  const statusFilter = searchParams.get("status") || "all";
+  const saleStatusFilter = searchParams.get("saleStatus") || "all";
+  const paymentStatusFilter = searchParams.get("paymentStatus") || "all";
   const employeeFilter = searchParams.get("employee") || "all";
   const uncheckedCorrectionsFilter = searchParams.get("unchecked") === "true";
+  const [activeTab, setActiveTab] = useState<"sale" | "payment">("sale");
   const [salesData, setSalesData] = useState<ISell[]>([]);
   const [employees, setEmployees] = useState<IEmployee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,8 +89,24 @@ export default function SellListingPage({}: SellListingPageProps) {
     }
   };
 
+  const getPaymentStatusDisplayText = (status: SellPaymentStatus): string => {
+    switch (status) {
+      case "PENDING":
+        return "pending";
+      case "PARTIAL":
+        return "partial";
+      case "PAID":
+        return "paid";
+      case "CANCELLED":
+        return "cancelled";
+      default:
+        return "unknown";
+    }
+  };
+
   const buildQueryStringLocal = (params: {
-    status?: string;
+    saleStatus?: string;
+    paymentStatus?: string;
     employee?: string;
     unchecked?: boolean;
     page?: string;
@@ -97,7 +117,8 @@ export default function SellListingPage({}: SellListingPageProps) {
     urlParams.set("limit", limit.toString());
     if (startDate) urlParams.set("startDate", startDate);
     if (endDate) urlParams.set("endDate", endDate);
-    urlParams.set("status", params.status || statusFilter);
+    urlParams.set("saleStatus", params.saleStatus || saleStatusFilter);
+    urlParams.set("paymentStatus", params.paymentStatus || paymentStatusFilter);
     const employeeValue = params.employee || employeeFilter;
     urlParams.set("employee", employeeValue.toString());
 
@@ -112,9 +133,10 @@ export default function SellListingPage({}: SellListingPageProps) {
     return `?${urlParams.toString()}`;
   };
 
-  const buildStatusFilterUrl = (status: string) =>
+  const buildStatusFilterUrl = (saleStatus: string, paymentStatus: string) =>
     buildQueryStringLocal({
-      status,
+      saleStatus,
+      paymentStatus,
       employee: employeeFilter,
       unchecked: uncheckedCorrectionsFilter,
       page: "1",
@@ -128,6 +150,7 @@ export default function SellListingPage({}: SellListingPageProps) {
     return <div className="p-4 text-red-500">{error}</div>;
   }
 
+  // Apply all filters
   const filteredData = salesData.filter((item) => {
     if (search) {
       const searchLower = search.toLowerCase();
@@ -151,10 +174,17 @@ export default function SellListingPage({}: SellListingPageProps) {
       }
     }
 
-    if (statusFilter !== "all" && item.saleStatus !== statusFilter) {
+    // Apply sale status filter
+    if (saleStatusFilter !== "all" && item.saleStatus !== saleStatusFilter) {
       return false;
     }
 
+    // Apply payment status filter
+    if (paymentStatusFilter !== "all" && item.paymentStatus !== paymentStatusFilter) {
+      return false;
+    }
+
+    // Apply employee filter
     if (employeeFilter !== "all") {
       const employeeId = item.createdBy?.id;
       if (employeeId !== employeeFilter) {
@@ -165,7 +195,8 @@ export default function SellListingPage({}: SellListingPageProps) {
     return true;
   });
 
-  const allStatusCounts = {
+  // Sale status counts
+  const saleStatusCounts = {
     APPROVED: salesData.filter((item) => item.saleStatus === "APPROVED").length,
     NOT_APPROVED: salesData.filter((item) => item.saleStatus === "NOT_APPROVED").length,
     PARTIALLY_DELIVERED: salesData.filter(
@@ -175,13 +206,28 @@ export default function SellListingPage({}: SellListingPageProps) {
     CANCELLED: salesData.filter((item) => item.saleStatus === "CANCELLED").length,
   };
 
+  // Payment status counts
+  const paymentStatusCounts = {
+    PENDING: salesData.filter((item) => item.paymentStatus === "PENDING").length,
+    PARTIAL: salesData.filter((item) => item.paymentStatus === "PARTIAL").length,
+    PAID: salesData.filter((item) => item.paymentStatus === "PAID").length,
+    CANCELLED: salesData.filter((item) => item.paymentStatus === "CANCELLED").length,
+  };
+
   const totalSells = salesData.length;
-  const needsApprovalCount = allStatusCounts.NOT_APPROVED;
+  const needsApprovalCount = saleStatusCounts.NOT_APPROVED;
+  const pendingPaymentCount = paymentStatusCounts.PENDING;
   const filteredCount = filteredData.length;
   const selectedEmployee = employees.find((emp) => emp.id === employeeFilter);
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
   const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  // Check if any filters are active
+  const hasActiveFilters = saleStatusFilter !== "all" || 
+                          paymentStatusFilter !== "all" || 
+                          employeeFilter !== "all" || 
+                          uncheckedCorrectionsFilter;
 
   return (
     <div className="space-y-6">
@@ -189,7 +235,7 @@ export default function SellListingPage({}: SellListingPageProps) {
         <div className="text-lg font-semibold">Sales Management</div>
         <ExportButtons
           data={filteredData}
-          statusCounts={allStatusCounts}
+          statusCounts={saleStatusCounts}
           totalSells={totalSells}
         />
       </div>
@@ -197,7 +243,8 @@ export default function SellListingPage({}: SellListingPageProps) {
       <EmployeeFilter
         employees={employees}
         currentEmployeeFilter={employeeFilter}
-        statusFilter={statusFilter}
+        saleStatusFilter={saleStatusFilter}
+        paymentStatusFilter={paymentStatusFilter}
         search={search}
         limit={limit}
         startDate={startDate}
@@ -205,61 +252,118 @@ export default function SellListingPage({}: SellListingPageProps) {
         uncheckedCorrectionsFilter={uncheckedCorrectionsFilter}
       />
 
-      <RadioGroup defaultValue={statusFilter} className="space-y-3" value={statusFilter}>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
-          <StatusCard
-            title="All Sells"
-            count={totalSells}
-            variant="total"
-            selected={statusFilter === "all"}
-            value="all"
-            href={buildStatusFilterUrl("all")}
-          />
-          <StatusCard
-            title="Approved"
-            count={allStatusCounts.APPROVED}
-            variant="approved"
-            selected={statusFilter === "APPROVED"}
-            value="APPROVED"
-            href={buildStatusFilterUrl("APPROVED")}
-          />
-          <StatusCard
-            title="Not Approved"
-            count={allStatusCounts.NOT_APPROVED}
-            variant="notApproved"
-            needsAttention={allStatusCounts.NOT_APPROVED > 0}
-            selected={statusFilter === "NOT_APPROVED"}
-            value="NOT_APPROVED"
-            href={buildStatusFilterUrl("NOT_APPROVED")}
-          />
-          <StatusCard
-            title="Partially Delivered"
-            count={allStatusCounts.PARTIALLY_DELIVERED}
-            variant="partial"
-            selected={statusFilter === "PARTIALLY_DELIVERED"}
-            value="PARTIALLY_DELIVERED"
-            href={buildStatusFilterUrl("PARTIALLY_DELIVERED")}
-          />
-          <StatusCard
-            title="Delivered"
-            count={allStatusCounts.DELIVERED}
-            variant="delivered"
-            selected={statusFilter === "DELIVERED"}
-            value="DELIVERED"
-            href={buildStatusFilterUrl("DELIVERED")}
-          />
-          <StatusCard
-            title="Cancelled"
-            count={allStatusCounts.CANCELLED}
-            variant="cancelled"
-            selected={statusFilter === "CANCELLED"}
-            value="CANCELLED"
-            href={buildStatusFilterUrl("CANCELLED")}
-          />
-        </div>
-      </RadioGroup>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "sale" | "payment")}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="sale">Sale Status</TabsTrigger>
+          <TabsTrigger value="payment">Payment Status</TabsTrigger>
+        </TabsList>
 
-      {(statusFilter !== "all" || employeeFilter !== "all" || uncheckedCorrectionsFilter) && (
+        <TabsContent value="sale" className="space-y-6">
+          <RadioGroup value={saleStatusFilter} className="space-y-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
+              <StatusCard
+                title="All Sells"
+                count={totalSells}
+                variant="total"
+                selected={saleStatusFilter === "all"}
+                value="all"
+                href={buildStatusFilterUrl("all", paymentStatusFilter)}
+              />
+              <StatusCard
+                title="Approved"
+                count={saleStatusCounts.APPROVED}
+                variant="approved"
+                selected={saleStatusFilter === "APPROVED"}
+                value="APPROVED"
+                href={buildStatusFilterUrl("APPROVED", paymentStatusFilter)}
+              />
+              <StatusCard
+                title="Not Approved"
+                count={saleStatusCounts.NOT_APPROVED}
+                variant="notApproved"
+                needsAttention={saleStatusCounts.NOT_APPROVED > 0}
+                selected={saleStatusFilter === "NOT_APPROVED"}
+                value="NOT_APPROVED"
+                href={buildStatusFilterUrl("NOT_APPROVED", paymentStatusFilter)}
+              />
+              <StatusCard
+                title="Partially Delivered"
+                count={saleStatusCounts.PARTIALLY_DELIVERED}
+                variant="partial"
+                selected={saleStatusFilter === "PARTIALLY_DELIVERED"}
+                value="PARTIALLY_DELIVERED"
+                href={buildStatusFilterUrl("PARTIALLY_DELIVERED", paymentStatusFilter)}
+              />
+              <StatusCard
+                title="Delivered"
+                count={saleStatusCounts.DELIVERED}
+                variant="delivered"
+                selected={saleStatusFilter === "DELIVERED"}
+                value="DELIVERED"
+                href={buildStatusFilterUrl("DELIVERED", paymentStatusFilter)}
+              />
+              <StatusCard
+                title="Cancelled"
+                count={saleStatusCounts.CANCELLED}
+                variant="cancelled"
+                selected={saleStatusFilter === "CANCELLED"}
+                value="CANCELLED"
+                href={buildStatusFilterUrl("CANCELLED", paymentStatusFilter)}
+              />
+            </div>
+          </RadioGroup>
+        </TabsContent>
+
+        <TabsContent value="payment" className="space-y-6">
+          <RadioGroup value={paymentStatusFilter} className="space-y-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+              <StatusCard
+                title="All Payments"
+                count={totalSells}
+                variant="total"
+                selected={paymentStatusFilter === "all"}
+                value="all"
+                href={buildStatusFilterUrl(saleStatusFilter, "all")}
+              />
+              <StatusCard
+                title="Pending"
+                count={paymentStatusCounts.PENDING}
+                variant="pending"
+                needsAttention={paymentStatusCounts.PENDING > 0}
+                selected={paymentStatusFilter === "PENDING"}
+                value="PENDING"
+                href={buildStatusFilterUrl(saleStatusFilter, "PENDING")}
+              />
+              <StatusCard
+                title="Partial"
+                count={paymentStatusCounts.PARTIAL}
+                variant="partial"
+                selected={paymentStatusFilter === "PARTIAL"}
+                value="PARTIAL"
+                href={buildStatusFilterUrl(saleStatusFilter, "PARTIAL")}
+              />
+              <StatusCard
+                title="Paid"
+                count={paymentStatusCounts.PAID}
+                variant="paid"
+                selected={paymentStatusFilter === "PAID"}
+                value="PAID"
+                href={buildStatusFilterUrl(saleStatusFilter, "PAID")}
+              />
+              <StatusCard
+                title="Cancelled"
+                count={paymentStatusCounts.CANCELLED}
+                variant="cancelled"
+                selected={paymentStatusFilter === "CANCELLED"}
+                value="CANCELLED"
+                href={buildStatusFilterUrl(saleStatusFilter, "CANCELLED")}
+              />
+            </div>
+          </RadioGroup>
+        </TabsContent>
+      </Tabs>
+
+      {hasActiveFilters && (
         <div className="bg-muted/50 rounded-lg border p-4">
           <div className="flex items-center justify-between">
             <div className="flex flex-wrap items-center gap-2">
@@ -267,9 +371,15 @@ export default function SellListingPage({}: SellListingPageProps) {
                 Filters Applied
               </Badge>
 
-              {statusFilter !== "all" && (
+              {saleStatusFilter !== "all" && (
                 <Badge variant="secondary" className="text-sm">
-                  Status: {getSaleStatusDisplayText(statusFilter as SaleStatus)}
+                  Sale: {getSaleStatusDisplayText(saleStatusFilter as SaleStatus)}
+                </Badge>
+              )}
+
+              {paymentStatusFilter !== "all" && (
+                <Badge variant="secondary" className="text-sm">
+                  Payment: {getPaymentStatusDisplayText(paymentStatusFilter as SellPaymentStatus)}
                 </Badge>
               )}
 
@@ -290,7 +400,8 @@ export default function SellListingPage({}: SellListingPageProps) {
 
             <Link
               href={buildQueryStringLocal({
-                status: "all",
+                saleStatus: "all",
+                paymentStatus: "all",
                 employee: "all",
                 unchecked: false,
                 page: "1",
@@ -303,7 +414,7 @@ export default function SellListingPage({}: SellListingPageProps) {
         </div>
       )}
 
-      {needsApprovalCount > 0 && (
+      {needsApprovalCount > 0 && activeTab === "sale" && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -319,6 +430,22 @@ export default function SellListingPage({}: SellListingPageProps) {
         </div>
       )}
 
+      {pendingPaymentCount > 0 && activeTab === "payment" && (
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-950/20">
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+            <h3 className="font-semibold text-yellow-800 dark:text-yellow-300">
+              Payment Attention
+            </h3>
+          </div>
+          <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-400">
+            You have {pendingPaymentCount} sale
+            {pendingPaymentCount === 1 ? "" : "s"} with pending payment. Please follow
+            up with customers.
+          </p>
+        </div>
+      )}
+
       <DataTable
         data={paginatedData}
         totalItems={filteredCount}
@@ -326,7 +453,8 @@ export default function SellListingPage({}: SellListingPageProps) {
         currentPage={page}
         itemsPerPage={limit}
         searchValue={search}
-        statusFilter={statusFilter}
+        statusFilter={saleStatusFilter}
+        paymentStatusFilter={paymentStatusFilter}
         employeeFilter={employeeFilter}
         uncheckedCorrectionsFilter={uncheckedCorrectionsFilter}
         startDate={startDate}

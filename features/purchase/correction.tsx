@@ -601,7 +601,7 @@ export default function PurchaseCorrectionForm({
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {item.product?.UnitOfMeasure || 'N/A'}
+                          {item.product?.unitOfMeasure?.symbol || 'N/A'}
                         </TableCell>
                         <TableCell>{item.quantity || 0}</TableCell>
                         <TableCell>

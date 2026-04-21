@@ -37,13 +37,14 @@ export interface ISellPayment {
 }
 // ✅ Sell Model Interface
 export interface ISell {
-  id: string; // UUID
+  id: string;
+    paymentStatus: SellPaymentStatus;
+ // UUID
   invoiceNo: string;
   imageUrl      ? : string;
   documentUrl?  : string;
   locked: boolean;
   saleStatus: SaleStatus; // Matches enum
-  paymentStatus: SellPaymentStatus;
 
   balance: number;
   totalPaid: number;
