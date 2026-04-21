@@ -48,8 +48,8 @@ export const navItems: NavItem[] = [
          {
         title: 'Top Product Report',
         url: '/dashboard/TopProductsReport',
-        // icon: 'userPen', 
-        shortcut: ['ps', 'ps'],
+        icon: 'Trophy',        
+shortcut: ['ps', 'ps'],
         permission: 'VIEW_SALES_RANK'
       }
     ]

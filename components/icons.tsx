@@ -56,6 +56,7 @@ import {
   IconBuildingEstate,
   IconRuler,
 } from '@tabler/icons-react';
+import { Trophy } from 'lucide-react';
 
 export type Icon = React.ComponentType<IconProps>;
 
@@ -80,6 +81,7 @@ export const Icons = {
   billing: IconCreditCard,
   ellipsis: IconDotsVertical,
   add: IconPlus,
+Trophy: Trophy,
   warning: IconAlertTriangle,
   user: IconUser,
   arrowRight: IconArrowRight,
