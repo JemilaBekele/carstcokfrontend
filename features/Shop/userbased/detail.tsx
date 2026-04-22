@@ -594,6 +594,7 @@ const generatePrintHTML = (data: PrintableSaleData) => {
           <div class="meta-section">
             <div class="meta-left">
               <div>
+                <span style="font-size: 11px;">Jebril mohammed:</span> <br>
                 <span style="font-weight: bold;">የታክስ ከፋይ መ.ቁ:</span> 0088411751<br>
                 <span style="font-size: 11px;">Supplier's TIN No.</span>
               </div>
