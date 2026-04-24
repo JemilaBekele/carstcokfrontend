@@ -50,7 +50,7 @@ export default function SignInViewPage() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard/overview";
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const { _hydrated: hydrated, isAuthenticated } = useAuthStore();
 
   useEffect(() => {

@@ -4,26 +4,11 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { navItems } from '@/constants/data';
-import { filterNavItemsWithCheckers } from '@/lib/filterNavItems';
-import type { NavItem } from '@/types';
+import {
+  filterNavItemsWithCheckers,
+  findFirstAccessibleUrl,
+} from '@/lib/filterNavItems';
 import BrandedSplash from '@/components/BrandedSplash';
-
-/**
- * Recursively finds the first navigable URL from a list of nav items.
- * Skips group placeholders (url === '#').
- */
-function findFirstAccessibleUrl(items: NavItem[]): string | null {
-  for (const item of items) {
-    if (item.url && item.url !== '#') {
-      return item.url;
-    }
-    if (item.items && item.items.length > 0) {
-      const found = findFirstAccessibleUrl(item.items as NavItem[]);
-      if (found) return found;
-    }
-  }
-  return null;
-}
 
 export default function DashboardPage() {
   const router = useRouter();

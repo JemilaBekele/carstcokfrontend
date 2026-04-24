@@ -1,5 +1,6 @@
 // lib/filterNavItems.ts
-// Single source of truth for permission-based nav filtering.
+// Single source of truth for permission-based nav filtering
+// and first-accessible-URL resolution.
 // Used by AppSidebar and KBar so they always apply the same logic.
 
 import type { NavItem } from '@/types';
@@ -68,4 +69,30 @@ export function filterNavItemsStatic(items: NavItem[]): NavItem[] {
     hasAnyPermission,
     hasAllPermissions,
   });
+}
+
+/**
+ * Recursively finds the first navigable URL from a list of nav items.
+ * Skips group placeholders (url === '#').
+ */
+export function findFirstAccessibleUrl(items: NavItem[]): string | null {
+  for (const item of items) {
+    if (item.url && item.url !== '#') {
+      return item.url;
+    }
+    if (item.items && item.items.length > 0) {
+      const found = findFirstAccessibleUrl(item.items as NavItem[]);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+/**
+ * Returns the first accessible dashboard URL for the current user.
+ * Uses Zustand's getState() — safe in non-React contexts.
+ */
+export function getFirstAccessibleUrl(items: NavItem[]): string {
+  const filtered = filterNavItemsStatic(items);
+  return findFirstAccessibleUrl(filtered) || '/dashboard/unauthorized';
 }
